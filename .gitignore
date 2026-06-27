@@ -1,2 +1,17 @@
-D.md
-_tasks/
+node_modules/
+.expo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+*.log
+ios/
+android/
+release/
+*.tgz
+bun.lock.bak
+# macOS
+.DS_Store
+# IDE
+.vscode/
+.idea/

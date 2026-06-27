@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "UniVPN",
+    "slug": "univpn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "univpn",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.univpn.app",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "This app requires access to network features for VPN functionality",
+        "UIBackgroundModes": ["network-authentication", "network"]
+      },
+      "entitlements": {
+        "com.apple.developer.networking.networkextension": ["packet-tunnel-provider"]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.univpn.app",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.BIND_VPN_SERVICE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "react-native-wireguard-vpn"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://vpn.example.com/api/vpn/mobile"
+    }
+  }
+}

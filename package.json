@@ -1,0 +1,9 @@
+{
+  "name": "univpn",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "mobile",
+    "desktop"
+  ]
+}

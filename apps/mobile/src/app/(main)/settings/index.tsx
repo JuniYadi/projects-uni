@@ -50,7 +50,7 @@ export default function SettingsScreen() {
         {/* Connection */}
         <SectionHeader label="CONNECTION" />
         <SettingsGroup>
-          <Host style={{ width: '100%', minHeight: 44 }}>
+          <Host style={{ width: '100%' }}>
             <Switch
               label="Auto-Connect"
               value={settings.autoConnect}
@@ -58,7 +58,7 @@ export default function SettingsScreen() {
             />
           </Host>
           <View style={styles.separator} />
-          <Host style={{ width: '100%', minHeight: 44 }}>
+          <Host style={{ width: '100%' }}>
             <Switch
               label="Kill Switch"
               value={settings.killSwitch}
@@ -92,11 +92,11 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="outlined" onPress={() => {}} label="📋 Manage via Web Portal" style={{ minHeight: 44 }} />
+          <Button variant="outlined" onPress={() => {}} label="📋 Manage via Web Portal" />
         </Host>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="filled" onPress={handleLogout} label="🚪 Logout" style={{ minHeight: 44 }} />
+          <Button variant="filled" onPress={handleLogout} label="🚪 Logout" />
         </Host>
 
         {/* About */}
@@ -108,7 +108,7 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="outlined" onPress={() => {}} label="📱 Check for Updates" style={{ minHeight: 44 }} />
+          <Button variant="outlined" onPress={() => {}} label="📱 Check for Updates" />
         </Host>
       </View>
     </ScrollView>

@@ -7,11 +7,7 @@ export default function MainLayout() {
   const c = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   return (
-    <NativeTabs
-      backgroundColor={c.background}
-      indicatorColor={c.backgroundElement}
-      labelStyle={{ selected: { color: c.text } }}
-    >
+    <NativeTabs backgroundColor={c.background} indicatorColor={c.backgroundElement} labelStyle={{ selected: { color: c.text } }}>
       <NativeTabs.Trigger name="servers">
         <NativeTabs.Trigger.Label>Servers</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="shield.fill" md="shield" />

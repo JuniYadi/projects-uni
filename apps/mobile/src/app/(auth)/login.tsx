@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button, TextInput, useNativeState } from '@expo/ui';
+import { Colors } from '@/constants/theme';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const scheme = useColorScheme();
+  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
   const loginWithSubId = useAuthStore((s) => s.loginWithSubId);
   const authStatus = useAuthStore((s) => s.status);
   const subId = useNativeState('');
@@ -17,7 +20,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await loginWithSubId(val);
-      router.replace('/(main)');
+      router.replace('/(main)/servers');
     } catch {
       setError('Invalid subscription ID');
     }
@@ -25,15 +28,17 @@ export default function LoginScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.scroll}
+      contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.glow, { backgroundColor: colors.backgroundElement }]} />
+
         {/* Brand */}
-        <View style={styles.brand}>
+        <View style={[styles.brandCard, { backgroundColor: colors.backgroundElement }]}>
           <Text style={styles.logo}>🛡️</Text>
-          <Text style={styles.title}>UniVPN</Text>
-          <Text style={styles.subtitle}>Fast & Private</Text>
+          <Text style={[styles.title, { color: colors.text }]}>UniVPN</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Fast & Private</Text>
         </View>
 
         {/* QR scan button */}
@@ -43,15 +48,15 @@ export default function LoginScreen() {
 
         {/* Divider */}
         <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: colors.backgroundElement }]} />
+          <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.backgroundElement }]} />
         </View>
 
         {/* Sub ID Input */}
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Subscription ID</Text>
-          <Host style={[styles.inputHost, error && styles.inputHostError]}>
+          <Text style={[styles.label, { color: colors.text }]}>Subscription ID</Text>
+          <Host style={[styles.inputHost, { borderColor: colors.backgroundElement }, error && styles.inputHostError]}>
             <TextInput
               value={subId}
               onChangeText={(v) => { 'worklet'; subId.value = v; }}
@@ -77,7 +82,7 @@ export default function LoginScreen() {
         </Host>
 
         {/* Version */}
-        <Text style={styles.version}>─── v1.0.0 ───</Text>
+        <Text style={[styles.version, { color: colors.textSecondary }]}>─── v1.0.0 ───</Text>
       </View>
     </ScrollView>
   );
@@ -90,20 +95,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    gap: 16,
+    gap: 18,
   },
-  brand: { alignItems: 'center', gap: 4 },
+  glow: {
+    position: 'absolute',
+    top: -120,
+    width: 240,
+    height: 240,
+    borderRadius: 999,
+    opacity: 0.14,
+  },
+  brandCard: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+  },
   logo: { fontSize: 48 },
   title: { fontSize: 32, fontWeight: '700' },
-  subtitle: { fontSize: 16, color: '#636366' },
+  subtitle: { fontSize: 16 },
   btnWrapper: { width: '100%', minHeight: 48 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#c6c6c8' },
-  dividerText: { fontSize: 14, color: '#636366' },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 14 },
   inputSection: { width: '100%', gap: 8 },
   label: { fontSize: 14, fontWeight: '600' },
-  inputHost: { borderWidth: 1, borderColor: '#c6c6c8', borderRadius: 8, padding: 12 },
+  inputHost: { borderWidth: 1, borderRadius: 14, padding: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
   inputHostError: { borderColor: '#ff3b30' },
   errorText: { color: '#ff3b30', fontSize: 12 },
-  version: { fontSize: 12, color: '#c6c6c8', marginTop: 64 },
+  version: { fontSize: 12, marginTop: 48 },
 });

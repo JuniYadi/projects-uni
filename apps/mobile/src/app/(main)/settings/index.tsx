@@ -1,36 +1,32 @@
 import { useEffect, useCallback } from 'react';
-import { ScrollView, View, Text, Alert, Pressable } from 'react-native';
+import { View, Text, Alert, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Host, Switch } from '@expo/ui';
+import * as WebBrowser from 'expo-web-browser';
+import { Host, Switch, FieldGroup, Picker } from '@expo/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import type { VpnProtocol } from '@/types/vpn';
 
-// ─── row components ────────────────────────────────────────
+// ─── row helpers ───────────────────────────────────────────
 
-function SectionHeader({ label }: { label: string }) {
+function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
-      {label}
-    </Text>
-  );
-}
-
-function SettingsGroup({ children }: { children: React.ReactNode }) {
-  return (
-    <View className="bg-black/5 dark:bg-white/10 rounded-2xl px-4 py-1">
-      {children}
+    <View className="flex-row items-center py-3.5 px-0">
+      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
+      <View className="ml-auto">
+        <Host matchContents>
+          <Switch value={value} onValueChange={onChange} />
+        </Host>
+      </View>
     </View>
   );
 }
 
-function Separator() {
-  return <View className="h-px bg-black/10 dark:bg-white/10 ml-0" />;
-}
-
 function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
   return (
-    <View className="flex-row items-center py-3.5">
+    <View className="flex-row items-center py-3.5 px-0">
       <Text className="flex-1 text-base text-black dark:text-white">{label}</Text>
       <Text
         className="text-base text-neutral-500 dark:text-neutral-400 max-w-[55%] text-right"
@@ -40,6 +36,43 @@ function InfoRow({ label, value, selectable }: { label: string; value: string; s
         {value}
       </Text>
     </View>
+  );
+}
+
+// ponytail: Picker wrapped in minimal Host, appearance="menu" gives native popup
+function ProtocolPicker() {
+  const preferredProtocol = useSettingsStore((s) => s.preferredProtocol);
+  const update = useSettingsStore((s) => s.update);
+  return (
+    <Host matchContents>
+      <Picker
+        selectedValue={preferredProtocol}
+        onValueChange={(v) => update('preferredProtocol', v as VpnProtocol | 'auto')}
+        appearance="menu"
+      >
+        <Picker.Item label="Auto" value="auto" />
+        <Picker.Item label="WireGuard" value="wireguard" />
+        <Picker.Item label="OpenVPN" value="openvpn" />
+      </Picker>
+    </Host>
+  );
+}
+
+function DnsPicker() {
+  const dnsServer = useSettingsStore((s) => s.dnsServer);
+  const update = useSettingsStore((s) => s.update);
+  return (
+    <Host matchContents>
+      <Picker
+        selectedValue={dnsServer}
+        onValueChange={(v) => update('dnsServer', v as string)}
+        appearance="menu"
+      >
+        <Picker.Item label="Default (system)" value="default" />
+        <Picker.Item label="Cloudflare 1.1.1.1" value="cloudflare" />
+        <Picker.Item label="Google 8.8.8.8" value="google" />
+      </Picker>
+    </Host>
   );
 }
 
@@ -68,7 +101,6 @@ function ProfileCard({
 
   return (
     <View className="items-center py-6 px-4 bg-black/5 dark:bg-white/10 rounded-2xl">
-      {/* avatar circle */}
       <View className="w-16 h-16 rounded-full bg-black/10 dark:bg-white/15 items-center justify-center mb-3">
         <Text className="text-2xl">👤</Text>
       </View>
@@ -108,122 +140,79 @@ export default function SettingsScreen() {
     ]);
   }, [auth, disconnect, router]);
 
+  const handleWebPortal = useCallback(() => {
+    // ponytail: static URL — make configurable when multi-region portals land
+    WebBrowser.openBrowserAsync('https://univpn.example.com/portal');
+  }, []);
+
+  const handleCheckUpdates = useCallback(() => {
+    // ponytail: add expo-updates when OTA update flow is implemented
+    Alert.alert('Up to Date', 'You have the latest version.');
+  }, []);
+
+  // ponytail: loading skeleton deferred — add shimmer when real API with latency lands
+  if (!settings.loaded) return null;
+
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <View className="px-4 pt-6 pb-8 gap-6">
-        {/* profile */}
-        <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
+    <SafeAreaView style={{ flex: 1 }}>
+      <Host style={{ flex: 1 }}>
+        <FieldGroup>
+          <FieldGroup.Section>
+            <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
+          </FieldGroup.Section>
 
-        {/* connection */}
-        <View className="gap-2">
-          <SectionHeader label="Connection" />
-          <SettingsGroup>
-            <View className="flex-row items-center py-3.5">
-              <Text className="flex-1 text-base text-black dark:text-white">Auto-Connect</Text>
-              <Host matchContents>
-                <Switch
-                  value={settings.autoConnect}
-                  onValueChange={(v) => settings.update('autoConnect', v)}
-                />
-              </Host>
+          <FieldGroup.Section title="Connection">
+            <ToggleRow label="Auto-Connect" value={settings.autoConnect} onChange={(v) => settings.update('autoConnect', v)} />
+            <ToggleRow label="Kill Switch" value={settings.killSwitch} onChange={(v) => settings.update('killSwitch', v)} />
+            <View className="flex-row items-center py-3.5 px-0">
+              <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>Preferred Protocol</Text>
+              <ProtocolPicker />
             </View>
-            <Separator />
-            <View className="flex-row items-center py-3.5">
-              <Text className="flex-1 text-base text-black dark:text-white">Kill Switch</Text>
-              <Host matchContents>
-                <Switch
-                  value={settings.killSwitch}
-                  onValueChange={(v) => settings.update('killSwitch', v)}
-                />
-              </Host>
+          </FieldGroup.Section>
+
+          <FieldGroup.Section title="DNS">
+            <View className="flex-row items-center py-3.5 px-0">
+              <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>DNS Server</Text>
+              <DnsPicker />
             </View>
-            <Separator />
-            <InfoRow
-              label="Preferred Protocol"
-              value={settings.preferredProtocol === 'auto' ? 'Auto' : settings.preferredProtocol === 'openvpn' ? 'OpenVPN' : 'WireGuard'}
-            />
-          </SettingsGroup>
-        </View>
+          </FieldGroup.Section>
 
-        {/* dns */}
-        <View className="gap-2">
-          <SectionHeader label="DNS" />
-          <SettingsGroup>
-            <InfoRow
-              label="DNS Server"
-              value={settings.dnsServer === 'default' ? 'Default (system)' : settings.dnsServer === 'cloudflare' ? 'Cloudflare 1.1.1.1' : 'Google 8.8.8.8'}
-            />
-          </SettingsGroup>
-        </View>
-
-        {/* account */}
-        <View className="gap-2">
-          <SectionHeader label="Account" />
-          <SettingsGroup>
+          <FieldGroup.Section title="Account">
             <InfoRow label="Subscription" value={auth.subscription?.id || '—'} selectable />
-            <Separator />
             <InfoRow label="Status" value={auth.subscription?.status || '—'} />
-            <Separator />
             <InfoRow label="Expires" value={auth.subscription?.expiresAt || '—'} />
-          </SettingsGroup>
-        </View>
+          </FieldGroup.Section>
 
-        {/* actions */}
-        <View className="gap-3">
-          <Pressable
-            onPress={() => {}}
-            className="bg-black/5 dark:bg-white/10 rounded-2xl px-4 py-4 active:bg-black/10 dark:active:bg-white/15"
-          >
-            <View className="flex-row items-center gap-3">
-              <Text className="text-xl">🌐</Text>
+          <FieldGroup.Section title="Actions">
+            <Pressable onPress={handleWebPortal} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+              <Text className="text-xl mr-3">🌐</Text>
               <View className="flex-1">
-                <Text className="text-base font-medium text-black dark:text-white">Manage via Web Portal</Text>
-                <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Billing, devices, and settings</Text>
+                <Text className="text-base text-black dark:text-white">Manage via Web Portal</Text>
               </View>
               <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
-            </View>
-          </Pressable>
-
-          <Pressable
-            onPress={handleLogout}
-            className="bg-red-500/10 dark:bg-red-500/15 rounded-2xl px-4 py-4 active:bg-red-500/20 dark:active:bg-red-500/25"
-          >
-            <View className="flex-row items-center gap-3">
-              <Text className="text-xl">🚪</Text>
+            </Pressable>
+            <Pressable onPress={handleLogout} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+              <Text className="text-xl mr-3">🚪</Text>
               <View className="flex-1">
-                <Text className="text-base font-medium text-red-500">Logout</Text>
-                <Text className="text-xs text-red-500/70 mt-0.5">Sign out of your account</Text>
+                <Text className="text-base text-red-500">Logout</Text>
               </View>
               <Text className="text-lg text-red-300 dark:text-red-600">›</Text>
-            </View>
-          </Pressable>
-        </View>
+            </Pressable>
+            <Pressable onPress={handleCheckUpdates} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+              <Text className="text-xl mr-3">📱</Text>
+              <View className="flex-1">
+                <Text className="text-base text-black dark:text-white">Check for Updates</Text>
+              </View>
+              <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
+            </Pressable>
+          </FieldGroup.Section>
 
-        {/* about */}
-        <View className="gap-2">
-          <SectionHeader label="About" />
-          <SettingsGroup>
+          <FieldGroup.Section title="About">
             <InfoRow label="Version" value="1.0.0" />
-            <Separator />
             <InfoRow label="Build" value="2026.06.26" />
-          </SettingsGroup>
-        </View>
-
-        {/* check updates */}
-        <Pressable
-          onPress={() => {}}
-          className="bg-black/5 dark:bg-white/10 rounded-2xl px-4 py-4 active:bg-black/10 dark:active:bg-white/15"
-        >
-          <View className="flex-row items-center gap-3">
-            <Text className="text-xl">📱</Text>
-            <View className="flex-1">
-              <Text className="text-base font-medium text-black dark:text-white">Check for Updates</Text>
-              <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Version 1.0.0</Text>
-            </View>
-            <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
-          </View>
-        </Pressable>
-      </View>
-    </ScrollView>
+          </FieldGroup.Section>
+        </FieldGroup>
+      </Host>
+    </SafeAreaView>
   );
 }

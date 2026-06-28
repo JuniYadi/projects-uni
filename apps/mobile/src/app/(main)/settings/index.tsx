@@ -15,7 +15,9 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <View className="flex-row items-center py-3.5 px-4">
       <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} />
+      <Host matchContents>
+        <Switch value={value} onValueChange={onChange} />
+      </Host>
     </View>
   );
 }

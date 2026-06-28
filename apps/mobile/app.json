@@ -1,14 +1,27 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "UniVPN",
+    "slug": "univpn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "univpn",
     "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.univpn.app",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "This app requires access to network features for VPN functionality",
+        "UIBackgroundModes": ["network-authentication", "network"]
+      },
+      "entitlements": {
+        "com.apple.developer.networking.networkextension": ["packet-tunnel-provider"]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +31,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.juniyadi.mobile"
+      "package": "com.univpn.app"
     },
     "web": {
       "output": "static",

@@ -26,6 +26,11 @@ export const useAuthStore = create<AuthActions>((set, get) => ({
   status: 'idle',
 
   restore: async () => {
+    // ponytail: skip auth for local dev, remove when real auth lands
+    if (process.env.EXPO_PUBLIC_SKIP_AUTH === '1') {
+      set({ token: 'dev-bypass', subscriptionId: 'dev', status: 'valid' });
+      return true;
+    }
     try {
       const token = await SecureStore.getItemAsync(KEYS.TOKEN);
       const subId = await SecureStore.getItemAsync(KEYS.SUB_ID);

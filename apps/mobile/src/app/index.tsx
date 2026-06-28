@@ -16,6 +16,6 @@ export default function AuthGate() {
   if (status === 'idle') {
     return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>UniVPN</Text></View>;
   }
-  if (status === 'valid') return <Redirect href="/(main)" />;
+  if (status === 'valid') return <Redirect href="/(main)/servers" />;
   return <Redirect href="/(auth)/login" />;
 }

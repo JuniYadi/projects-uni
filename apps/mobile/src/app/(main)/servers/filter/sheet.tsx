@@ -84,9 +84,8 @@ export default function FilterSheet() {
           variant="filled"
           onPress={() => router.back()}
           style={{ width: '100%', paddingVertical: 14 }}
-        >
-          Apply Filters
-        </Button>
+          label="Apply Filters"
+        />
       </Host>
     </View>
   );

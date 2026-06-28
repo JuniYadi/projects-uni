@@ -15,3 +15,7 @@ bun.lock.bak
 # IDE
 .vscode/
 .idea/
+screenshoot/
+goals/
+temp/
+docs/

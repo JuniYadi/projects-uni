@@ -20,8 +20,8 @@ function SettingsGroup({ children }: { children: React.ReactNode }) {
 function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
   return (
     <View style={styles.fieldRow}>
-      <Text style={{ flex: 1 }}>{label}</Text>
-      <Text style={{ color: '#636366' }} selectable={selectable}>{value}</Text>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <Text style={styles.fieldValue} selectable={selectable}>{value}</Text>
     </View>
   );
 }
@@ -50,17 +50,21 @@ export default function SettingsScreen() {
         {/* Connection */}
         <SectionHeader label="CONNECTION" />
         <SettingsGroup>
-          <Switch
-            label="Auto-Connect"
-            value={settings.autoConnect}
-            onValueChange={(v) => settings.update('autoConnect', v)}
-          />
+          <Host style={{ width: '100%', minHeight: 44 }}>
+            <Switch
+              label="Auto-Connect"
+              value={settings.autoConnect}
+              onValueChange={(v) => settings.update('autoConnect', v)}
+            />
+          </Host>
           <View style={styles.separator} />
-          <Switch
-            label="Kill Switch"
-            value={settings.killSwitch}
-            onValueChange={(v) => settings.update('killSwitch', v)}
-          />
+          <Host style={{ width: '100%', minHeight: 44 }}>
+            <Switch
+              label="Kill Switch"
+              value={settings.killSwitch}
+              onValueChange={(v) => settings.update('killSwitch', v)}
+            />
+          </Host>
           <View style={styles.separator} />
           <InfoRow
             label="Preferred Protocol"
@@ -116,5 +120,7 @@ const styles = StyleSheet.create({
   sectionHeader: { fontSize: 13, fontWeight: '600', color: '#636366', marginLeft: 4 },
   group: { backgroundColor: 'rgba(120,120,128,0.08)', borderRadius: 12, paddingHorizontal: 12 },
   fieldRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
+  fieldLabel: { flex: 1, fontSize: 15 },
+  fieldValue: { fontSize: 15, color: '#636366' },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: '#c6c6c8', marginLeft: 0 },
 });

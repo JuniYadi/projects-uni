@@ -13,20 +13,16 @@ import type { VpnProtocol } from '@/types/vpn';
 
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <View className="flex-row items-center py-3.5 px-0">
+    <View className="flex-row items-center py-3.5 px-4">
       <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
-      <View className="ml-auto">
-        <Host matchContents>
-          <Switch value={value} onValueChange={onChange} />
-        </Host>
-      </View>
+      <Switch value={value} onValueChange={onChange} />
     </View>
   );
 }
 
 function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
   return (
-    <View className="flex-row items-center py-3.5 px-0">
+    <View className="flex-row items-center py-3.5 px-4">
       <Text className="flex-1 text-base text-black dark:text-white">{label}</Text>
       <Text
         className="text-base text-neutral-500 dark:text-neutral-400 max-w-[55%] text-right"
@@ -157,48 +153,48 @@ export default function SettingsScreen() {
     <SafeAreaView style={{ flex: 1 }}>
       <Host style={{ flex: 1 }}>
         <FieldGroup>
-          <FieldGroup.Section>
+          <FieldGroup.Section style={{ paddingHorizontal: 0 }}>
             <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="Connection">
+          <FieldGroup.Section title="Connection" style={{ paddingHorizontal: 0 }}>
             <ToggleRow label="Auto-Connect" value={settings.autoConnect} onChange={(v) => settings.update('autoConnect', v)} />
             <ToggleRow label="Kill Switch" value={settings.killSwitch} onChange={(v) => settings.update('killSwitch', v)} />
-            <View className="flex-row items-center py-3.5 px-0">
+            <View className="flex-row items-center py-3.5 px-4">
               <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>Preferred Protocol</Text>
               <ProtocolPicker />
             </View>
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="DNS">
-            <View className="flex-row items-center py-3.5 px-0">
+          <FieldGroup.Section title="DNS" style={{ paddingHorizontal: 0 }}>
+            <View className="flex-row items-center py-3.5 px-4">
               <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>DNS Server</Text>
               <DnsPicker />
             </View>
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="Account">
+          <FieldGroup.Section title="Account" style={{ paddingHorizontal: 0 }}>
             <InfoRow label="Subscription" value={auth.subscription?.id || '—'} selectable />
             <InfoRow label="Status" value={auth.subscription?.status || '—'} />
             <InfoRow label="Expires" value={auth.subscription?.expiresAt || '—'} />
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="Actions">
-            <Pressable onPress={handleWebPortal} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+          <FieldGroup.Section title="Actions" style={{ paddingHorizontal: 0 }}>
+            <Pressable onPress={handleWebPortal} className="flex-row items-center py-3.5 px-4 active:opacity-60">
               <Text className="text-xl mr-3">🌐</Text>
               <View className="flex-1">
                 <Text className="text-base text-black dark:text-white">Manage via Web Portal</Text>
               </View>
               <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
             </Pressable>
-            <Pressable onPress={handleLogout} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+            <Pressable onPress={handleLogout} className="flex-row items-center py-3.5 px-4 active:opacity-60">
               <Text className="text-xl mr-3">🚪</Text>
               <View className="flex-1">
                 <Text className="text-base text-red-500">Logout</Text>
               </View>
               <Text className="text-lg text-red-300 dark:text-red-600">›</Text>
             </Pressable>
-            <Pressable onPress={handleCheckUpdates} className="flex-row items-center py-3.5 px-0 active:opacity-60">
+            <Pressable onPress={handleCheckUpdates} className="flex-row items-center py-3.5 px-4 active:opacity-60">
               <Text className="text-xl mr-3">📱</Text>
               <View className="flex-1">
                 <Text className="text-base text-black dark:text-white">Check for Updates</Text>
@@ -207,7 +203,7 @@ export default function SettingsScreen() {
             </Pressable>
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="About">
+          <FieldGroup.Section title="About" style={{ paddingHorizontal: 0 }}>
             <InfoRow label="Version" value="1.0.0" />
             <InfoRow label="Build" value="2026.06.26" />
           </FieldGroup.Section>

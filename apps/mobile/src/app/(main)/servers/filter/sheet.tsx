@@ -22,9 +22,8 @@ function ChipGroup({
               variant={selected === o.value ? 'filled' : 'outlined'}
               onPress={() => onSelect(o.value)}
               style={{ paddingHorizontal: 12, paddingVertical: 8 }}
-            >
-              {o.label}
-            </Button>
+              label={o.label}
+            />
           </Host>
         ))}
       </View>
@@ -42,7 +41,7 @@ export default function FilterSheet() {
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
         <Text style={styles.title}>Filter</Text>
         <Host>
-          <Button variant="text" onPress={resetFilter}>Reset</Button>
+          <Button variant="text" onPress={resetFilter} label="Reset" />
         </Host>
       </View>
 

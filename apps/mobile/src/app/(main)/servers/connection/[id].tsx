@@ -109,15 +109,11 @@ export default function ConnectionDetailScreen() {
         {connected || disconnecting ? (
           <Host style={{ width: '100%' }}>
             <Button
-              variant="text"
+              variant="filled"
               onPress={handleDisconnect}
               disabled={disconnecting}
-              style={{ width: '100%', backgroundColor: '#ff3b30', borderRadius: 12, paddingVertical: 14 }}
-            >
-              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-                {disconnecting ? 'Disconnecting...' : 'DISCONNECT'}
-              </Text>
-            </Button>
+              label={disconnecting ? 'Disconnecting...' : 'DISCONNECT'}
+            />
           </Host>
         ) : (
           <Host style={{ width: '100%' }}>
@@ -125,10 +121,8 @@ export default function ConnectionDetailScreen() {
               variant="filled"
               onPress={handleConnect}
               disabled={connecting}
-              style={{ width: '100%', paddingVertical: 14 }}
-            >
-              {connecting ? 'Connecting...' : 'Connect'}
-            </Button>
+              label={connecting ? 'Connecting...' : 'Connect'}
+            />
           </Host>
         )}
       </View>

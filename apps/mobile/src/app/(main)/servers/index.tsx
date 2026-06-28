@@ -54,9 +54,7 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
           </Text>
         </View>
         <Host>
-          <Button variant="text" onPress={conn.disconnect}>
-            <Text style={{ color: '#fff' }}>Disconnect</Text>
-          </Button>
+          <Button variant="text" onPress={conn.disconnect} label="Disconnect" />
         </Host>
       </View>
     </Pressable>
@@ -84,7 +82,7 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
     return (
       <View style={{ alignItems: 'center', gap: 8, padding: 24 }}>
         <Text style={styles.errorText}>{error}</Text>
-        <Host><Button variant="text" onPress={loadProfiles}>Tap to retry</Button></Host>
+        <Host><Button variant="text" onPress={loadProfiles} label="Tap to retry" /></Host>
       </View>
     );
   }
@@ -93,7 +91,7 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
     return (
       <View style={{ alignItems: 'center', gap: 8, padding: 24 }}>
         <Text>No servers found</Text>
-        <Host><Button variant="text" onPress={loadProfiles}>Refresh</Button></Host>
+        <Host><Button variant="text" onPress={loadProfiles} label="Refresh" /></Host>
       </View>
     );
   }

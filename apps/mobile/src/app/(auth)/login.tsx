@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button, TextInput, useNativeState } from '@expo/ui';
 import { useAuthStore } from '@/stores/authStore';
-import { Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -38,17 +37,8 @@ export default function LoginScreen() {
         </View>
 
         {/* QR scan button */}
-        <Host style={{ width: '100%' }}>
-          <Button
-            variant="outlined"
-            onPress={() => {}}
-            style={{ alignSelf: 'stretch', paddingVertical: 12 }}
-          >
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 16 }}>📷</Text>
-              <Text style={{ fontSize: 16 }}>Scan QR Code</Text>
-            </View>
-          </Button>
+        <Host style={{ width: '100%', paddingVertical: 12 }}>
+          <Button variant="outlined" onPress={() => {}} label="📷  Scan QR Code" />
         </Host>
 
         {/* Divider */}
@@ -61,35 +51,36 @@ export default function LoginScreen() {
         {/* Sub ID Input */}
         <View style={{ width: '100%', gap: 8 }}>
           <Text style={styles.label}>Subscription ID</Text>
-          <Host>
-            <View style={[styles.inputWrapper, error && styles.inputError]}>
-              <TextInput
-                value={subId}
-                onChangeText={(v) => { 'worklet'; subId.value = v; setError(null); }}
-                placeholder="Enter your subscription ID..."
-              />
-            </View>
+          <Host
+            style={{
+              borderWidth: 1,
+              borderColor: error ? '#ff3b30' : '#c6c6c8',
+              borderRadius: 8,
+              padding: 12,
+            }}
+          >
+            <TextInput
+              value={subId}
+              onChangeText={(v) => { 'worklet'; subId.value = v; setError(null); }}
+              placeholder="Enter your subscription ID..."
+            />
           </Host>
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
 
-        {/* Connect */}
-        <Host style={{ width: '100%' }}>
+        {/* Connect button */}
+        <Host style={{ width: '100%', paddingVertical: 12 }}>
           <Button
             variant="filled"
             onPress={handleConnect}
             disabled={!subId.value?.trim() || authStatus === 'loading'}
-            style={{ alignSelf: 'stretch', paddingVertical: 12, opacity: !subId.value?.trim() ? 0.5 : 1 }}
-          >
-            {authStatus === 'loading' ? 'Connecting...' : 'Connect'}
-          </Button>
+            label={authStatus === 'loading' ? 'Connecting...' : 'Connect'}
+          />
         </Host>
 
         {/* External link */}
         <Host>
-          <Button variant="text" onPress={() => {}}>
-            ↗️ Get one at our website
-          </Button>
+          <Button variant="text" onPress={() => {}} label="↗️ Get one at our website" />
         </Host>
 
         {/* Version */}
@@ -116,8 +107,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#c6c6c8' },
   dividerText: { fontSize: 14, color: '#636366' },
   label: { fontSize: 14, fontWeight: '600' },
-  inputWrapper: { borderWidth: 1, borderColor: '#c6c6c8', borderRadius: 8, padding: 12 },
-  inputError: { borderColor: '#ff3b30' },
   errorText: { color: '#ff3b30', fontSize: 12 },
   version: { fontSize: 12, color: '#c6c6c8', marginTop: 64 },
 });

@@ -53,7 +53,7 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
             {formatDuration(conn.elapsed)}  ▼{formatBytes(conn.bytesDownloaded)} ▲{formatBytes(conn.bytesUploaded)}
           </Text>
         </View>
-        <Host>
+        <Host style={{ minHeight: 36 }}>
           <Button variant="text" onPress={conn.disconnect} label="Disconnect" />
         </Host>
       </View>

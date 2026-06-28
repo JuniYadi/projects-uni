@@ -17,11 +17,11 @@ function ChipGroup({
       <Text style={styles.chipLabel}>{label}</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
         {options.map((o) => (
-          <Host key={o.value} matchContents>
+          <Host key={o.value} matchContents style={{ minHeight: 36 }}>
             <Button
               variant={selected === o.value ? 'filled' : 'outlined'}
               onPress={() => onSelect(o.value)}
-              style={{ paddingHorizontal: 12, paddingVertical: 8 }}
+              style={{ paddingHorizontal: 16, paddingVertical: 10 }}
               label={o.label}
             />
           </Host>

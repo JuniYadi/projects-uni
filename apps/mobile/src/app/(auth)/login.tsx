@@ -37,7 +37,7 @@ export default function LoginScreen() {
         </View>
 
         {/* QR scan button */}
-        <Host style={{ width: '100%', paddingVertical: 12 }}>
+        <Host style={styles.btnWrapper}>
           <Button variant="outlined" onPress={() => {}} label="📷  Scan QR Code" />
         </Host>
 
@@ -49,16 +49,9 @@ export default function LoginScreen() {
         </View>
 
         {/* Sub ID Input */}
-        <View style={{ width: '100%', gap: 8 }}>
+        <View style={styles.inputSection}>
           <Text style={styles.label}>Subscription ID</Text>
-          <Host
-            style={{
-              borderWidth: 1,
-              borderColor: error ? '#ff3b30' : '#c6c6c8',
-              borderRadius: 8,
-              padding: 12,
-            }}
-          >
+          <Host style={[styles.inputHost, error && styles.inputHostError]}>
             <TextInput
               value={subId}
               onChangeText={(v) => { 'worklet'; subId.value = v; setError(null); }}
@@ -69,7 +62,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Connect button */}
-        <Host style={{ width: '100%', paddingVertical: 12 }}>
+        <Host style={styles.btnWrapper}>
           <Button
             variant="filled"
             onPress={handleConnect}
@@ -103,10 +96,14 @@ const styles = StyleSheet.create({
   logo: { fontSize: 48 },
   title: { fontSize: 32, fontWeight: '700' },
   subtitle: { fontSize: 16, color: '#636366' },
+  btnWrapper: { width: '100%', minHeight: 48 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#c6c6c8' },
   dividerText: { fontSize: 14, color: '#636366' },
+  inputSection: { width: '100%', gap: 8 },
   label: { fontSize: 14, fontWeight: '600' },
+  inputHost: { borderWidth: 1, borderColor: '#c6c6c8', borderRadius: 8, padding: 12 },
+  inputHostError: { borderColor: '#ff3b30' },
   errorText: { color: '#ff3b30', fontSize: 12 },
   version: { fontSize: 12, color: '#c6c6c8', marginTop: 64 },
 });

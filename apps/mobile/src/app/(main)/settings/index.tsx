@@ -80,11 +80,11 @@ export default function SettingsScreen() {
         </FieldGroup>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="outlined" onPress={() => {}} label="📋 Manage via Web Portal" />
+          <Button variant="outlined" onPress={() => {}} label="📋 Manage via Web Portal" style={{ minHeight: 44 }} />
         </Host>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="filled" onPress={handleLogout} label="🚪 Logout" />
+          <Button variant="filled" onPress={handleLogout} label="🚪 Logout" style={{ minHeight: 44 }} />
         </Host>
 
         {/* About */}
@@ -101,7 +101,7 @@ export default function SettingsScreen() {
         </FieldGroup>
 
         <Host style={{ width: '100%' }}>
-          <Button variant="outlined" onPress={() => {}} label="📱 Check for Updates" />
+          <Button variant="outlined" onPress={() => {}} label="📱 Check for Updates" style={{ minHeight: 44 }} />
         </Host>
       </View>
     </ScrollView>

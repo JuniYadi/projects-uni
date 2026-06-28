@@ -7,14 +7,14 @@ export default function ServersLayout() {
     <Stack
       screenOptions={{
         headerLargeTitle: true,
-        headerTransparent: true,
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
-        headerLargeStyle: { backgroundColor: 'transparent' },
+        headerLargeStyle: { backgroundColor: colors.systemBackground },
+        headerStyle: { backgroundColor: colors.systemBackground },
         headerTitleStyle: { color: colors.label },
-        headerBlurEffect: 'none',
+        headerTintColor: colors.systemBlue,
         headerBackButtonDisplayMode: 'minimal',
-        contentStyle: { backgroundColor: 'transparent' },
+        contentStyle: { backgroundColor: colors.systemBackground },
       }}
     >
       <Stack.Screen
@@ -34,7 +34,7 @@ export default function ServersLayout() {
           presentation: 'formSheet',
           sheetGrabberVisible: true,
           sheetAllowedDetents: [0.5, 0.85],
-          contentStyle: { backgroundColor: 'transparent' },
+          contentStyle: { backgroundColor: colors.systemBackground },
           title: 'Filter',
         }}
       />

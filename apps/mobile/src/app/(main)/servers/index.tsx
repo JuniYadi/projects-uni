@@ -1,36 +1,81 @@
 import { useEffect, useMemo } from 'react';
-import { ScrollView, StyleSheet, Pressable, View, Text } from 'react-native';
+import { ScrollView, Pressable, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
-import { Spacing } from '@/constants/theme';
 import { formatBytes, formatDuration, formatPing } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 
+// ─── helpers ───────────────────────────────────────────────
+
+const LOAD_COLORS = {
+  low: '#34c759',
+  med: '#ff9f0a',
+  high: '#ff453a',
+} as const;
+
+function loadColor(pct: number): string {
+  if (pct < 50) return LOAD_COLORS.low;
+  if (pct < 80) return LOAD_COLORS.med;
+  return LOAD_COLORS.high;
+}
+
+// ─── sub-components ────────────────────────────────────────
+
 function PingBadge({ ping }: { ping: number }) {
   const { label, color } = formatPing(ping);
-  return <Text style={[styles.ping, { color }]}>🟢 {label}</Text>;
+  return (
+    <View className="flex-row items-center gap-1">
+      <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <Text className="text-xs font-medium" style={{ color }}>{label}</Text>
+    </View>
+  );
 }
 
 function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.7 }]}>
-      <View style={styles.cardRow}>
-        <Text style={styles.flag}>{profile.countryCode}</Text>
-        <View style={{ flex: 1, gap: 4 }}>
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            <Text style={styles.serverName}>{profile.name}</Text>
-            <PingBadge ping={profile.ping} />
+    <Pressable onPress={onPress}>
+      {({ pressed }) => (
+        <View
+          className={`flex-row items-center rounded-2xl px-4 py-4 ${
+            pressed
+              ? 'bg-black/10 dark:bg-white/15'
+              : 'bg-black/5 dark:bg-white/10'
+          }`}
+        >
+          {/* flag badge */}
+          <View className="w-12 h-12 rounded-xl bg-black/10 dark:bg-white/15 items-center justify-center mr-3">
+            <Text className="text-lg font-semibold text-black dark:text-white">{profile.countryCode}</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            <Text style={styles.protocol}>{profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}</Text>
-            <Text style={styles.detail}>● {profile.port} ● {profile.load}% load</Text>
+
+          {/* info */}
+          <View className="flex-1 gap-1.5">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
+                {profile.name}
+              </Text>
+              <PingBadge ping={profile.ping} />
+            </View>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-xs font-medium bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-neutral-500 dark:text-neutral-400 overflow-hidden">
+                {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
+              </Text>
+              <Text className="text-xs text-neutral-400 dark:text-neutral-500">
+                ● {profile.port}
+              </Text>
+              <View className="flex-row items-center gap-1">
+                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: loadColor(profile.load) }} />
+                <Text className="text-xs text-neutral-400 dark:text-neutral-500">{profile.load}%</Text>
+              </View>
+            </View>
           </View>
+
+          {/* chevron */}
+          <Text className="text-lg text-neutral-300 dark:text-neutral-600 ml-2">›</Text>
         </View>
-        <Text style={styles.chevron}>›</Text>
-      </View>
+      )}
     </Pressable>
   );
 }
@@ -43,13 +88,15 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
   return (
     <Pressable
       onPress={() => router.push(`/servers/connection/${profile.id}`)}
-      style={({ pressed }) => [styles.connectedBanner, pressed && { opacity: 0.7 }]}
+      className="active:opacity-70"
     >
-      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-        <Text style={{ fontSize: 12 }}>🟢</Text>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={styles.connectedName}>Connected to {profile.name}</Text>
-          <Text style={styles.connectedDetail}>
+      <View className="flex-row items-center gap-3 bg-green-500 rounded-2xl px-4 py-4">
+        <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center">
+          <Text className="text-lg">🟢</Text>
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text className="text-white font-semibold text-sm">Connected to {profile.name}</Text>
+          <Text className="text-white/80 text-xs">
             {formatDuration(conn.elapsed)}  ▼{formatBytes(conn.bytesDownloaded)} ▲{formatBytes(conn.bytesUploaded)}
           </Text>
         </View>
@@ -60,6 +107,8 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
     </Pressable>
   );
 }
+
+// ─── main list ─────────────────────────────────────────────
 
 function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
   const { filteredProfiles, loading, error, loadProfiles } = useProfileStore();
@@ -76,12 +125,16 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
     return groups;
   }, [filteredProfiles]);
 
-  if (loading) return <Text style={styles.centerText}>Loading servers...</Text>;
+  if (loading) return (
+    <View className="flex-1 items-center justify-center py-20">
+      <Text className="text-neutral-400 dark:text-neutral-500">Loading servers...</Text>
+    </View>
+  );
 
   if (error) {
     return (
-      <View style={{ alignItems: 'center', gap: 8, padding: 24 }}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View className="items-center gap-3 py-20">
+        <Text className="text-red-500 text-sm">{error}</Text>
         <Host><Button variant="text" onPress={loadProfiles} label="Tap to retry" /></Host>
       </View>
     );
@@ -89,18 +142,18 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
 
   if (filteredProfiles.length === 0) {
     return (
-      <View style={{ alignItems: 'center', gap: 8, padding: 24 }}>
-        <Text>No servers found</Text>
+      <View className="items-center gap-3 py-20">
+        <Text className="text-neutral-400 dark:text-neutral-500">No servers found</Text>
         <Host><Button variant="text" onPress={loadProfiles} label="Refresh" /></Host>
       </View>
     );
   }
 
   return (
-    <View style={{ gap: 8 }}>
+    <View className="gap-6">
       {Object.entries(sections).map(([region, profiles]) => (
-        <View key={region} style={{ gap: 8 }}>
-          <Text style={styles.sectionHeader}>
+        <View key={region} className="gap-3">
+          <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
             {region === '__rec' ? 'RECOMMENDED' : region}
           </Text>
           {profiles.map((p) => (
@@ -116,6 +169,8 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
   );
 }
 
+// ─── screen ────────────────────────────────────────────────
+
 export default function ServersScreen() {
   const router = useRouter();
   const loadProfiles = useProfileStore((s) => s.loadProfiles);
@@ -123,31 +178,16 @@ export default function ServersScreen() {
 
   useEffect(() => { loadProfiles(); }, []);
 
+  // ponytail: no padding on top — the Stack header handles that via contentInsetAdjustmentBehavior
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.three }]}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
     >
-      <ConnectedBanner router={router} />
-      <ProfileList router={router} />
+      <View className="gap-4 pt-2">
+        <ConnectedBanner router={router} />
+        <ProfileList router={router} />
+      </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContent: { padding: Spacing.three, gap: Spacing.three },
-  connectedBanner: { backgroundColor: '#34c759', borderRadius: 12, padding: Spacing.three },
-  connectedName: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  connectedDetail: { color: '#fff', fontSize: 12 },
-  card: { backgroundColor: 'rgba(120,120,128,0.08)', borderRadius: 12, padding: Spacing.three },
-  cardRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  flag: { fontSize: 24 },
-  serverName: { fontWeight: '600', fontSize: 15 },
-  ping: { fontSize: 12, fontWeight: '500' },
-  protocol: { fontSize: 11, color: '#636366', backgroundColor: 'rgba(120,120,128,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
-  detail: { fontSize: 11, color: '#636366' },
-  chevron: { fontSize: 20, color: '#c7c7cc' },
-  sectionHeader: { fontSize: 13, fontWeight: '600', color: '#636366', marginTop: 8 },
-  centerText: { textAlign: 'center', marginTop: 64, color: '#636366' },
-  errorText: { color: '#ff3b30' },
-});

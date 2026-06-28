@@ -1,8 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useProfileStore } from '@/stores/profileStore';
-import { Spacing } from '@/constants/theme';
 
 function ChipGroup({
   label, options, selected, onSelect,
@@ -13,9 +12,9 @@ function ChipGroup({
   onSelect: (v: string) => void;
 }) {
   return (
-    <View style={{ gap: 8 }}>
-      <Text style={styles.chipLabel}>{label}</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+    <View className="gap-2">
+      <Text className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 tracking-wider uppercase">{label}</Text>
+      <View className="flex-row flex-wrap gap-1">
         {options.map((o) => (
           <Host key={o.value} matchContents style={{ minHeight: 36 }}>
             <Button
@@ -36,10 +35,10 @@ export default function FilterSheet() {
   const { activeFilter, setFilter, resetFilter, regions } = useProfileStore();
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 p-6 gap-6">
       {/* Header */}
-      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-        <Text style={styles.title}>Filter</Text>
+      <View className="flex-row gap-2 items-center">
+        <Text className="text-xl font-bold flex-1 text-black dark:text-white">Filter</Text>
         <Host>
           <Button variant="text" onPress={resetFilter} label="Reset" />
         </Host>
@@ -77,7 +76,7 @@ export default function FilterSheet() {
         onSelect={(v) => setFilter({ sortBy: v as any })}
       />
 
-      <View style={{ flex: 1 }} />
+      <View className="flex-1" />
 
       <Host style={{ width: '100%' }}>
         <Button
@@ -90,9 +89,3 @@ export default function FilterSheet() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: Spacing.four, gap: Spacing.four, flex: 1 },
-  title: { fontSize: 20, fontWeight: '700', flex: 1 },
-  chipLabel: { fontSize: 13, fontWeight: '600', color: '#636366' },
-});

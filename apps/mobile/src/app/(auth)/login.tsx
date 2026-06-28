@@ -54,7 +54,7 @@ export default function LoginScreen() {
           <Host style={[styles.inputHost, error && styles.inputHostError]}>
             <TextInput
               value={subId}
-              onChangeText={(v) => { 'worklet'; subId.value = v; setError(null); }}
+              onChangeText={(v) => { 'worklet'; subId.value = v; }}
               placeholder="Enter your subscription ID..."
             />
           </Host>

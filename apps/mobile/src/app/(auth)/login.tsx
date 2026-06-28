@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
+import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Host, Column, Text, Button, TextInput, Row, useNativeState } from '@expo/ui';
+import { Host, Button, TextInput, useNativeState } from '@expo/ui';
 import { useAuthStore } from '@/stores/authStore';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,48 +25,43 @@ export default function LoginScreen() {
   }, [subId, loginWithSubId, router]);
 
   return (
-    <Host style={{ width: '100%', height: '100%' }}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        contentInsetAdjustmentBehavior="automatic"
-      >
-        <Column spacing={Spacing.four} style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: 24,
-        }}>
-          {/* Brand */}
-          <Column spacing={4} style={{ alignItems: 'center' }}>
-            <Text textStyle={{ fontSize: 48 }}>🛡️</Text>
-            <Text textStyle={{ fontSize: 32, fontWeight: '700' }}>UniVPN</Text>
-            <Text textStyle={{ fontSize: 16, color: '#636366' }}>Fast & Private</Text>
-          </Column>
+    <ScrollView
+      contentContainerStyle={styles.scroll}
+      contentInsetAdjustmentBehavior="automatic"
+    >
+      <View style={styles.container}>
+        {/* Brand */}
+        <View style={styles.brand}>
+          <Text style={styles.logo}>🛡️</Text>
+          <Text style={styles.title}>UniVPN</Text>
+          <Text style={styles.subtitle}>Fast & Private</Text>
+        </View>
 
-          {/* QR button */}
+        {/* QR scan button */}
+        <Host style={{ width: '100%' }}>
           <Button
             variant="outlined"
-            onPress={() => {
-              // ponytail: stub — expo-camera QR scanner
-            }}
+            onPress={() => {}}
             style={{ alignSelf: 'stretch', paddingVertical: 12 }}
           >
-            <Row spacing={8} alignment="center">
-              <Text textStyle={{ fontSize: 16 }}>📷</Text>
-              <Text textStyle={{ fontSize: 16 }}>Scan QR Code</Text>
-            </Row>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 16 }}>📷</Text>
+              <Text style={{ fontSize: 16 }}>Scan QR Code</Text>
+            </View>
           </Button>
+        </Host>
 
-          {/* Divider */}
-          <Row spacing={8} alignment="center" style={{ alignSelf: 'stretch' }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: '#c6c6c8' }} />
-            <Text textStyle={{ fontSize: 14, color: '#636366' }}>or</Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: '#c6c6c8' }} />
-          </Row>
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
-          {/* Sub ID Input */}
-          <Column spacing={8} style={{ alignSelf: 'stretch' }}>
-            <Text textStyle={{ fontSize: 14, fontWeight: '600' }}>Subscription ID</Text>
+        {/* Sub ID Input */}
+        <View style={{ width: '100%', gap: 8 }}>
+          <Text style={styles.label}>Subscription ID</Text>
+          <Host>
             <View style={[styles.inputWrapper, error && styles.inputError]}>
               <TextInput
                 value={subId}
@@ -74,10 +69,12 @@ export default function LoginScreen() {
                 placeholder="Enter your subscription ID..."
               />
             </View>
-            {error && <Text textStyle={{ color: '#ff3b30', fontSize: 12 }}>{error}</Text>}
-          </Column>
+          </Host>
+          {error && <Text style={styles.errorText}>{error}</Text>}
+        </View>
 
-          {/* Connect */}
+        {/* Connect */}
+        <Host style={{ width: '100%' }}>
           <Button
             variant="filled"
             onPress={handleConnect}
@@ -86,29 +83,41 @@ export default function LoginScreen() {
           >
             {authStatus === 'loading' ? 'Connecting...' : 'Connect'}
           </Button>
+        </Host>
 
-          {/* External link */}
+        {/* External link */}
+        <Host>
           <Button variant="text" onPress={() => {}}>
             ↗️ Get one at our website
           </Button>
+        </Host>
 
-          {/* Version */}
-          <Text textStyle={{ fontSize: 12, color: '#c6c6c8', textAlign: 'center' }} selectable>
-            ─── v1.0.0 ───
-          </Text>
-        </Column>
-      </ScrollView>
-    </Host>
+        {/* Version */}
+        <Text style={styles.version}>─── v1.0.0 ───</Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { flexGrow: 1 },
-  inputWrapper: {
-    borderWidth: 1,
-    borderColor: '#c6c6c8',
-    borderRadius: 8,
-    padding: 12,
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    gap: 16,
   },
+  brand: { alignItems: 'center', gap: 4 },
+  logo: { fontSize: 48 },
+  title: { fontSize: 32, fontWeight: '700' },
+  subtitle: { fontSize: 16, color: '#636366' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#c6c6c8' },
+  dividerText: { fontSize: 14, color: '#636366' },
+  label: { fontSize: 14, fontWeight: '600' },
+  inputWrapper: { borderWidth: 1, borderColor: '#c6c6c8', borderRadius: 8, padding: 12 },
   inputError: { borderColor: '#ff3b30' },
+  errorText: { color: '#ff3b30', fontSize: 12 },
+  version: { fontSize: 12, color: '#c6c6c8', marginTop: 64 },
 });

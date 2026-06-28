@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { ScrollView, StyleSheet, Alert, View } from 'react-native';
+import { ScrollView, StyleSheet, Alert, View, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Host, Column, Row, Text, Button } from '@expo/ui';
+import { Host, Button } from '@expo/ui';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { Spacing } from '@/constants/theme';
@@ -9,16 +9,15 @@ import { formatBytes, formatDuration } from '@/utils/formatters';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <Row spacing={8}>
-      <Text textStyle={{ fontSize: 13, color: '#636366', width: 100 }}>{label}</Text>
-      <Text textStyle={{ fontSize: 13, flex: 1 }} selectable>{value}</Text>
-    </Row>
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue} selectable>{value}</Text>
+    </View>
   );
 }
 
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === id));
   const conn = useConnectionStore();
   const connect = useConnectionStore((s) => s.connect);
@@ -34,9 +33,7 @@ export default function ConnectionDetailScreen() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [conn.status, tick]);
 
   const handleConnect = useCallback(async () => {
@@ -52,118 +49,106 @@ export default function ConnectionDetailScreen() {
 
   if (!profile) {
     return (
-      <Host style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Server not found</Text>
-      </Host>
+      </View>
     );
   }
 
   const isActive = conn.profile?.id === id;
-  const isThisConnected = isActive && conn.status === 'connected';
-  const isThisConnecting = isActive && conn.status === 'connecting';
-  const isThisDisconnecting = isActive && conn.status === 'disconnecting';
-
-  const statusEmoji = isThisConnected ? '🟢' : isThisConnecting ? '🟡' : '🔴';
-  const statusLabel = isThisConnected ? 'CONNECTED' : isThisConnecting ? 'CONNECTING...' : isThisDisconnecting ? 'DISCONNECTING...' : 'DISCONNECTED';
+  const connected = isActive && conn.status === 'connected';
+  const connecting = isActive && conn.status === 'connecting';
+  const disconnecting = isActive && conn.status === 'disconnecting';
+  const statusEmoji = connected ? '🟢' : connecting ? '🟡' : '🔴';
+  const statusLabel = connected ? 'CONNECTED' : connecting ? 'CONNECTING...' : disconnecting ? 'DISCONNECTING...' : 'DISCONNECTED';
 
   return (
-    <Host style={{ width: '100%', height: '100%' }}>
-      <ScrollView contentInsetAdjustmentBehavior="automatic">
-        <Column spacing={Spacing.four} style={{ padding: Spacing.four, alignItems: 'center' }}>
-          {/* Status Card */}
-          <Column spacing={8} style={[styles.card, { alignItems: 'center', alignSelf: 'stretch' }]}>
-            <Text textStyle={{ fontSize: 48 }}>{profile.countryCode}</Text>
-            <Text textStyle={{ fontSize: 22, fontWeight: '700' }}>{profile.name}</Text>
-            <Text textStyle={{ fontSize: 14, color: '#636366' }}>
-              {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
-            </Text>
+    <ScrollView contentInsetAdjustmentBehavior="automatic">
+      <View style={styles.container}>
+        {/* Status Card */}
+        <View style={[styles.card, styles.statusCard]}>
+          <Text style={styles.flag}>{profile.countryCode}</Text>
+          <Text style={styles.name}>{profile.name}</Text>
+          <Text style={styles.protocol}>{profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}</Text>
 
-            <View style={{ alignItems: 'center', marginTop: 12 }}>
-              <Text textStyle={{ fontSize: 36 }}>{statusEmoji}</Text>
-              <Text textStyle={{ fontSize: 14, fontWeight: '600', color: isThisConnected ? '#34c759' : '#8e8e93' }}>
-                {statusLabel}
-              </Text>
+          <View style={{ alignItems: 'center', marginTop: 12 }}>
+            <Text style={{ fontSize: 36 }}>{statusEmoji}</Text>
+            <Text style={[styles.statusText, connected && { color: '#34c759' }]}>{statusLabel}</Text>
+          </View>
+
+          <Text style={styles.timer}>{formatDuration(isActive ? conn.elapsed : 0)}</Text>
+
+          <View style={{ flexDirection: 'row', gap: 20, marginTop: 8 }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.dataValue}>▼ {formatBytes(isActive ? conn.bytesDownloaded : 0)}</Text>
+              <Text style={styles.dataLabel}>Download</Text>
             </View>
-
-            <Text textStyle={{
-              fontSize: 36,
-              fontWeight: '300',
-            }}>
-              {formatDuration(isActive ? conn.elapsed : 0)}
-            </Text>
-
-            <Row spacing={20} style={{ marginTop: 8 }}>
-              <View style={{ alignItems: 'center' }}>
-                <Text textStyle={{ fontSize: 16, fontWeight: '600' }}>
-                  ▼ {formatBytes(isActive ? conn.bytesDownloaded : 0)}
-                </Text>
-                <Text textStyle={{ fontSize: 12, color: '#636366' }}>Download</Text>
-              </View>
-              <View style={{ alignItems: 'center' }}>
-                <Text textStyle={{ fontSize: 16, fontWeight: '600' }}>
-                  ▲ {formatBytes(isActive ? conn.bytesUploaded : 0)}
-                </Text>
-                <Text textStyle={{ fontSize: 12, color: '#636366' }}>Upload</Text>
-              </View>
-            </Row>
-          </Column>
-
-          {/* Server Info */}
-          <Column spacing={8} style={{ alignSelf: 'stretch' }}>
-            <Text textStyle={{ fontSize: 13, fontWeight: '600', color: '#636366' }}>
-              Server Information
-            </Text>
-            <View style={[styles.card, { padding: 12 }]}>
-              <Column spacing={8}>
-                <InfoRow label="Server" value={profile.serverAddress} />
-                <InfoRow label="IP" value={profile.serverIp} />
-                <InfoRow label="Location" value={`${profile.city}, ${profile.region}`} />
-                <InfoRow label="Protocol" value={`${profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'} UDP ${profile.port}`} />
-                <InfoRow label="Encryption" value={profile.encryption} />
-                <InfoRow label="Connected" value={isThisConnected ? formatDuration(conn.elapsed) : '—'} />
-              </Column>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.dataValue}>▲ {formatBytes(isActive ? conn.bytesUploaded : 0)}</Text>
+              <Text style={styles.dataLabel}>Upload</Text>
             </View>
-          </Column>
+          </View>
+        </View>
 
-          {/* Error */}
-          {conn.error && (
-            <Text textStyle={{ color: '#ff3b30', fontSize: 13, textAlign: 'center' }}>
-              {conn.error}
-            </Text>
-          )}
+        {/* Server Info */}
+        <View style={{ width: '100%', gap: 8 }}>
+          <Text style={styles.sectionTitle}>Server Information</Text>
+          <View style={[styles.card, { padding: 12 }]}>
+            <InfoRow label="Server" value={profile.serverAddress} />
+            <InfoRow label="IP" value={profile.serverIp} />
+            <InfoRow label="Location" value={`${profile.city}, ${profile.region}`} />
+            <InfoRow label="Protocol" value={`${profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'} UDP ${profile.port}`} />
+            <InfoRow label="Encryption" value={profile.encryption} />
+            <InfoRow label="Connected" value={connected ? formatDuration(conn.elapsed) : '—'} />
+          </View>
+        </View>
 
-          {/* Action Button */}
-          {isThisConnected || isThisDisconnecting ? (
+        {conn.error && <Text style={styles.error}>{conn.error}</Text>}
+
+        {/* Action */}
+        {connected || disconnecting ? (
+          <Host style={{ width: '100%' }}>
             <Button
               variant="text"
               onPress={handleDisconnect}
-              disabled={isThisDisconnecting}
-              style={{ alignSelf: 'stretch', backgroundColor: '#ff3b30', borderRadius: 12, paddingVertical: 14 }}
+              disabled={disconnecting}
+              style={{ width: '100%', backgroundColor: '#ff3b30', borderRadius: 12, paddingVertical: 14 }}
             >
-              <Text textStyle={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-                {isThisDisconnecting ? 'Disconnecting...' : 'DISCONNECT'}
+              <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
+                {disconnecting ? 'Disconnecting...' : 'DISCONNECT'}
               </Text>
             </Button>
-          ) : (
+          </Host>
+        ) : (
+          <Host style={{ width: '100%' }}>
             <Button
               variant="filled"
               onPress={handleConnect}
-              disabled={isThisConnecting}
-              style={{ alignSelf: 'stretch', paddingVertical: 14 }}
+              disabled={connecting}
+              style={{ width: '100%', paddingVertical: 14 }}
             >
-              {isThisConnecting ? 'Connecting...' : 'Connect'}
+              {connecting ? 'Connecting...' : 'Connect'}
             </Button>
-          )}
-        </Column>
-      </ScrollView>
-    </Host>
+          </Host>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: 'rgba(120,120,128,0.08)',
-    borderRadius: 16,
-    padding: Spacing.five,
-  },
+  container: { padding: Spacing.four, gap: Spacing.four, alignItems: 'center' },
+  card: { backgroundColor: 'rgba(120,120,128,0.08)', borderRadius: 16 },
+  statusCard: { width: '100%', alignItems: 'center', padding: Spacing.five },
+  flag: { fontSize: 48 },
+  name: { fontSize: 22, fontWeight: '700' },
+  protocol: { fontSize: 14, color: '#636366' },
+  statusText: { fontSize: 14, fontWeight: '600', color: '#8e8e93' },
+  timer: { fontSize: 36, fontWeight: '300', marginTop: 4 },
+  dataValue: { fontSize: 16, fontWeight: '600' },
+  dataLabel: { fontSize: 12, color: '#636366' },
+  sectionTitle: { fontSize: 13, fontWeight: '600', color: '#636366' },
+  infoLabel: { fontSize: 13, color: '#636366', width: 100 },
+  infoValue: { fontSize: 13, flex: 1 },
+  error: { color: '#ff3b30', fontSize: 13 },
 });

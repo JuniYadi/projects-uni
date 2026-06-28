@@ -31,7 +31,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.univpn.app"
+      "package": "com.univpn.app",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.BIND_VPN_SERVICE"
+      ]
     },
     "web": {
       "output": "static",

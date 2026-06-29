@@ -13,10 +13,26 @@ export default function LoginScreen() {
   const authStatus = useAuthStore((s) => s.status);
   const subId = useNativeState('');
   const [error, setError] = useState<string | null>(null);
+  const [qrExpired, setQrExpired] = useState(false);
+  const [deviceRevoked, setDeviceRevoked] = useState(false);
+
+  // ponytail: simple regex validation, add server-side check when API lands
+  const isValidSubId = (v: string) => /^[a-zA-Z0-9]{12}$/.test(v.trim());
+
+  const handleChangeText = useCallback((v: string) => {
+    'worklet';
+    subId.value = v;
+    if (error && isValidSubId(v)) setError(null);
+    if (error && v.trim() === '') setError(null);
+  }, [subId, error]);
 
   const handleConnect = useCallback(async () => {
     const val = subId.value?.trim();
     if (!val) return;
+    if (!isValidSubId(val)) {
+      setError('Subscription ID must be 12 alphanumeric characters');
+      return;
+    }
     setError(null);
     try {
       await loginWithSubId(val);
@@ -25,6 +41,14 @@ export default function LoginScreen() {
       setError('Invalid subscription ID');
     }
   }, [subId, loginWithSubId, router]);
+
+  const handleQrScan = useCallback(() => {
+    // ponytail: QR scan placeholder — add expo-camera when device API ready
+    setQrExpired(true);
+  }, []);
+
+  const dismissQrExpired = useCallback(() => setQrExpired(false), []);
+  const dismissDeviceRevoked = useCallback(() => setDeviceRevoked(false), []);
 
   return (
     <ScrollView
@@ -43,8 +67,22 @@ export default function LoginScreen() {
 
         {/* QR scan button */}
         <Host style={styles.btnWrapper}>
-          <Button variant="outlined" onPress={() => {}} label="📷  Scan QR Code" />
+          <Button variant="outlined" onPress={handleQrScan} label="📷  Scan QR Code" />
         </Host>
+
+        {/* ponytail: dismissable banner, no animation */}
+        {qrExpired && (
+          <View style={[styles.banner, { backgroundColor: '#ff9f0a15', borderColor: '#ff9f0a' }]}>
+            <Text style={styles.bannerText}>QR code expired. Generate ulang.</Text>
+            <Text style={styles.bannerDismiss} onPress={dismissQrExpired}>✕</Text>
+          </View>
+        )}
+        {deviceRevoked && (
+          <View style={[styles.banner, styles.bannerOverlay, { backgroundColor: '#ff3b3015', borderColor: '#ff3b30' }]}>
+            <Text style={[styles.bannerText, { color: '#ff3b30' }]}>Device telah di-revoke — hubungi admin</Text>
+            <Text style={styles.bannerDismiss} onPress={dismissDeviceRevoked}>✕</Text>
+          </View>
+        )}
 
         {/* Divider */}
         <View style={styles.divider}>
@@ -59,7 +97,7 @@ export default function LoginScreen() {
           <Host style={[styles.inputHost, { borderColor: colors.backgroundElement }, error && styles.inputHostError]}>
             <TextInput
               value={subId}
-              onChangeText={(v) => { 'worklet'; subId.value = v; }}
+              onChangeText={handleChangeText}
               placeholder="Enter your subscription ID..."
             />
           </Host>
@@ -71,7 +109,7 @@ export default function LoginScreen() {
           <Button
             variant="filled"
             onPress={handleConnect}
-            disabled={!subId.value?.trim() || authStatus === 'loading'}
+            disabled={!subId.value?.trim() || !isValidSubId(subId.value) || authStatus === 'loading'}
             label={authStatus === 'loading' ? 'Connecting...' : 'Connect'}
           />
         </Host>
@@ -126,4 +164,24 @@ const styles = StyleSheet.create({
   inputHostError: { borderColor: '#ff3b30' },
   errorText: { color: '#ff3b30', fontSize: 12 },
   version: { fontSize: 12, marginTop: 48 },
+  banner: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 24,
+    right: 24,
+    zIndex: 10,
+    elevation: 10,
+  },
+  bannerText: { flex: 1, fontSize: 13, color: '#ff9f0a' },
+  bannerDismiss: { fontSize: 16, color: '#999', padding: 4 },
 });

@@ -66,6 +66,16 @@ export default function FilterSheet() {
       />
 
       <ChipGroup
+        label="Connection Status"
+        options={[
+          { value: 'all', label: 'All' },
+          { value: 'connected', label: 'Connected (active)' },
+        ]}
+        selected={activeFilter.status}
+        onSelect={(v) => setFilter({ status: v as any })}
+      />
+
+      <ChipGroup
         label="Sort By"
         options={[
           { value: 'name', label: 'Name' },

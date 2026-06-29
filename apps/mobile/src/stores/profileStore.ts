@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { VpnProfile, FilterState } from '@/types/vpn';
+import { useConnectionStore } from '@/stores/connectionStore';
 
 const MOCK_PROFILES: VpnProfile[] = [
   { id: 'sg-1', name: 'Singapore 1', country: 'Singapore', countryCode: 'SG', city: 'Singapore', region: 'Asia', protocol: 'wireguard', port: 51820, load: 45, ping: 12, encryption: 'AES-256-GCM', serverAddress: 'sg1.vpn.example.com', serverIp: '203.0.113.10' },
@@ -71,6 +72,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     }
     if (activeFilter.region !== 'all') {
       result = result.filter((p) => p.region === activeFilter.region);
+    }
+    if (activeFilter.status === 'connected') {
+      const activeProfileId = useConnectionStore.getState().profile?.id;
+      result = result.filter((p) => p.id === activeProfileId);
     }
 
     if (activeFilter.sortBy === 'ping') {

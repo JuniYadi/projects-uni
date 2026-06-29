@@ -16,6 +16,7 @@ bun.lock.bak
 .vscode/
 .idea/
 screenshoot/
+screenshots/
 goals/
 temp/
 docs/

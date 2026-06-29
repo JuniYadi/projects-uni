@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { ScrollView, Pressable, View, Text } from 'react-native';
+import { useEffect, useMemo, useCallback, useState } from 'react';
+import { ScrollView, Pressable, View, Text, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,8 +35,27 @@ function PingBadge({ ping }: { ping: number }) {
 }
 
 function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () => void }) {
+  const conn = useConnectionStore();
+
+  const handleLongPress = useCallback(() => {
+    Alert.alert(profile.name, undefined, [
+      {
+        text: 'Connect',
+        onPress: () => conn.connect(profile),
+      },
+      {
+        text: 'Copy Config',
+        onPress: () => {
+          // ponytail: add expo-clipboard when copy-to-clipboard is a real UX need
+          console.warn('Copy config:', profile.serverAddress);
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, [profile, conn]);
+
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} onLongPress={handleLongPress}>
       {({ pressed }) => (
         <View
           className={`flex-row items-center rounded-2xl px-4 py-4 ${
@@ -175,14 +194,22 @@ export default function ServersScreen() {
   const router = useRouter();
   const loadProfiles = useProfileStore((s) => s.loadProfiles);
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { loadProfiles(); }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadProfiles();
+    setRefreshing(false);
+  }, [loadProfiles]);
 
   // ponytail: no padding on top — the Stack header handles that via contentInsetAdjustmentBehavior
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View className="gap-4 pt-2">
         <ConnectedBanner router={router} />

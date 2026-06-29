@@ -1,19 +1,39 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { ScrollView, Alert, View, Text } from 'react-native';
+import { ScrollView, Alert, View, Text, Animated, Pressable, useColorScheme } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Host, Button } from '@expo/ui';
+
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
-import { formatBytes, formatDuration } from '@/utils/formatters';
+import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
+import { Colors } from '@/constants/theme';
+
+// ─── pulse dot ─────────────────────────────────────────────
+
+function PulseDot({ size = 12, color = '#34c759' }: { size?: number; color?: string }) {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  return <Animated.View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, opacity }} />;
+}
 
 // ─── data-row ──────────────────────────────────────────────
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center py-3 px-1">
+    <View className="flex-row items-center py-3 px-4">
       <Text className="text-sm text-neutral-500 dark:text-neutral-400 w-28">{label}</Text>
-      <Text className="text-sm flex-1 text-black dark:text-white" selectable>{value}</Text>
+      <Text className="text-sm flex-1 text-black dark:text-white font-medium" selectable>{value}</Text>
     </View>
   );
 }
@@ -35,40 +55,58 @@ function StatusCard({
   conn: { elapsed: number; bytesDownloaded: number; bytesUploaded: number };
   isActive: boolean;
 }) {
-  const statusEmoji = connected ? '🟢' : connecting ? '🟡' : '🔴';
+  const scheme = useColorScheme();
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+
+  const statusColor = connected ? '#34c759' : connecting ? '#ff9f0a' : '#8e8e93';
   const statusLabel = connected ? 'CONNECTED' : connecting ? 'CONNECTING...' : disconnecting ? 'DISCONNECTING...' : 'DISCONNECTED';
 
   return (
-    <View className="items-center py-8 px-6 bg-black/5 dark:bg-white/10 rounded-2xl">
+    <View className="items-center py-8 px-6 rounded-2xl overflow-hidden"
+      style={{ backgroundColor: connected ? '#00C78110' : colors.backgroundElement }}
+    >
+      {/* accent bar when connected */}
+      {connected && (
+        <View className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: '#00C781' }} />
+      )}
+
       {/* flag badge */}
-      <View className="w-16 h-16 rounded-2xl bg-black/10 dark:bg-white/15 items-center justify-center mb-4">
-        <Text className="text-2xl font-bold text-black dark:text-white">{profile.countryCode}</Text>
+      <View className="w-20 h-20 rounded-2xl items-center justify-center mb-4"
+        style={{ backgroundColor: connected ? '#00C78120' : '#00000010' }}
+      >
+        <Text className="text-4xl">{countryFlag(profile.countryCode)}</Text>
       </View>
 
       {/* name + protocol */}
       <Text className="text-xl font-bold text-black dark:text-white">{profile.name}</Text>
       <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-        {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
+        {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}  ●  {profile.port}
       </Text>
 
       {/* divider */}
-      <View className="w-12 h-0.5 bg-black/10 dark:bg-white/10 rounded-full my-5" />
+      <View className="w-12 h-0.5 rounded-full my-5" style={{ backgroundColor: colors.backgroundSelected }} />
 
       {/* status indicator */}
-      <View className="items-center gap-1">
-        <Text className="text-2xl">{statusEmoji}</Text>
-        <Text className={`text-xs font-semibold tracking-widest ${connected ? 'text-green-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
+      <View className="items-center gap-2">
+        <View className="items-center justify-center" style={{ width: 32, height: 32 }}>
+          {connecting || connected ? (
+            <PulseDot size={28} color={statusColor} />
+          ) : (
+            <View className="rounded-full" style={{ width: 28, height: 28, backgroundColor: statusColor }} />
+          )}
+        </View>
+        <Text className="text-xs font-semibold tracking-widest" style={{ color: statusColor }}>
           {statusLabel}
         </Text>
       </View>
 
       {/* timer */}
-      <Text className="text-4xl font-light text-black dark:text-white mt-3 tabular-nums">
+      <Text className="text-5xl font-light text-black dark:text-white mt-5 tabular-nums tracking-wider">
         {formatDuration(isActive ? conn.elapsed : 0)}
       </Text>
 
       {/* data stats */}
-      <View className="flex-row gap-6 mt-4">
+      <View className="flex-row gap-8 mt-5">
         <View className="items-center">
           <Text className="text-base font-semibold text-black dark:text-white">▼ {formatBytes(isActive ? conn.bytesDownloaded : 0)}</Text>
           <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Download</Text>
@@ -128,9 +166,12 @@ export default function ConnectionDetailScreen() {
   const connecting = isActive && conn.status === 'connecting';
   const disconnecting = isActive && conn.status === 'disconnecting';
 
+  const showConnect = !connected && !disconnecting;
+  const showDisconnect = connected || disconnecting;
+
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <View className="px-4 pt-4 pb-8 gap-6">
+    <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
+      <View className="px-4 pt-4 gap-6">
         {/* status card */}
         <StatusCard
           profile={profile}
@@ -146,47 +187,47 @@ export default function ConnectionDetailScreen() {
           <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
             Server Information
           </Text>
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl px-3">
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
             <InfoRow label="Server" value={profile.serverAddress} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-1" />
+            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
             <InfoRow label="IP" value={profile.serverIp} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-1" />
+            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
             <InfoRow label="Location" value={`${profile.city}, ${profile.region}`} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-1" />
+            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
             <InfoRow label="Protocol" value={`${profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'} UDP ${profile.port}`} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-1" />
+            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
             <InfoRow label="Encryption" value={profile.encryption} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-1" />
-            <InfoRow label="Connected" value={connected ? formatDuration(conn.elapsed) : '—'} />
           </View>
         </View>
 
+        {/* error */}
         {conn.error && (
           <View className="bg-red-500/10 rounded-xl px-4 py-3">
             <Text className="text-red-500 text-sm">{conn.error}</Text>
           </View>
         )}
 
-        {/* action button */}
-        <View className="pt-2">
-          {connected || disconnecting ? (
-            <Host style={{ width: '100%' }}>
-              <Button
-                variant="filled"
-                onPress={handleDisconnect}
-                disabled={disconnecting}
-                label={disconnecting ? 'Disconnecting...' : 'DISCONNECT'}
-              />
-            </Host>
-          ) : (
-            <Host style={{ width: '100%' }}>
-              <Button
-                variant="filled"
-                onPress={handleConnect}
-                disabled={connecting}
-                label={connecting ? 'Connecting...' : 'Connect'}
-              />
-            </Host>
+        {/* CTA button at end of scroll */}
+        <View className="pt-6 pb-8">
+          {showConnect && (
+            <Pressable
+              onPress={handleConnect}
+              className="bg-[#00C781] rounded-2xl py-4 items-center active:opacity-70"
+            >
+              <Text className="text-white font-semibold text-base">
+                {connecting ? 'Connecting...' : 'Connect to Server'}
+              </Text>
+            </Pressable>
+          )}
+          {showDisconnect && (
+            <Pressable
+              onPress={handleDisconnect}
+              className="bg-red-500 rounded-2xl py-4 items-center active:opacity-70"
+            >
+              <Text className="text-white font-semibold text-base">
+                {disconnecting ? 'Disconnecting...' : 'Disconnect'}
+              </Text>
+            </Pressable>
           )}
         </View>
       </View>

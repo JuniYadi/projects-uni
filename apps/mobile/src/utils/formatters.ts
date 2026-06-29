@@ -1,3 +1,13 @@
+// ponytail: country codes → flag emoji via Regional Indicator Symbols
+export function countryFlag(code: string): string {
+  if (code.length !== 2) return '🏳️';
+  const base = 0x1F1E6;
+  const a = code.charCodeAt(0) - 65;
+  const b = code.charCodeAt(1) - 65;
+  if (a < 0 || a > 25 || b < 0 || b > 25) return '🏳️';
+  return String.fromCodePoint(base + a, base + b);
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];

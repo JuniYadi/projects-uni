@@ -1,25 +1,27 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { ScrollView, Pressable, View, Text, RefreshControl, Alert } from 'react-native';
+import { ScrollView, Pressable, View, Text, RefreshControl, Alert, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
-import { formatBytes, formatDuration, formatPing } from '@/utils/formatters';
+import { formatBytes, formatDuration, formatPing, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from 'react-native';
 
 // ─── helpers ───────────────────────────────────────────────
 
-const LOAD_COLORS = {
-  low: '#34c759',
-  med: '#ff9f0a',
-  high: '#ff453a',
-} as const;
-
-function loadColor(pct: number): string {
+const LOAD_COLORS = { low: '#34c759', med: '#ff9f0a', high: '#ff453a' } as const;
+function loadColor(pct: number) {
   if (pct < 50) return LOAD_COLORS.low;
   if (pct < 80) return LOAD_COLORS.med;
   return LOAD_COLORS.high;
+}
+
+function useAccent() {
+  const scheme = useColorScheme();
+  return scheme === 'dark' ? Colors.dark.accent : Colors.light.accent;
 }
 
 // ─── sub-components ────────────────────────────────────────
@@ -27,26 +29,24 @@ function loadColor(pct: number): string {
 function PingBadge({ ping }: { ping: number }) {
   const { label, color } = formatPing(ping);
   return (
-    <View className="flex-row items-center gap-1">
-      <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-      <Text className="text-xs font-medium" style={{ color }}>{label}</Text>
+    <View className="flex-row items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-full">
+      <View className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+      <Text className="text-xs font-semibold" style={{ color }}>{label}</Text>
     </View>
   );
 }
 
 function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () => void }) {
   const conn = useConnectionStore();
+  const isActive = conn.profile?.id === profile.id;
+  const accent = useAccent();
 
   const handleLongPress = useCallback(() => {
     Alert.alert(profile.name, undefined, [
-      {
-        text: 'Connect',
-        onPress: () => conn.connect(profile),
-      },
+      { text: 'Connect', onPress: () => conn.connect(profile) },
       {
         text: 'Copy Config',
         onPress: () => {
-          // ponytail: add expo-clipboard when copy-to-clipboard is a real UX need
           console.warn('Copy config:', profile.serverAddress);
         },
       },
@@ -58,41 +58,59 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
     <Pressable onPress={onPress} onLongPress={handleLongPress}>
       {({ pressed }) => (
         <View
-          className={`flex-row items-center rounded-2xl px-4 py-4 ${
-            pressed
-              ? 'bg-black/10 dark:bg-white/15'
-              : 'bg-black/5 dark:bg-white/10'
+          className={`rounded-2xl overflow-hidden ${
+            isActive ? 'border-l-4' : ''
           }`}
+          style={{
+            borderLeftColor: isActive ? accent : undefined,
+            backgroundColor: pressed
+              ? '#00000015'
+              : isActive
+                ? '#00C78110'
+                : undefined,
+          }}
         >
-          {/* flag badge */}
-          <View className="w-12 h-12 rounded-xl bg-black/10 dark:bg-white/15 items-center justify-center mr-3">
-            <Text className="text-lg font-semibold text-black dark:text-white">{profile.countryCode}</Text>
-          </View>
-
-          {/* info */}
-          <View className="flex-1 gap-1.5">
-            <View className="flex-row items-center gap-2">
-              <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
-                {profile.name}
-              </Text>
-              <PingBadge ping={profile.ping} />
-            </View>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-xs font-medium bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-neutral-500 dark:text-neutral-400 overflow-hidden">
-                {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
-              </Text>
-              <Text className="text-xs text-neutral-400 dark:text-neutral-500">
-                ● {profile.port}
-              </Text>
-              <View className="flex-row items-center gap-1">
-                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: loadColor(profile.load) }} />
-                <Text className="text-xs text-neutral-400 dark:text-neutral-500">{profile.load}%</Text>
+          <View
+            className={`bg-black/5 dark:bg-white/10 py-4 ${
+              isActive ? '' : 'rounded-2xl'
+            } ${isActive ? 'rounded-r-2xl' : ''}`}
+            style={pressed ? { opacity: 0.7 } : undefined}
+          >
+            <View className="flex-row items-center px-4">
+              {/* flag */}
+              <View className="w-12 h-12 rounded-xl bg-white/60 dark:bg-black/30 items-center justify-center mr-3 shadow-sm">
+                <Text className="text-2xl">{countryFlag(profile.countryCode)}</Text>
               </View>
+
+              {/* info */}
+              <View className="flex-1 gap-1.5">
+                <View className="flex-row items-center gap-2">
+                  {isActive && (
+                    <View className="w-2 h-2 rounded-full bg-[#00C781]" />
+                  )}
+                  <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
+                    {profile.name}
+                  </Text>
+                  <PingBadge ping={profile.ping} />
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-xs font-semibold bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-neutral-500 dark:text-neutral-400 overflow-hidden">
+                    {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
+                  </Text>
+                  <Text className="text-xs text-neutral-400 dark:text-neutral-500">
+                    ● {profile.port}
+                  </Text>
+                  <View className="flex-row items-center gap-1">
+                    <View className="w-2 h-2 rounded-full" style={{ backgroundColor: loadColor(profile.load) }} />
+                    <Text className="text-xs text-neutral-400 dark:text-neutral-500">{profile.load}% load</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* chevron */}
+              <Text className="text-lg text-neutral-300 dark:text-neutral-600 ml-2">›</Text>
             </View>
           </View>
-
-          {/* chevron */}
-          <Text className="text-lg text-neutral-300 dark:text-neutral-600 ml-2">›</Text>
         </View>
       )}
     </Pressable>
@@ -107,11 +125,11 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
   return (
     <Pressable
       onPress={() => router.push(`/servers/connection/${profile.id}`)}
-      className="active:opacity-70"
+      className="active:opacity-70 rounded-2xl overflow-hidden"
     >
-      <View className="flex-row items-center gap-3 bg-green-500 rounded-2xl px-4 py-4">
+      <View className="flex-row items-center gap-3 px-4 py-4" style={{ backgroundColor: '#00C781' }}>
         <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center">
-          <Text className="text-lg">🟢</Text>
+          <Text className="text-lg">{countryFlag(profile.countryCode)}</Text>
         </View>
         <View className="flex-1 gap-0.5">
           <Text className="text-white font-semibold text-sm">Connected to {profile.name}</Text>
@@ -124,6 +142,27 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
         </Host>
       </View>
     </Pressable>
+  );
+}
+
+// ─── pulse dot ─────────────────────────────────────────────
+
+function PulseDot({ color }: { color: string }) {
+  const opacity = useState(() => new Animated.Value(0.4))[0];
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color, opacity }} />
   );
 }
 
@@ -172,9 +211,15 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
     <View className="gap-6">
       {Object.entries(sections).map(([region, profiles]) => (
         <View key={region} className="gap-3">
-          <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
-            {region === '__rec' ? 'RECOMMENDED' : region}
-          </Text>
+          {/* section header with accent for recommended */}
+          <View className="flex-row items-center gap-2 px-1">
+            {region === '__rec' && <PulseDot color="#00C781" />}
+            <Text className={`text-xs font-semibold tracking-widest uppercase ${
+              region === '__rec' ? 'text-[#00C781]' : 'text-neutral-400 dark:text-neutral-500'
+            }`}>
+              {region === '__rec' ? 'BEST PING' : region}
+            </Text>
+          </View>
           {profiles.map((p) => (
             <ProfileCard
               key={p.id}
@@ -204,7 +249,6 @@ export default function ServersScreen() {
     setRefreshing(false);
   }, [loadProfiles]);
 
-  // ponytail: no padding on top — the Stack header handles that via contentInsetAdjustmentBehavior
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"

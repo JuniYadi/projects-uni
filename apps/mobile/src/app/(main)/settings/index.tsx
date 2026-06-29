@@ -19,15 +19,19 @@ function Divider() {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-wider uppercase px-4 pb-1 pt-6">
-      {title}
-    </Text>
+    <View className="flex-row items-center gap-2 px-1 pb-1 pt-6">
+      <View className="w-1 h-4 rounded-full bg-[#00C781]" />
+      <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-wider uppercase">
+        {title}
+      </Text>
+    </View>
   );
 }
 
-function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({ icon, label, value, onChange }: { icon: string; label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <View className="flex-row items-center py-3.5 px-4">
+      <Text className="text-lg mr-3">{icon}</Text>
       <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
       <Host matchContents>
         <Switch value={value} onValueChange={onChange} />
@@ -36,9 +40,20 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   );
 }
 
-function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
+function PickerRow({ icon, label, children }: { icon: string; label: string; children: React.ReactNode }) {
   return (
     <View className="flex-row items-center py-3.5 px-4">
+      <Text className="text-lg mr-3">{icon}</Text>
+      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
+function InfoRow({ icon, label, value, selectable }: { icon?: string; label: string; value: string; selectable?: boolean }) {
+  return (
+    <View className="flex-row items-center py-3.5 px-4">
+      {icon && <Text className="text-lg mr-3">{icon}</Text>}
       <Text className="flex-1 text-base text-black dark:text-white">{label}</Text>
       <Text
         className="text-base text-neutral-500 dark:text-neutral-400 max-w-[55%] text-right"
@@ -91,7 +106,7 @@ function DnsPicker() {
 function ActionRow({ icon, label, onPress, destructive }: { icon: string; label: string; onPress: () => void; destructive?: boolean }) {
   return (
     <Pressable onPress={onPress} className="flex-row items-center py-3.5 px-4 active:opacity-60">
-      <Text className="text-xl mr-3">{icon}</Text>
+      <Text className="text-lg mr-3">{icon}</Text>
       <View className="flex-1">
         <Text className={`text-base ${destructive ? 'text-red-500' : 'text-black dark:text-white'}`}>{label}</Text>
       </View>
@@ -111,10 +126,10 @@ function ProfileCard({
 }) {
   const statusColor =
     subscription?.status === 'active'
-      ? 'bg-green-500'
+      ? '#00C781'
       : subscription?.status === 'expired'
-        ? 'bg-red-500'
-        : 'bg-neutral-400';
+        ? '#ff453a'
+        : '#8e8e93';
 
   const statusLabel =
     subscription?.status === 'active'
@@ -124,15 +139,19 @@ function ProfileCard({
         : 'No subscription';
 
   return (
-    <View className="items-center py-6 px-4">
-      <View className="w-16 h-16 rounded-full bg-black/10 dark:bg-white/15 items-center justify-center mb-3">
+    <View className="items-center py-6 px-4 relative overflow-hidden">
+      {/* accent bar */}
+      {subscription?.status === 'active' && (
+        <View className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: '#00C781' }} />
+      )}
+      <View className="w-16 h-16 rounded-full bg-[#00C78115] items-center justify-center mb-3">
         <Text className="text-2xl">👤</Text>
       </View>
       <Text className="text-lg font-bold text-black dark:text-white">
         {subscriptionId || 'Not signed in'}
       </Text>
       <View className="flex-row items-center gap-2 mt-1.5">
-        <View className={`w-2 h-2 rounded-full ${statusColor}`} />
+        <View className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColor }} />
         <Text className="text-sm text-neutral-500 dark:text-neutral-400">{statusLabel}</Text>
       </View>
       {subscription?.expiresAt && (
@@ -181,52 +200,50 @@ export default function SettingsScreen() {
     <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
       <View className="px-4 pt-4 pb-8 gap-6">
         {/* profile card */}
-        <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
+        <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
           <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
         </View>
 
         {/* connection settings */}
         <View className="gap-2">
           <SectionHeader title="Connection" />
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
-            <ToggleRow label="Auto-Connect" value={settings.autoConnect} onChange={(v) => settings.update('autoConnect', v)} />
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            <ToggleRow icon="🔗" label="Auto-Connect" value={settings.autoConnect} onChange={(v) => settings.update('autoConnect', v)} />
             <Divider />
-            <ToggleRow label="Kill Switch" value={settings.killSwitch} onChange={(v) => settings.update('killSwitch', v)} />
+            <ToggleRow icon="🛡️" label="Kill Switch" value={settings.killSwitch} onChange={(v) => settings.update('killSwitch', v)} />
             <Divider />
-            <View className="flex-row items-center py-3.5 px-4">
-              <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>Preferred Protocol</Text>
+            <PickerRow icon="📡" label="Preferred Protocol">
               <ProtocolPicker />
-            </View>
+            </PickerRow>
           </View>
         </View>
 
         {/* dns */}
         <View className="gap-2">
           <SectionHeader title="DNS" />
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
-            <View className="flex-row items-center py-3.5 px-4">
-              <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>DNS Server</Text>
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            <PickerRow icon="🌐" label="DNS Server">
               <DnsPicker />
-            </View>
+            </PickerRow>
           </View>
         </View>
 
         {/* account */}
         <View className="gap-2">
           <SectionHeader title="Account" />
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
-            <InfoRow label="Subscription" value={auth.subscription?.id || '—'} selectable />
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            <InfoRow icon="📋" label="Subscription" value={auth.subscription?.id || '—'} selectable />
             <Divider />
-            <InfoRow label="Status" value={auth.subscription?.status || '—'} />
+            <InfoRow icon="📊" label="Status" value={auth.subscription?.status || '—'} />
             <Divider />
-            <InfoRow label="Expires" value={auth.subscription?.expiresAt || '—'} />
+            <InfoRow icon="⏰" label="Expires" value={auth.subscription?.expiresAt || '—'} />
           </View>
         </View>
 
         {/* actions */}
         <View className="gap-2">
           <SectionHeader title="Actions" />
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
             <ActionRow icon="🌐" label="Manage via Web Portal" onPress={handleWebPortal} />
             <Divider />
             <ActionRow icon="🚪" label="Logout" onPress={handleLogout} destructive />
@@ -238,10 +255,10 @@ export default function SettingsScreen() {
         {/* about */}
         <View className="gap-2">
           <SectionHeader title="About" />
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
-            <InfoRow label="Version" value="1.0.0" />
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            <InfoRow icon="📦" label="Version" value="1.0.0" />
             <Divider />
-            <InfoRow label="Build" value="2026.06.26" />
+            <InfoRow icon="🔨" label="Build" value="2026.06.26" />
           </View>
         </View>
       </View>

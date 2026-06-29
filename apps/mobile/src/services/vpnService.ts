@@ -12,6 +12,7 @@ type VpnState =
   | 'UNKNOWN'
 
 type StatusCallback = (status: VpnState) => void
+type StatsCallback = (stats: { bytesReceived: number; bytesSent: number }) => void
 
 // ─── types from native module ────────────────────────────
 
@@ -62,8 +63,14 @@ class VpnService {
 
   /** Subscribe to VPN state changes. */
   onStatusChange(_cb: StatusCallback): () => void {
-    // ponytail: local module plumbing first; native events return when WireGuard code moves in.
+    // ponytail: only stats events are wired for now; status is still read by JS state.
     return () => {}
+  }
+
+  /** Subscribe to native-pushed byte stats. */
+  onStatsChange(cb: StatsCallback): () => void {
+    const sub = WireGuardVpnModule.addListener('onStatsChanged', cb)
+    return () => sub.remove()
   }
 
   /** Clean up resources. */

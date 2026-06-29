@@ -102,15 +102,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     const { status, startTime } = get()
     if (status === 'connected' && startTime) {
       set({ elapsed: Math.floor((Date.now() - startTime) / 1000) })
-      try {
-        const s = await vpnService.getStatus()
-        if (s.bytesReceived !== undefined || s.bytesSent !== undefined) {
-          set({
-            bytesDownloaded: s.bytesReceived ?? get().bytesDownloaded,
-            bytesUploaded: s.bytesSent ?? get().bytesUploaded,
-          })
-        }
-      } catch { /* stats best-effort */ }
     }
   },
 

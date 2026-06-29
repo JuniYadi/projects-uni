@@ -24,7 +24,16 @@ export interface WireGuardStatus {
   error?: string;
 }
 
-declare class UnivpnNativeModule extends NativeModule<{}> {
+export type WireGuardStatsEvent = {
+  bytesReceived: number;
+  bytesSent: number;
+};
+
+type UnivpnNativeEvents = {
+  onStatsChanged(event: WireGuardStatsEvent): void;
+};
+
+declare class UnivpnNativeModule extends NativeModule<UnivpnNativeEvents> {
   initialize(): Promise<void>;
   connect(config: WireGuardConfig): Promise<void>;
   disconnect(): Promise<void>;

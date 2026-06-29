@@ -1,6 +1,9 @@
 package expo.modules.univpnnative
 
 import android.net.VpnService
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
 import com.wireguard.android.backend.Statistics
@@ -18,9 +21,28 @@ class UnivpnNativeModule : Module() {
   private var backend: GoBackend? = null
   private var tunnel: Tunnel? = null
   private var wgConfig: Config? = null
+  private var observingStats = false
+  private val statsHandler = Handler(Looper.getMainLooper())
+  private val statsRunnable = object : Runnable {
+    override fun run() {
+      emitStats()
+      statsHandler.postDelayed(this, 1000)
+    }
+  }
 
   override fun definition() = ModuleDefinition {
     Name("UnivpnNative")
+    Events("onStatsChanged")
+
+    OnStartObserving("onStatsChanged") {
+      observingStats = true
+      startStatsLoop()
+    }
+
+    OnStopObserving("onStatsChanged") {
+      observingStats = false
+      stopStatsLoop()
+    }
 
     AsyncFunction("initialize") {
       if (backend == null) backend = GoBackend(appContext.reactContext ?: throw Exception("React context unavailable"))
@@ -39,10 +61,11 @@ class UnivpnNativeModule : Module() {
       tunnel = object : Tunnel {
         override fun getName() = "WireGuardTunnel"
         override fun onStateChange(newState: Tunnel.State) {
-          // ponytail: JS polls getStatus; native events later if needed.
+          if (newState == Tunnel.State.UP) startStatsLoop() else stopStatsLoop()
         }
       }
       backend!!.setState(tunnel!!, Tunnel.State.UP, wgConfig!!)
+      startStatsLoop()
       Unit
     }
 
@@ -51,6 +74,7 @@ class UnivpnNativeModule : Module() {
       val c = wgConfig
       val b = backend
       if (t != null && c != null && b != null) b.setState(t, Tunnel.State.DOWN, c)
+      stopStatsLoop()
       Unit
     }
 
@@ -107,6 +131,31 @@ class UnivpnNativeModule : Module() {
     )
     Tunnel.State.DOWN -> mapOf("isConnected" to false, "tunnelState" to "INACTIVE", "status" to "DISCONNECTED")
     else -> mapOf("isConnected" to false, "tunnelState" to "UNKNOWN", "status" to "UNKNOWN")
+  }
+
+  private fun startStatsLoop() {
+    if (!observingStats || tunnel == null || backend == null) return
+    statsHandler.removeCallbacks(statsRunnable)
+    statsRunnable.run()
+  }
+
+  private fun stopStatsLoop() {
+    statsHandler.removeCallbacks(statsRunnable)
+  }
+
+  private fun emitStats() {
+    try {
+      val t = tunnel ?: return
+      val b = backend ?: return
+      if (b.getState(t) != Tunnel.State.UP) return
+      val stats = b.getStatistics(t)
+      sendEvent("onStatsChanged", Bundle().apply {
+        putDouble("bytesReceived", stats.totalRx().toDouble())
+        putDouble("bytesSent", stats.totalTx().toDouble())
+      })
+    } catch (_: Exception) {
+      // stats are best-effort
+    }
   }
 
   private fun string(m: Map<String, Any?>, key: String) = m[key] as? String

@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { vpnService } from '@/services/vpnService';
 import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import * as Cellular from 'expo-cellular';
@@ -242,6 +243,7 @@ export default function ConnectionDetailScreen() {
 
   const conn = { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, tunnelAddress, tunnelDns, error: connError };
   const tick = useConnectionStore((s) => s.tick);
+  const updateStats = useConnectionStore((s) => s.updateStats);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -254,6 +256,13 @@ export default function ConnectionDetailScreen() {
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [conn.status, tick]);
+
+  useEffect(() => {
+    if (!connected) return;
+    return vpnService.onStatsChange((stats) => {
+      updateStats(stats.bytesReceived, stats.bytesSent);
+    });
+  }, [connected, updateStats]);
 
   if (!profile) {
     return (

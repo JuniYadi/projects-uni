@@ -242,6 +242,10 @@ export default function ConnectionDetailScreen() {
   const disconnect = useConnectionStore((s) => s.disconnect);
 
   const conn = { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, tunnelAddress, tunnelDns, error: connError };
+  const isActive = conn.profile?.id === id;
+  const connected = isActive && conn.status === 'connected';
+  const connecting = isActive && conn.status === 'connecting';
+  const disconnecting = isActive && conn.status === 'disconnecting';
   const tick = useConnectionStore((s) => s.tick);
   const updateStats = useConnectionStore((s) => s.updateStats);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -271,11 +275,6 @@ export default function ConnectionDetailScreen() {
       </View>
     );
   }
-
-  const isActive = conn.profile?.id === id;
-  const connected = isActive && conn.status === 'connected';
-  const connecting = isActive && conn.status === 'connecting';
-  const disconnecting = isActive && conn.status === 'disconnecting';
 
   const insets = useSafeAreaInsets();
 

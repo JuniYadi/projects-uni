@@ -105,7 +105,5 @@ export function parseWireGuardConfig(confText: string): WireGuardConfig {
   if (extraPeers.length > 1) {
     console.warn(`[config-parser] ${extraPeers.length - 1} extra [Peer] sections ignored`)
   }
-
-  console.log('[config-parser] output:', JSON.stringify({ privateKey: privateKey.substring(0,10)+'...', serverAddress: host, serverPort: port, address, allowedIPs, presharedKey: presharedKey?.substring(0,10)+'...', dns }))
   return config
 }

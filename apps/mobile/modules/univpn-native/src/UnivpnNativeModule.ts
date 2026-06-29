@@ -19,6 +19,8 @@ export interface WireGuardStatus {
   isConnected: boolean;
   tunnelState: TunnelState;
   status: NativeStatus;
+  bytesReceived?: number;
+  bytesSent?: number;
   error?: string;
 }
 

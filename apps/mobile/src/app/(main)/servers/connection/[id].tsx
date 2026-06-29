@@ -48,9 +48,9 @@ function StatusBolt({ color, size = 30 }: { color: string; size?: number }) {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center py-3 px-4">
-      <Text className="text-sm text-neutral-500 dark:text-neutral-400 w-28">{label}</Text>
-      <Text className="text-sm flex-1 text-black dark:text-white font-medium" selectable>{value}</Text>
+    <View className="flex-row items-center py-2 px-4">
+      <Text className="text-xs text-neutral-500 dark:text-neutral-400 w-24">{label}</Text>
+      <Text className="text-xs flex-1 text-black dark:text-white font-medium" selectable numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -95,7 +95,7 @@ function StatusCard({
   }, [connecting, boltScale]);
 
   return (
-    <View className="items-center py-8 px-6 rounded-2xl overflow-hidden"
+    <View className="items-center py-5 px-6 rounded-2xl overflow-hidden"
       style={{ backgroundColor: connected ? '#00C78110' : colors.backgroundElement }}
     >
       {/* accent bar when connected */}
@@ -104,20 +104,13 @@ function StatusCard({
       )}
 
       {/* flag badge */}
-      <View className="w-20 h-20 rounded-2xl items-center justify-center mb-4"
-        style={{ backgroundColor: connected ? '#00C78120' : '#00000010' }}
-      >
-        <Text className="text-4xl">{countryFlag(profile.countryCode)}</Text>
-      </View>
-
-      {/* name + protocol */}
-      <Text className="text-xl font-bold text-black dark:text-white">{profile.name}</Text>
-      <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+      <Text className="text-lg font-bold text-black dark:text-white">{countryFlag(profile.countryCode)} {profile.name}</Text>
+      <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
         {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}  ●  {profile.port}
       </Text>
 
       {/* divider */}
-      <View className="w-12 h-0.5 rounded-full my-5" style={{ backgroundColor: colors.backgroundSelected }} />
+      <View className="w-12 h-0.5 rounded-full my-3" style={{ backgroundColor: colors.backgroundSelected }} />
 
       {/* status indicator */}
       <View className="items-center gap-2">
@@ -136,12 +129,12 @@ function StatusCard({
       </View>
 
       {/* timer */}
-      <Text className="text-5xl font-light text-black dark:text-white mt-5 tabular-nums tracking-wider">
+      <Text className="text-4xl font-light text-black dark:text-white mt-3 tabular-nums tracking-wider">
         {formatDuration(isActive ? conn.elapsed : 0)}
       </Text>
 
       {/* data stats */}
-      <View className="flex-row gap-8 mt-5">
+      <View className="flex-row gap-8 mt-3">
         <View className="items-center">
           <Text className="text-base font-semibold text-black dark:text-white">▼ {formatBytes(isActive ? conn.bytesDownloaded : 0)}</Text>
           <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Download</Text>
@@ -165,13 +158,9 @@ function NetworkInfo() {
 
   useEffect(() => {
     Network.getIpAddressAsync().then(setIp);
-    if (type === Network.NetworkStateType.CELLULAR) {
-      Cellular.getCarrierNameAsync().then(setCarrierName);
-      Cellular.getCellularGenerationAsync().then(setGeneration);
-    } else {
-      setCarrierName(null);
-      setGeneration(null);
-    }
+    // Always try cellular — returns null if no cellular interface
+    Cellular.getCarrierNameAsync().then(setCarrierName);
+    Cellular.getCellularGenerationAsync().then(setGeneration);
   }, [type]);
 
   const typeLabel =
@@ -191,11 +180,11 @@ function NetworkInfo() {
     generation === Cellular.CellularGeneration.CELLULAR_2G ? '2G' : null;
 
   return (
-    <View className="gap-2">
+    <View className="gap-1">
       <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
         Network Status
       </Text>
-      <View className="bg-black/5 dark:bg-white/10 rounded-2xl p-3 gap-y-3">
+      <View className="bg-black/5 dark:bg-white/10 rounded-2xl p-3 gap-y-2">
         <View className="flex-row gap-3">
           <View className="flex-1">
             <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Connection</Text>
@@ -285,7 +274,7 @@ export default function ConnectionDetailScreen() {
     <View style={{ flex: 1 }}>
       <BgGlow />
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
-      <View className="px-4 pt-4 gap-6" style={{ paddingBottom: insets.bottom + 20 }}>
+      <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
         {/* status card */}
         <StatusCard
           profile={profile}
@@ -297,7 +286,7 @@ export default function ConnectionDetailScreen() {
         />
 
         {/* server info */}
-        <View className="gap-2">
+        <View className="gap-1">
           <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
             Server Information
           </Text>

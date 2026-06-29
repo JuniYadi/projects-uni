@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { View, Pressable, Animated, Text } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { useProfileStore } from '@/stores/profileStore';
 
@@ -25,7 +25,7 @@ export function FloatingConnectButton() {
   const profiles = useProfileStore((s) => s.profiles);
   const connect = useConnectionStore((s) => s.connect);
   const disconnect = useConnectionStore((s) => s.disconnect);
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id } = useGlobalSearchParams<{ id?: string }>();
   const router = useRouter();
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -99,18 +99,19 @@ export function FloatingConnectButton() {
         />
       )}
 
-      {/* Button */}
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <Pressable
-          onPress={handlePress}
-          style={({ pressed }) => ({
+      <Pressable
+        onPress={handlePress}
+        hitSlop={{ top: 12, bottom: 28, left: 24, right: 24 }}
+        style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.85 : 1 })}
+      >
+        <Animated.View
+          style={{
             width: BTN_SIZE,
             height: BTN_SIZE,
             borderRadius: BTN_SIZE / 2,
             backgroundColor: btnColor,
             alignItems: 'center',
             justifyContent: 'center',
-            opacity: pressed ? 0.85 : 1,
             borderWidth: isDisconnected ? 2 : 0,
             borderColor: isDisconnected ? '#C7C7CC' : undefined,
             shadowColor: isConnected || isConnecting ? '#ffcc00' : '#00C781',
@@ -118,24 +119,23 @@ export function FloatingConnectButton() {
             shadowOpacity: isConnected ? 0.45 : isConnecting ? 0.3 : 0.12,
             shadowRadius: isConnected ? 12 : 8,
             elevation: 6,
-          })}
+            transform: [{ scale: pulseAnim }],
+          }}
         >
           <BoltIcon color={iconColor} size={28} />
-        </Pressable>
-      </Animated.View>
-
-      {/* Label */}
-      <Text
-        style={{
-          fontSize: 10,
-          fontWeight: '700',
-          color: labelColor,
-          marginTop: 6,
-          letterSpacing: 0.5,
-        }}
-      >
-        {labelText}
-      </Text>
+        </Animated.View>
+        <Text
+          style={{
+            fontSize: 10,
+            fontWeight: '700',
+            color: labelColor,
+            marginTop: 6,
+            letterSpacing: 0.5,
+          }}
+        >
+          {labelText}
+        </Text>
+      </Pressable>
     </View>
   );
 }

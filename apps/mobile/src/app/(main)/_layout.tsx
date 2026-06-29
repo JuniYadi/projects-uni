@@ -105,6 +105,7 @@ export default function MainLayout() {
   const isDark = scheme === 'dark';
   const bg = isDark ? '#1C1C1E' : '#FFFFFF';
   const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 24);
 
   return (
     <Tabs>
@@ -117,8 +118,8 @@ export default function MainLayout() {
             backgroundColor: bg,
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
-            paddingBottom: Math.max(insets.bottom - 6, 4),
-            paddingTop: 6,
+            paddingBottom: bottomInset,
+            paddingTop: 10,
             paddingHorizontal: 16,
             alignItems: 'flex-start',
             shadowColor: '#000',
@@ -134,20 +135,19 @@ export default function MainLayout() {
           </TabTrigger>
 
           {/* ── Center: connect dock with shape ── */}
-          <View pointerEvents="box-none" style={{ flex: 1.2, alignItems: 'center' }}>
-            {/* Circle plate — makes the featured button prominent */}
+          <View pointerEvents="box-none" style={{ flex: 1.2, alignItems: 'center', overflow: 'visible' }}>
             <View
               pointerEvents="none"
               style={{
                 position: 'absolute',
-                top: -28,
-                width: 86,
-                height: 86,
-                borderRadius: 43,
+                top: -44,
+                width: 116,
+                height: 116,
+                borderRadius: 58,
                 backgroundColor: bg,
               }}
             />
-            <View pointerEvents="box-none" style={{ marginTop: -14 }}>
+            <View pointerEvents="box-none" style={{ marginTop: -44, zIndex: 2, elevation: 10 }}>
               <FloatingConnectButton />
             </View>
           </View>

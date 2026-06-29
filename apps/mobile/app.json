@@ -27,7 +27,15 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.univpn.app"
+      "package": "com.univpn.app",
+      "permissions": [
+        "android.permission.READ_PHONE_STATE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "allowBackup": false
     },
     "web": {
       "output": "static",
@@ -54,7 +62,16 @@
         }
       ],
       "react-native-wireguard-vpn-patched",
-      "./plugins/with-network-security-config"
+      "./plugins/with-network-security-config",
+      "./plugins/with-wireguard-exported",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

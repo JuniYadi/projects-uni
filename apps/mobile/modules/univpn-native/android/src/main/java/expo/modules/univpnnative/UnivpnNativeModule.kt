@@ -96,17 +96,16 @@ class UnivpnNativeModule : Module() {
   }
 
   private fun statusMap(state: Tunnel.State?) = when (state) {
-    Tunnel.State.UP -> mapOf(
-      "isConnected" to true,
-      "tunnelState" to "ACTIVE",
-      "status" to "CONNECTED",
-      // ponytail: static bridge proof; replace with GoBackend stats next.
-      "bytesReceived" to 12_345_678.0,
-      "bytesSent" to 234_567.0
-    )
+    Tunnel.State.UP -> mapOf("isConnected" to true, "tunnelState" to "ACTIVE", "status" to "CONNECTED")
     Tunnel.State.DOWN -> mapOf("isConnected" to false, "tunnelState" to "INACTIVE", "status" to "DISCONNECTED")
     else -> mapOf("isConnected" to false, "tunnelState" to "UNKNOWN", "status" to "UNKNOWN")
-  }
+  }.withStaticBytes()
+
+  private fun Map<String, Any?>.withStaticBytes(): Map<String, Any?> = this + mapOf(
+    // ponytail: static bridge proof; replace with GoBackend stats next.
+    "bytesReceived" to 12_345_678.0,
+    "bytesSent" to 234_567.0
+  )
 
   private fun string(m: Map<String, Any?>, key: String) = m[key] as? String
   private fun requiredString(m: Map<String, Any?>, key: String) = string(m, key) ?: throw Exception("$key is required")

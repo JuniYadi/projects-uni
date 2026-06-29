@@ -157,7 +157,16 @@ function StatusCard({
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === id));
-  const conn = useConnectionStore();
+  const { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, error } = useConnectionStore((state) => ({
+    status: state.status,
+    profile: state.profile,
+    elapsed: state.elapsed,
+    bytesDownloaded: state.bytesDownloaded,
+    bytesUploaded: state.bytesUploaded,
+    error: state.error,
+  }));
+
+  const conn = { status, profile, elapsed, bytesDownloaded, bytesUploaded, error };
   const tick = useConnectionStore((s) => s.tick);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

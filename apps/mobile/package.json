@@ -5,8 +5,10 @@
   "dependencies": {
     "@expo/ui": "~56.0.18",
     "@tailwindcss/postcss": "^4.3.1",
+    "@univpn/shared": "1.0.0",
     "clsx": "^2.1.1",
     "expo": "~56.0.12",
+    "expo-camera": "~56.0.8",
     "expo-constants": "~56.0.18",
     "expo-crypto": "~56.0.4",
     "expo-device": "~56.0.4",

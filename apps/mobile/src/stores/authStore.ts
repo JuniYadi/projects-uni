@@ -1,98 +1,122 @@
-import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
-import type { AuthState, SubscriptionInfo } from '@/types/vpn';
+// Auth store — Zustand with real API integration
 
-interface AuthActions {
-  subscriptionId: string | null;
-  token: string | null;
-  subscription: SubscriptionInfo | null;
-  status: 'idle' | 'loading' | 'valid' | 'invalid' | 'expired';
-  restore: () => Promise<boolean>;
-  loginWithSubId: (subId: string) => Promise<void>;
-  loginWithQr: (qrToken: string) => Promise<void>;
-  logout: () => Promise<void>;
+import { create } from 'zustand'
+import * as storage from '@/services/storageService'
+import { api, getErrorMessage } from '@/services/api'
+import type { SubscriptionInfo } from '@univpn/shared'
+
+// ponytail: dev bypass check
+const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
+
+interface AuthState {
+  subscriptionId: string | null
+  token: string | null
+  expiresAt: string | null
+  subscription: SubscriptionInfo | null
+  status: 'idle' | 'loading' | 'valid' | 'invalid' | 'error'
+  error: string | null
+  restore: () => Promise<boolean>
+  loginWithSubId: (subId: string) => Promise<void>
+  loginWithQr: (pairingToken: string) => Promise<void>
+  logout: () => Promise<void>
+  clearError: () => void
 }
 
-const KEYS = {
-  TOKEN: 'univpn_token',
-  SUB_ID: 'univpn_sub_id',
-  DEVICE_NAME: 'univpn_device_name',
-} as const;
-
-export const useAuthStore = create<AuthActions>((set, get) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   subscriptionId: null,
   token: null,
+  expiresAt: null,
   subscription: null,
   status: 'idle',
+  error: null,
 
   restore: async () => {
-    // ponytail: skip auth for local dev, remove when real auth lands
-    if (process.env.EXPO_PUBLIC_SKIP_AUTH === '1') {
-      set({ token: 'dev-bypass', subscriptionId: 'dev', status: 'valid' });
-      return true;
+    if (SKIP_AUTH) {
+      set({ token: 'dev-bypass', subscriptionId: 'dev', status: 'valid' })
+      return true
     }
+
+    set({ status: 'loading' })
     try {
-      const token = await SecureStore.getItemAsync(KEYS.TOKEN);
-      const subId = await SecureStore.getItemAsync(KEYS.SUB_ID);
-      if (token && subId) {
-        // ponytail: stored expiry check — pass via jwt-decode when token format known
-        set({ token, subscriptionId: subId, status: 'valid' });
-        return true;
+      const token = await storage.getToken()
+      const expiresAt = await storage.getExpiresAt()
+      const subId = await storage.getSubscriptionId()
+
+      if (!token || !expiresAt || !subId) {
+        set({ status: 'invalid' })
+        return false
       }
-      set({ status: 'invalid' });
-      return false;
+
+      // Client-side expiry check
+      if (new Date(expiresAt) < new Date()) {
+        await storage.clearAll()
+        set({ status: 'invalid' })
+        return false
+      }
+
+      // Test token validity via profiles fetch
+      await api.getProfiles()
+
+      set({ token, expiresAt, subscriptionId: subId, status: 'valid' })
+      return true
     } catch {
-      set({ status: 'invalid' });
-      return false;
+      await storage.clearAll()
+      set({ status: 'invalid' })
+      return false
     }
   },
 
   loginWithSubId: async (subId: string) => {
-    set({ status: 'loading' });
+    set({ status: 'loading', error: null })
     try {
-      // ponytail: mock — POST /api/vpn/mobile/auth/login
-      const mockToken = `session_${subId}_${Date.now()}`;
-      const mockSub: SubscriptionInfo = {
-        id: subId,
-        status: 'active',
-        expiresAt: '2026-12-31',
-      };
-      await SecureStore.setItemAsync(KEYS.TOKEN, mockToken);
-      await SecureStore.setItemAsync(KEYS.SUB_ID, subId);
-      set({ token: mockToken, subscriptionId: subId, subscription: mockSub, status: 'valid' });
-    } catch {
-      set({ status: 'invalid' });
-      throw new Error('Login failed');
+      const res = await api.loginWithSubId(subId)
+      set({
+        token: res.token,
+        expiresAt: res.expiresAt,
+        subscriptionId: res.subscription.id,
+        subscription: res.subscription,
+        status: 'valid',
+      })
+    } catch (err) {
+      const code = (err as Error).message
+      const msg = getErrorMessage(code as any)
+      set({ status: 'error', error: msg })
+      throw err
     }
   },
 
-  loginWithQr: async (qrToken: string) => {
-    set({ status: 'loading' });
+  loginWithQr: async (pairingToken: string) => {
+    set({ status: 'loading', error: null })
     try {
-      // ponytail: mock — POST /pairing/claim
-      const mockToken = `qr_session_${Date.now()}`;
-      const mockSub: SubscriptionInfo = {
-        id: 'SUB-0000-0000',
-        status: 'active',
-        expiresAt: '2026-12-31',
-      };
-      await SecureStore.setItemAsync(KEYS.TOKEN, mockToken);
-      await SecureStore.setItemAsync(KEYS.SUB_ID, mockSub.id);
-      set({ token: mockToken, subscriptionId: mockSub.id, subscription: mockSub, status: 'valid' });
-    } catch {
-      set({ status: 'invalid' });
-      throw new Error('QR pairing failed');
+      const res = await api.loginWithQr(pairingToken)
+      set({
+        token: res.token,
+        expiresAt: res.expiresAt,
+        subscriptionId: res.subscription.id,
+        subscription: res.subscription,
+        status: 'valid',
+      })
+    } catch (err) {
+      const code = (err as Error).message
+      const msg = getErrorMessage(code as any)
+      set({ status: 'error', error: msg })
+      throw err
     }
   },
 
   logout: async () => {
-    try {
-      await SecureStore.deleteItemAsync(KEYS.TOKEN);
-      await SecureStore.deleteItemAsync(KEYS.SUB_ID);
-      await SecureStore.deleteItemAsync(KEYS.DEVICE_NAME);
-    } catch {
-      // ignore secure store errors on logout
-    }
-    set({ token: null, subscriptionId: null, subscription: null, status: 'invalid' });
+    await api.logout()
+    set({
+      token: null,
+      expiresAt: null,
+      subscriptionId: null,
+      subscription: null,
+      status: 'invalid',
+      error: null,
+    })
   },
-}));
+
+  clearError: () => set({ error: null, status: 'idle' }),
+}))
+
+export default useAuthStore

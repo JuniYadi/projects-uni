@@ -45,17 +45,6 @@ export default function FilterSheet() {
       </View>
 
       <ChipGroup
-        label="Protocol"
-        options={[
-          { value: 'all', label: 'All' },
-          { value: 'openvpn', label: 'OpenVPN' },
-          { value: 'wireguard', label: 'WireGuard' },
-        ]}
-        selected={activeFilter.protocol}
-        onSelect={(v) => setFilter({ protocol: v as any })}
-      />
-
-      <ChipGroup
         label="Region"
         options={[
           { value: 'all', label: 'All' },

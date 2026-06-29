@@ -1,9 +1,10 @@
 // ponytail: country codes → flag emoji via Regional Indicator Symbols
 export function countryFlag(code: string): string {
-  if (code.length !== 2) return '🏳️';
+  const cc = ({ HONGKONG: 'HK', 'HONG KONG': 'HK' } as Record<string, string>)[code.trim().toUpperCase()] ?? code.trim().toUpperCase();
+  if (cc.length !== 2) return '🏳️';
   const base = 0x1F1E6;
-  const a = code.charCodeAt(0) - 65;
-  const b = code.charCodeAt(1) - 65;
+  const a = cc.charCodeAt(0) - 65;
+  const b = cc.charCodeAt(1) - 65;
   if (a < 0 || a > 25 || b < 0 || b > 25) return '🏳️';
   return String.fromCodePoint(base + a, base + b);
 }

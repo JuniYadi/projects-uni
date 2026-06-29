@@ -127,7 +127,7 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <Text className="text-xs font-semibold bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-neutral-500 dark:text-neutral-400 overflow-hidden">
-                    {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}
+                    WireGuard
                   </Text>
                   <Text className="text-xs text-neutral-400 dark:text-neutral-500">
                     ● {profile.port}

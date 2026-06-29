@@ -16,6 +16,13 @@ const MOCK_PROFILES: VpnProfile[] = [
   { id: 'de-1', name: 'Frankfurt 1', country: 'Germany', countryCode: 'DE', city: 'Frankfurt', region: 'Europe', protocol: 'openvpn', port: 1194, load: 60, ping: 145, encryption: 'AES-256-GCM', serverAddress: 'de1.vpn.example.com', serverIp: '203.0.113.50' },
 ];
 
+const COUNTRY_CODES: Record<string, string> = {
+  'HONG KONG': 'HK',
+  JAPAN: 'JP',
+  SINGAPORE: 'SG',
+  'UNITED STATES': 'US',
+};
+
 // Map API ProfileInfo → local VpnProfile
 function mapProfile(apiProfile: {
   id: string;
@@ -26,14 +33,16 @@ function mapProfile(apiProfile: {
   region: string;
   provisioningStatus: string;
   country?: string;
+  serverIp?: string | null;
   pingMs?: number;
   loadPercent?: number;
 }): VpnProfile {
-  const countryCode = apiProfile.country?.slice(0, 2).toUpperCase() ?? apiProfile.region.slice(0, 2).toUpperCase();
+  const country = apiProfile.country ?? apiProfile.region;
+  const countryCode = COUNTRY_CODES[country.toUpperCase()] ?? COUNTRY_CODES[apiProfile.region.toUpperCase()] ?? country;
   return {
     id: apiProfile.id,
     name: apiProfile.serverName,
-    country: apiProfile.region,
+    country,
     countryCode,
     city: apiProfile.region,
     region: apiProfile.region,
@@ -48,7 +57,7 @@ function mapProfile(apiProfile: {
 }
 
 const DEFAULT_FILTER: FilterState = {
-  protocol: 'all',
+  protocol: 'wireguard',
   region: 'all',
   status: 'all',
   sortBy: 'ping',

@@ -7,18 +7,14 @@
     "icon": "./assets/images/icon.png",
     "scheme": "univpn",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
       "bundleIdentifier": "com.univpn.app",
-      "infoPlist": {
-        "NSLocalNetworkUsageDescription": "This app requires access to network features for VPN functionality",
-        "UIBackgroundModes": ["network-authentication", "network"]
-      },
-      "entitlements": {
-        "com.apple.developer.networking.networkextension": ["packet-tunnel-provider"]
-      },
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -31,12 +27,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.univpn.app",
-      "permissions": [
-        "android.permission.INTERNET",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.BIND_VPN_SERVICE"
-      ]
+      "package": "com.univpn.app"
     },
     "web": {
       "output": "static",
@@ -61,7 +52,9 @@
           "cameraPermission": "Allow UniVPN to access your camera",
           "barcodeScannerEnabled": true
         }
-      ]
+      ],
+      "react-native-wireguard-vpn-patched",
+      "./plugins/with-network-security-config"
     ],
     "experiments": {
       "typedRoutes": true,

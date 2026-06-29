@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { ScrollView, View, Text, Animated, useColorScheme } from 'react-native';
 import { SymbolView } from 'expo-symbols';
+import { Host, Button } from '@expo/ui';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
@@ -157,16 +158,18 @@ function StatusCard({
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === id));
-  const { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, error } = useConnectionStore((state) => ({
-    status: state.status,
-    profile: state.profile,
-    elapsed: state.elapsed,
-    bytesDownloaded: state.bytesDownloaded,
-    bytesUploaded: state.bytesUploaded,
-    error: state.error,
-  }));
+  const status = useConnectionStore((s) => s.status);
+  const connectionProfile = useConnectionStore((s) => s.profile);
+  const elapsed = useConnectionStore((s) => s.elapsed);
+  const bytesDownloaded = useConnectionStore((s) => s.bytesDownloaded);
+  const bytesUploaded = useConnectionStore((s) => s.bytesUploaded);
+  const tunnelAddress = useConnectionStore((s) => s.tunnelAddress);
+  const tunnelDns = useConnectionStore((s) => s.tunnelDns);
+  const connError = useConnectionStore((s) => s.error);
+  const connect = useConnectionStore((s) => s.connect);
+  const disconnect = useConnectionStore((s) => s.disconnect);
 
-  const conn = { status, profile, elapsed, bytesDownloaded, bytesUploaded, error };
+  const conn = { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, tunnelAddress, tunnelDns, error: connError };
   const tick = useConnectionStore((s) => s.tick);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -219,11 +222,11 @@ export default function ConnectionDetailScreen() {
           <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
             <InfoRow label="Server" value={profile.serverAddress} />
             <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="IP" value={profile.serverIp} />
+            <InfoRow label="IP Server" value={profile.serverIp} />
             <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="Location" value={`${profile.city}, ${profile.region}`} />
+            <InfoRow label="IP Lokal" value={conn.tunnelAddress.join(', ') || 'Connect untuk lihat IP'} />
             <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="Protocol" value={`${profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'} UDP ${profile.port}`} />
+            <InfoRow label="DNS" value={conn.tunnelDns.join(', ') || 'Connect untuk lihat DNS'} />
             <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
             <InfoRow label="Encryption" value={profile.encryption} />
           </View>
@@ -236,6 +239,29 @@ export default function ConnectionDetailScreen() {
           </View>
         )}
 
+        {/* connect / disconnect button */}
+        <Host style={{ width: '100%', minHeight: 48 }}>
+          <Button
+            variant="filled"
+            onPress={() => {
+              if (connected) {
+                disconnect();
+              } else if (!connecting && !disconnecting) {
+                connect(profile);
+              }
+            }}
+            disabled={connecting || disconnecting}
+            label={
+              connecting
+                ? 'Connecting...'
+                : disconnecting
+                  ? 'Disconnecting...'
+                  : connected
+                    ? 'Disconnect'
+                    : 'Connect'
+            }
+          />
+        </Host>
       </View>
     </ScrollView>
     </View>

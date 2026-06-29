@@ -43,7 +43,7 @@ function mapProfile(apiProfile: {
     ping: apiProfile.pingMs ?? 999,
     encryption: 'AES-256-GCM',
     serverAddress: apiProfile.hostname,
-    serverIp: '0.0.0.0',
+    serverIp: apiProfile.serverIp ?? apiProfile.hostname ?? apiProfile.serverName,
   };
 }
 
@@ -84,7 +84,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       } else {
         const res = await api.getProfiles();
         const mapped = res.profiles.map(mapProfile);
-        set({ profiles: mapped });
+        set({ profiles: mapped, loading: false });
         get().applyFilter();
         return;
       }

@@ -68,13 +68,14 @@ function PingBadge({ ping }: { ping: number }) {
 }
 
 function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () => void }) {
-  const conn = useConnectionStore();
-  const isActive = conn.profile?.id === profile.id;
+  const activeId = useConnectionStore((s) => s.profile?.id);
+  const connect = useConnectionStore((s) => s.connect);
+  const isActive = activeId === profile.id;
   const accent = useAccent();
 
   const handleLongPress = useCallback(() => {
     Alert.alert(profile.name, undefined, [
-      { text: 'Connect', onPress: () => conn.connect(profile) },
+      { text: 'Connect', onPress: () => connect(profile) },
       {
         text: 'Copy Config',
         onPress: () => {
@@ -83,7 +84,7 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
       },
       { text: 'Cancel', style: 'cancel' },
     ]);
-  }, [profile, conn]);
+  }, [profile, connect]);
 
   return (
     <Pressable onPress={onPress} onLongPress={handleLongPress}>
@@ -149,9 +150,14 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
 }
 
 function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
-  const conn = useConnectionStore();
-  const profile = conn.profile;
-  if (!profile || conn.status !== 'connected') return null;
+  const profile = useConnectionStore((s) => s.profile);
+  const status = useConnectionStore((s) => s.status);
+  const elapsed = useConnectionStore((s) => s.elapsed);
+  const bytesDownloaded = useConnectionStore((s) => s.bytesDownloaded);
+  const bytesUploaded = useConnectionStore((s) => s.bytesUploaded);
+  const tunnelAddress = useConnectionStore((s) => s.tunnelAddress);
+  const disconnect = useConnectionStore((s) => s.disconnect);
+  if (!profile || status !== 'connected') return null;
 
   return (
     <Pressable
@@ -165,11 +171,11 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
         <View className="flex-1 gap-0.5">
           <Text className="text-white font-semibold text-sm">Connected to {profile.name}</Text>
           <Text className="text-white/80 text-xs">
-            {formatDuration(conn.elapsed)}  ▼{formatBytes(conn.bytesDownloaded)} ▲{formatBytes(conn.bytesUploaded)}
+            {tunnelAddress[0] ? `IP Lokal ${tunnelAddress[0]}  ` : ''}{formatDuration(elapsed)}  ▼{formatBytes(bytesDownloaded)} ▲{formatBytes(bytesUploaded)}
           </Text>
         </View>
         <Host style={{ minHeight: 36 }}>
-          <Button variant="text" onPress={conn.disconnect} label="Disconnect" />
+          <Button variant="text" onPress={disconnect} label="Disconnect" />
         </Host>
       </View>
     </Pressable>

@@ -1,12 +1,28 @@
 import '../global.css';
 
+import { useEffect } from 'react';
 import { Stack } from 'expo-router/stack';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { useColorScheme } from 'react-native';
 import { Host } from '@expo/ui';
+import { vpnService } from '@/services/vpnService';
+import { useConnectionStore } from '@/stores/connectionStore';
+import { stopHeartbeat } from '@/services/heartbeatService';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const reset = useConnectionStore((s) => s.reset);
+
+  // Subscribe to native VPN state changes
+  useEffect(() => {
+    const unsub = vpnService.onStatusChange((status) => {
+      if (status === 'DISCONNECTED' || status === 'ERROR') {
+        stopHeartbeat();
+        reset();
+      }
+    });
+    return unsub;
+  }, [reset]);
 
   return (
     <Host style={{ flex: 1 }}>

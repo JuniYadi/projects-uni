@@ -1,19 +1,28 @@
-import { create } from 'zustand';
-import type { VpnProfile, ConnectionStatus } from '@/types/vpn';
+// Connection store — real WireGuard integration
+// Manages VPN lifecycle: fetch config → parse → connect → heartbeat → disconnect
+
+import { create } from 'zustand'
+import type { VpnProfile, ConnectionStatus } from '@/types/vpn'
+import { api } from '@/services/api'
+import { vpnService } from '@/services/vpnService'
+import { parseWireGuardConfig } from '@/utils/config-parser'
+import { startHeartbeat, stopHeartbeat } from '@/services/heartbeatService'
 
 interface ConnectionState {
-  profile: VpnProfile | null;
-  status: ConnectionStatus;
-  startTime: number | null;
-  elapsed: number;
-  bytesDownloaded: number;
-  bytesUploaded: number;
-  error: string | null;
-  connect: (profile: VpnProfile) => Promise<void>;
-  disconnect: () => Promise<void>;
-  tick: () => void;
-  updateStats: (down: number, up: number) => void;
-  reset: () => void;
+  profile: VpnProfile | null
+  status: ConnectionStatus
+  startTime: number | null
+  elapsed: number
+  bytesDownloaded: number
+  bytesUploaded: number
+  tunnelAddress: string[]
+  tunnelDns: string[]
+  error: string | null
+  connect: (profile: VpnProfile) => Promise<void>
+  disconnect: () => Promise<void>
+  tick: () => void
+  updateStats: (down: number, up: number) => void
+  reset: () => void
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
@@ -23,49 +32,94 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   elapsed: 0,
   bytesDownloaded: 0,
   bytesUploaded: 0,
+  tunnelAddress: [],
+  tunnelDns: [],
   error: null,
 
   connect: async (profile) => {
-    set({ status: 'connecting', profile, error: null });
+    set({ status: 'connecting', profile, error: null })
+
+    // ponytail: only WireGuard supported for now
+    if (profile.protocol !== 'wireguard') {
+      set({
+        status: 'disconnected',
+        error: `OpenVPN not yet supported — use a WireGuard server`,
+      })
+      return
+    }
+
     try {
-      // ponytail: mock — WireGuardVpnModule.connect(config)
-      await new Promise((r) => setTimeout(r, 1500));
-      set({ status: 'connected', startTime: Date.now(), elapsed: 0 });
-    } catch {
-      set({ status: 'disconnected', error: 'Connection failed' });
+      // 1. Fetch config from API
+      const configRes = await api.getProfileConfig(profile.id)
+
+      // 2. Parse WireGuard .conf
+      const wgConfig = parseWireGuardConfig(configRes.config)
+      const tunnelAddress = Array.isArray(wgConfig.address) ? wgConfig.address : wgConfig.address ? [wgConfig.address] : []
+
+      // 3. Initialize VPN module
+      await vpnService.initialize()
+
+      // 4. Connect
+      await vpnService.connect(wgConfig)
+
+      // 5. Connected
+      set({ status: 'connected', startTime: Date.now(), elapsed: 0, tunnelAddress, tunnelDns: wgConfig.dns ?? [] })
+
+      // 6. Start heartbeat
+      startHeartbeat(profile.id)
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : 'Connection failed'
+      set({ status: 'disconnected', error: msg })
     }
   },
 
   disconnect: async () => {
-    set({ status: 'disconnecting' });
+    const prev = get().profile
+    set({ status: 'disconnecting', tunnelAddress: [], tunnelDns: [] })
+
     try {
-      // ponytail: mock — WireGuardVpnModule.disconnect()
-      await new Promise((r) => setTimeout(r, 500));
-      get().reset();
+      await vpnService.disconnect()
     } catch {
-      set({ status: 'connected', error: 'Disconnect failed' });
+      // Silently clean up anyway
     }
+
+    stopHeartbeat()
+    set({
+      status: 'disconnected',
+      profile: null,
+      startTime: null,
+      elapsed: 0,
+      bytesDownloaded: 0,
+      bytesUploaded: 0,
+      tunnelAddress: [],
+      tunnelDns: [],
+      error: null,
+    })
   },
 
   tick: () => {
-    const { status, startTime } = get();
+    const { status, startTime } = get()
     if (status === 'connected' && startTime) {
-      set({ elapsed: Math.floor((Date.now() - startTime) / 1000) });
+      set({ elapsed: Math.floor((Date.now() - startTime) / 1000) })
     }
   },
 
   updateStats: (down, up) => {
-    set({ bytesDownloaded: down, bytesUploaded: up });
+    set({ bytesDownloaded: down, bytesUploaded: up })
   },
 
   reset: () => {
+    stopHeartbeat()
     set({
       status: 'disconnected',
       startTime: null,
       elapsed: 0,
       bytesDownloaded: 0,
       bytesUploaded: 0,
+      tunnelAddress: [],
+      tunnelDns: [],
       error: null,
-    });
+    })
   },
-}));
+}))

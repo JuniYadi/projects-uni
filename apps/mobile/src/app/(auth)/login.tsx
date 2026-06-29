@@ -13,7 +13,8 @@ export default function LoginScreen() {
   const clearError = useAuthStore((s) => s.clearError);
   const [subId, setSubId] = useState('');
 
-  const isValidSubId = (v: string) => /^[a-zA-Z0-9]{12}$/.test(v.trim());
+  // ponytail: backend validates format — just check non-empty
+  const isValidSubId = (v: string) => v.trim().length >= 3;
 
   const handleChangeText = useCallback(
     (v: string) => {

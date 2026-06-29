@@ -57,6 +57,7 @@ export interface PairingClaimResponse {
 }
 
 export type SessionTokenResponse = PairingClaimResponse
+export type AuthLoginResponse = SessionTokenResponse
 
 // ─── Profiles ───────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ export interface ProfileInfo {
   serverId?: string
   serverName: string
   hostname: string
+  serverIp?: string | null
   protocol: "OPENVPN" | "WIREGUARD"
   region: string
   provisioningStatus: string

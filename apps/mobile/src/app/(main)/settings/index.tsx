@@ -1,12 +1,48 @@
 import { useEffect, useCallback } from 'react';
-import { ScrollView, Alert, View, Text, Pressable } from 'react-native';
+import { ScrollView, Alert, View, Text, Pressable, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { Host, Switch, Picker } from '@expo/ui';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import type { VpnProtocol } from '@/types/vpn';
+
+// ponytail: gradient-like bg glow
+function BgGlow() {
+  const scheme = useColorScheme();
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 280, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: -140,
+          alignSelf: 'center',
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: '#00C781',
+          opacity: scheme === 'dark' ? 0.06 : 0.04,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: -60,
+          right: -40,
+          width: 180,
+          height: 180,
+          borderRadius: 90,
+          backgroundColor: '#5856D6',
+          opacity: scheme === 'dark' ? 0.05 : 0.03,
+        }}
+      />
+    </View>
+  );
+}
+
+// ponytail: tab bar bottom padding constant
 
 // ponytail: all-RN layout — Host/@expo/ui only wraps Switch/Picker.
 // FieldGroup skipped because RN View/Text don't render inside Compose (Host) on Android.
@@ -193,12 +229,16 @@ export default function SettingsScreen() {
     Alert.alert('Up to Date', 'You have the latest version.');
   }, []);
 
+  const insets = useSafeAreaInsets();
+
   // ponytail: loading skeleton deferred — add shimmer when real API with latency lands
   if (!settings.loaded) return null;
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
-      <View className="px-4 pt-4 pb-8 gap-6">
+    <View style={{ flex: 1 }}>
+      <BgGlow />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
+      <View className="px-4 pt-4 gap-6" style={{ paddingBottom: insets.bottom + 20 }}>
         {/* profile card */}
         <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
           <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
@@ -263,5 +303,6 @@ export default function SettingsScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 }

@@ -1,30 +1,44 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { ScrollView, Alert, View, Text, Animated, Pressable, useColorScheme } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ScrollView, View, Text, Animated, useColorScheme } from 'react-native';
+import { SymbolView } from 'expo-symbols';
 import { useLocalSearchParams } from 'expo-router';
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import { Colors } from '@/constants/theme';
 
-// ─── pulse dot ─────────────────────────────────────────────
+// ponytail: gradient-like bg glow — overlapping views, no dep
+function BgGlow() {
+  const scheme = useColorScheme();
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 300, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: -120,
+          alignSelf: 'center',
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          backgroundColor: '#00C781',
+          opacity: scheme === 'dark' ? 0.08 : 0.05,
+        }}
+      />
+    </View>
+  );
+}
 
-function PulseDot({ size = 12, color = '#34c759' }: { size?: number; color?: string }) {
-  const opacity = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 900, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.3, duration: 900, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [opacity]);
-
-  return <Animated.View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, opacity }} />;
+function StatusBolt({ color, size = 30 }: { color: string; size?: number }) {
+  return (
+    <SymbolView
+      name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
+      tintColor={color}
+      size={size}
+      style={{ width: size, height: size }}
+    />
+  );
 }
 
 // ─── data-row ──────────────────────────────────────────────
@@ -60,6 +74,22 @@ function StatusCard({
 
   const statusColor = connected ? '#34c759' : connecting ? '#ff9f0a' : '#8e8e93';
   const statusLabel = connected ? 'CONNECTED' : connecting ? 'CONNECTING...' : disconnecting ? 'DISCONNECTING...' : 'DISCONNECTED';
+  const boltScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!connecting) {
+      boltScale.setValue(1);
+      return;
+    }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(boltScale, { toValue: 1.15, duration: 450, useNativeDriver: true }),
+        Animated.timing(boltScale, { toValue: 1, duration: 450, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [connecting, boltScale]);
 
   return (
     <View className="items-center py-8 px-6 rounded-2xl overflow-hidden"
@@ -89,10 +119,12 @@ function StatusCard({
       {/* status indicator */}
       <View className="items-center gap-2">
         <View className="items-center justify-center" style={{ width: 32, height: 32 }}>
-          {connecting || connected ? (
-            <PulseDot size={28} color={statusColor} />
+          {connecting ? (
+            <Animated.View style={{ transform: [{ scale: boltScale }] }}>
+              <StatusBolt color="#ffcc00" />
+            </Animated.View>
           ) : (
-            <View className="rounded-full" style={{ width: 28, height: 28, backgroundColor: statusColor }} />
+            <StatusBolt color={connected ? '#ffcc00' : statusColor} />
           )}
         </View>
         <Text className="text-xs font-semibold tracking-widest" style={{ color: statusColor }}>
@@ -126,8 +158,6 @@ export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === id));
   const conn = useConnectionStore();
-  const connect = useConnectionStore((s) => s.connect);
-  const disconnect = useConnectionStore((s) => s.disconnect);
   const tick = useConnectionStore((s) => s.tick);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -142,17 +172,6 @@ export default function ConnectionDetailScreen() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [conn.status, tick]);
 
-  const handleConnect = useCallback(async () => {
-    if (profile) await connect(profile);
-  }, [profile, connect]);
-
-  const handleDisconnect = useCallback(() => {
-    Alert.alert('Disconnect', `Disconnect from ${profile?.name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Disconnect', style: 'destructive', onPress: () => { disconnect(); } },
-    ]);
-  }, [profile, disconnect]);
-
   if (!profile) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -166,12 +185,13 @@ export default function ConnectionDetailScreen() {
   const connecting = isActive && conn.status === 'connecting';
   const disconnecting = isActive && conn.status === 'disconnecting';
 
-  const showConnect = !connected && !disconnecting;
-  const showDisconnect = connected || disconnecting;
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
-      <View className="px-4 pt-4 gap-6">
+    <View style={{ flex: 1 }}>
+      <BgGlow />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
+      <View className="px-4 pt-4 gap-6" style={{ paddingBottom: insets.bottom + 20 }}>
         {/* status card */}
         <StatusCard
           profile={profile}
@@ -207,30 +227,8 @@ export default function ConnectionDetailScreen() {
           </View>
         )}
 
-        {/* CTA button at end of scroll */}
-        <View className="pt-6 pb-8">
-          {showConnect && (
-            <Pressable
-              onPress={handleConnect}
-              className="bg-[#00C781] rounded-2xl py-4 items-center active:opacity-70"
-            >
-              <Text className="text-white font-semibold text-base">
-                {connecting ? 'Connecting...' : 'Connect to Server'}
-              </Text>
-            </Pressable>
-          )}
-          {showDisconnect && (
-            <Pressable
-              onPress={handleDisconnect}
-              className="bg-red-500 rounded-2xl py-4 items-center active:opacity-70"
-            >
-              <Text className="text-white font-semibold text-base">
-                {disconnecting ? 'Disconnecting...' : 'Disconnect'}
-              </Text>
-            </Pressable>
-          )}
-        </View>
       </View>
     </ScrollView>
+    </View>
   );
 }

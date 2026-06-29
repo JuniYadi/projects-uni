@@ -1,14 +1,45 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { ScrollView, Pressable, View, Text, RefreshControl, Alert, Animated } from 'react-native';
+import { ScrollView, Pressable, View, Text, RefreshControl, Alert, Animated, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { formatBytes, formatDuration, formatPing, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from 'react-native';
+
+// ponytail: gradient-like background using overlapping circles — no linear-gradient dep
+function BgGlow() {
+  const scheme = useColorScheme();
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 280, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: -140,
+          alignSelf: 'center',
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: '#00C781',
+          opacity: scheme === 'dark' ? 0.06 : 0.04,
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: -80,
+          left: -60,
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          backgroundColor: '#007AFF',
+          opacity: scheme === 'dark' ? 0.04 : 0.03,
+        }}
+      />
+    </View>
+  );
+}
 
 // ─── helpers ───────────────────────────────────────────────
 
@@ -238,7 +269,6 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
 export default function ServersScreen() {
   const router = useRouter();
   const loadProfiles = useProfileStore((s) => s.loadProfiles);
-  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { loadProfiles(); }, []);
@@ -250,15 +280,19 @@ export default function ServersScreen() {
   }, [loadProfiles]);
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View className="gap-4 pt-2">
-        <ConnectedBanner router={router} />
-        <ProfileList router={router} />
-      </View>
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <BgGlow />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View className="gap-4 pt-2">
+          <ConnectedBanner router={router} />
+          <ProfileList router={router} />
+        </View>
+      </ScrollView>
+    </View>
   );
 }

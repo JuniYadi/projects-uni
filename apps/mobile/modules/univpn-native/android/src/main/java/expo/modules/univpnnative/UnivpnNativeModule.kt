@@ -3,6 +3,7 @@ package expo.modules.univpnnative
 import android.net.VpnService
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
+import com.wireguard.android.backend.Statistics
 import com.wireguard.config.Config
 import com.wireguard.config.InetNetwork
 import com.wireguard.config.Interface
@@ -56,7 +57,8 @@ class UnivpnNativeModule : Module() {
     AsyncFunction("getStatus") {
       try {
         val state = if (tunnel != null && backend != null) backend!!.getState(tunnel!!) else Tunnel.State.DOWN
-        statusMap(state)
+        val stats = if (state == Tunnel.State.UP && tunnel != null && backend != null) backend!!.getStatistics(tunnel!!) else null
+        statusMap(state, stats)
       } catch (e: Exception) {
         mapOf("isConnected" to false, "tunnelState" to "ERROR", "status" to "ERROR", "error" to e.message)
       }
@@ -95,17 +97,17 @@ class UnivpnNativeModule : Module() {
     return Config.Builder().setInterface(iface.build()).addPeer(peer.build()).build()
   }
 
-  private fun statusMap(state: Tunnel.State?) = when (state) {
-    Tunnel.State.UP -> mapOf("isConnected" to true, "tunnelState" to "ACTIVE", "status" to "CONNECTED")
+  private fun statusMap(state: Tunnel.State?, stats: Statistics?) = when (state) {
+    Tunnel.State.UP -> mapOf(
+      "isConnected" to true,
+      "tunnelState" to "ACTIVE",
+      "status" to "CONNECTED",
+      "bytesReceived" to (stats?.totalRx() ?: 0L).toDouble(),
+      "bytesSent" to (stats?.totalTx() ?: 0L).toDouble()
+    )
     Tunnel.State.DOWN -> mapOf("isConnected" to false, "tunnelState" to "INACTIVE", "status" to "DISCONNECTED")
     else -> mapOf("isConnected" to false, "tunnelState" to "UNKNOWN", "status" to "UNKNOWN")
-  }.withStaticBytes()
-
-  private fun Map<String, Any?>.withStaticBytes(): Map<String, Any?> = this + mapOf(
-    // ponytail: static bridge proof; replace with GoBackend stats next.
-    "bytesReceived" to 12_345_678.0,
-    "bytesSent" to 234_567.0
-  )
+  }
 
   private fun string(m: Map<String, Any?>, key: String) = m[key] as? String
   private fun requiredString(m: Map<String, Any?>, key: String) = string(m, key) ?: throw Exception("$key is required")

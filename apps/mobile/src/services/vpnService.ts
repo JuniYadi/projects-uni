@@ -63,7 +63,11 @@ class VpnService {
 
   /** Subscribe to VPN state changes. */
   onStatusChange(cb: StatusCallback): () => void {
-    const emitter = new NativeEventEmitter(NativeModules.WireGuardVpnModule)
+    const emitter = new NativeEventEmitter({
+      ...NativeModules.WireGuardVpnModule,
+      addListener: () => {},
+      removeListeners: () => {},
+    })
     const sub = emitter.addListener('vpnStateChanged', (payload: VpnConnectionStatus) => {
       cb(payload.status)
     })

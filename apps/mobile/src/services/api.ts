@@ -4,6 +4,7 @@
 import { Platform } from 'react-native'
 import * as Crypto from 'expo-crypto'
 import * as Device from 'expo-device'
+import * as Application from 'expo-application'
 import { API_BASE_URL, API_TIMEOUT } from '@univpn/shared'
 import * as storage from './storageService'
 import type {
@@ -93,7 +94,7 @@ class VpnApiClient {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': `UniVPN/1.0.0 ${Platform.OS}`,
+          'User-Agent': `UniVPN/${Application.nativeApplicationVersion ?? '1.0.0'} ${Platform.OS}`,
           ...(token && { Authorization: `Bearer ${token}` }),
           ...(fingerprint && { 'X-Device-Fingerprint': fingerprint }),
           ...options.headers,
@@ -144,8 +145,8 @@ class VpnApiClient {
       deviceName,
       deviceFingerprint: fingerprint,
       platform: Platform.OS,
-      osVersion: Platform.Version.toString(),
-      appVersion: '1.0.0',
+      osVersion: Device.osVersion ?? '',
+      appVersion: Application.nativeApplicationVersion ?? '1.0.0',
     }
 
     const res = await this.request<AuthLoginResponse>('/auth/login', {
@@ -169,8 +170,8 @@ class VpnApiClient {
       deviceName,
       deviceFingerprint: fingerprint,
       platform: Platform.OS,
-      osVersion: Platform.Version.toString(),
-      appVersion: '1.0.0',
+      osVersion: Device.osVersion ?? '',
+      appVersion: Application.nativeApplicationVersion ?? '1.0.0',
     }
 
     const res = await this.request<PairingClaimResponse>('/pairing/claim', {

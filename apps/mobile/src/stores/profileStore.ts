@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { VpnProfile, FilterState } from '@/types/vpn';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { api } from '@/services/api';
+import { withLivePing } from '@/services/pingService';
 
 // ponytail: dev bypass fallback
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
@@ -63,6 +64,8 @@ const DEFAULT_FILTER: FilterState = {
   sortBy: 'ping',
 };
 
+let pingController: AbortController | null = null
+
 interface ProfileState {
   profiles: VpnProfile[];
   filteredProfiles: VpnProfile[];
@@ -71,6 +74,7 @@ interface ProfileState {
   loading: boolean;
   error: string | null;
   loadProfiles: () => Promise<void>;
+  cancelLoadProfiles: () => void;
   setFilter: (filter: Partial<FilterState>) => void;
   resetFilter: () => void;
   applyFilter: () => void;
@@ -85,6 +89,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   error: null,
 
   loadProfiles: async () => {
+    pingController?.abort()
+    pingController = new AbortController()
+    const signal = pingController.signal
     set({ loading: true, error: null });
     try {
       if (SKIP_AUTH) {
@@ -92,17 +99,25 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         await new Promise((r) => setTimeout(r, 300));
       } else {
         const res = await api.getProfiles();
-        const mapped = res.profiles.map(mapProfile);
+        const mapped = await withLivePing(res.profiles.map(mapProfile), signal);
+        if (signal.aborted) return
         set({ profiles: mapped, loading: false });
         get().applyFilter();
         return;
       }
       const regions = [...new Set(MOCK_PROFILES.map((p) => p.region))] as string[];
-      set({ profiles: MOCK_PROFILES, regions, loading: false });
+      const profiles = await withLivePing(MOCK_PROFILES, signal);
+      if (signal.aborted) return
+      set({ profiles, regions, loading: false });
       get().applyFilter();
     } catch {
-      set({ error: 'Failed to load servers', loading: false });
+      if (!signal.aborted) set({ error: 'Failed to load servers', loading: false });
     }
+  },
+
+  cancelLoadProfiles: () => {
+    pingController?.abort()
+    pingController = null
   },
 
   setFilter: (filter) => {

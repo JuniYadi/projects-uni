@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { Host, Switch, Picker } from '@expo/ui';
+import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useConnectionStore } from '@/stores/connectionStore';
@@ -296,9 +297,9 @@ export default function SettingsScreen() {
         <View className="gap-2">
           <SectionHeader title="About" />
           <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-            <InfoRow icon="📦" label="Version" value="1.0.0" />
+            <InfoRow icon="📦" label="Version" value={Application.nativeApplicationVersion ?? '1.0.0'} />
             <Divider />
-            <InfoRow icon="🔨" label="Build" value="2026.06.26" />
+            <InfoRow icon="🔨" label="Build" value={Application.nativeBuildVersion ?? '—'} />
           </View>
         </View>
       </View>

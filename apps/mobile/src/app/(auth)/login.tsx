@@ -3,6 +3,7 @@ import { ScrollView, View, Text, TextInput, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Host, Button } from '@expo/ui';
+import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginScreen() {
@@ -120,7 +121,7 @@ export default function LoginScreen() {
             className="flex-row items-center justify-center gap-2 py-3 active:opacity-60"
           >
             <SymbolView
-              name={{ ios: 'qrcode.viewfinder', android: 'qr_code_scanner', web: 'qr' }}
+              name={{ ios: 'qrcode.viewfinder', android: 'qr_code_scanner', web: 'qr_code' }}
               tintColor="#8E8E93"
               size={18}
               style={{ width: 18, height: 18 }}
@@ -133,7 +134,7 @@ export default function LoginScreen() {
         <Pressable
           onPress={() => {
             import('expo-web-browser').then((m) =>
-              m.openBrowserAsync('https://univpn.example.com/portal'),
+              m.openBrowserAsync(process.env.EXPO_PUBLIC_APP_URL || ''),
             );
           }}
           className="flex-row items-center justify-center gap-1.5 mt-6 active:opacity-60"
@@ -142,7 +143,7 @@ export default function LoginScreen() {
           <Text className="text-sm text-[#8E8E93]">↗</Text>
         </Pressable>
 
-        <Text className="mt-12 text-center text-xs text-[#C7C7CC]">─── v1.0.0 ───</Text>
+        <Text className="mt-12 text-center text-xs text-[#C7C7CC]">─── v{Application.nativeApplicationVersion ?? '1.0.0'} ───</Text>
       </ScrollView>
     </View>
   );

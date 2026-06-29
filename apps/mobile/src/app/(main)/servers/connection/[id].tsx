@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ScrollView, View, Text, Animated, useColorScheme } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { Host, Button } from '@expo/ui';
@@ -8,6 +8,8 @@ import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
+import * as Cellular from 'expo-cellular';
+import * as Network from 'expo-network';
 import { Colors } from '@/constants/theme';
 
 // ponytail: gradient-like bg glow — overlapping views, no dep
@@ -153,6 +155,86 @@ function StatusCard({
   );
 }
 
+// ─── network info ──────────────────────────────────────────
+
+function NetworkInfo() {
+  const { type, isConnected, isInternetReachable } = Network.useNetworkState();
+  const [ip, setIp] = useState<string | null>(null);
+  const [carrierName, setCarrierName] = useState<string | null>(null);
+  const [generation, setGeneration] = useState<Cellular.CellularGeneration | null>(null);
+
+  useEffect(() => {
+    Network.getIpAddressAsync().then(setIp);
+    if (type === Network.NetworkStateType.CELLULAR) {
+      Cellular.getCarrierNameAsync().then(setCarrierName);
+      Cellular.getCellularGenerationAsync().then(setGeneration);
+    } else {
+      setCarrierName(null);
+      setGeneration(null);
+    }
+  }, [type]);
+
+  const typeLabel =
+    type === Network.NetworkStateType.WIFI ? 'Wi-Fi' :
+    type === Network.NetworkStateType.CELLULAR ? 'Cellular' :
+    type === Network.NetworkStateType.ETHERNET ? 'Ethernet' :
+    type === Network.NetworkStateType.BLUETOOTH ? 'Bluetooth' :
+    type === Network.NetworkStateType.VPN ? 'VPN' :
+    type === Network.NetworkStateType.NONE ? 'Disconnected' : 'Unknown';
+
+  const internetLabel = isInternetReachable ? 'Reachable' : isConnected ? 'No access' : 'Offline';
+
+  const genLabel =
+    generation === Cellular.CellularGeneration.CELLULAR_5G ? '5G' :
+    generation === Cellular.CellularGeneration.CELLULAR_4G ? '4G LTE' :
+    generation === Cellular.CellularGeneration.CELLULAR_3G ? '3G' :
+    generation === Cellular.CellularGeneration.CELLULAR_2G ? '2G' : null;
+
+  return (
+    <View className="gap-2">
+      <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
+        Network Status
+      </Text>
+      <View className="bg-black/5 dark:bg-white/10 rounded-2xl p-3 gap-y-3">
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Connection</Text>
+            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{typeLabel}</Text>
+          </View>
+          <View className="flex-1">
+            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Internet</Text>
+            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{internetLabel}</Text>
+          </View>
+        </View>
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">IP Address</Text>
+            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1} selectable>{ip && ip !== '0.0.0.0' ? ip : '—'}</Text>
+          </View>
+          {carrierName && genLabel ? (
+            <View className="flex-1">
+              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Network</Text>
+              <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{carrierName} · {genLabel}</Text>
+            </View>
+          ) : carrierName ? (
+            <View className="flex-1">
+              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Carrier</Text>
+              <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{carrierName}</Text>
+            </View>
+          ) : genLabel ? (
+            <View className="flex-1">
+              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Signal</Text>
+              <Text className="text-xs text-black dark:text-white font-medium mt-0.5">{genLabel}</Text>
+            </View>
+          ) : (
+            <View className="flex-1" />
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 // ─── screen ────────────────────────────────────────────────
 
 export default function ConnectionDetailScreen() {
@@ -231,6 +313,9 @@ export default function ConnectionDetailScreen() {
             <InfoRow label="Encryption" value={profile.encryption} />
           </View>
         </View>
+
+        {/* network status */}
+        <NetworkInfo />
 
         {/* error */}
         {conn.error && (

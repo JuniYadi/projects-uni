@@ -275,9 +275,13 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
 export default function ServersScreen() {
   const router = useRouter();
   const loadProfiles = useProfileStore((s) => s.loadProfiles);
+  const cancelLoadProfiles = useProfileStore((s) => s.cancelLoadProfiles);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => { loadProfiles(); }, []);
+  useEffect(() => {
+    loadProfiles();
+    return cancelLoadProfiles;
+  }, [loadProfiles, cancelLoadProfiles]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

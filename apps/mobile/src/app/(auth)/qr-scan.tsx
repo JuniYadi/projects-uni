@@ -63,49 +63,48 @@ export default function QrScanScreen() {
         facing="back"
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={handleBarcodeScanned}
-      >
-        {/* Overlay */}
-        <View className="flex-1">
-          {/* Top bar */}
-          <View className="flex-row items-center px-4 pt-16">
-            <Pressable
-              onPress={() => router.back()}
-              className="h-10 w-10 items-center justify-center rounded-full bg-black/40 active:opacity-60"
-            >
-              <SymbolView
-                name={{ ios: 'xmark', android: 'close', web: 'x' }}
-                tintColor="#FFFFFF"
-                size={20}
-                style={{ width: 20, height: 20 }}
-              />
-            </Pressable>
-            <Text className="ml-3 text-lg font-semibold text-white">Scan QR Code</Text>
-          </View>
-
-          {/* Center guide */}
-          <View className="flex-1 items-center justify-center">
-            <View className="h-64 w-64 items-center justify-center rounded-2xl border-2 border-white/40">
-              <SymbolView
-                name={{ ios: 'qrcode.viewfinder', android: 'qr_code_scanner', web: 'qr' }}
-                tintColor="#FFFFFF"
-                size={64}
-                opacity={0.6}
-                style={{ width: 64, height: 64 }}
-              />
-            </View>
-            <Text className="mt-6 text-sm text-white/50">
-              Arahkan kamera ke QR Code
-            </Text>
-          </View>
-
-          {/* Bottom */}
-          <View className="items-center pb-12">
-            {authStatus === 'loading' && (
-              <Text className="text-base text-white/70">Memverifikasi...</Text>
-            )}
-          </View>
+      />
+      {/* Overlay on top — CameraView doesn't support children */}
+      <View className="absolute inset-0">
+        {/* Top bar */}
+        <View className="flex-row items-center px-4 pt-16">
+          <Pressable
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-full bg-black/40 active:opacity-60"
+          >
+            <SymbolView
+              name={{ ios: 'xmark', android: 'close', web: 'x' }}
+              tintColor="#FFFFFF"
+              size={20}
+              style={{ width: 20, height: 20 }}
+            />
+          </Pressable>
+          <Text className="ml-3 text-lg font-semibold text-white">Scan QR Code</Text>
         </View>
-      </CameraView>
+
+        {/* Center guide */}
+        <View className="flex-1 items-center justify-center">
+          <View className="h-64 w-64 items-center justify-center rounded-2xl border-2 border-white/40">
+            <SymbolView
+              name={{ ios: 'qrcode.viewfinder', android: 'qr_code_scanner', web: 'qr' }}
+              tintColor="#FFFFFF"
+              size={64}
+              opacity={0.6}
+              style={{ width: 64, height: 64 }}
+            />
+          </View>
+          <Text className="mt-6 text-sm text-white/50">
+            Arahkan kamera ke QR Code
+          </Text>
+        </View>
+
+        {/* Bottom */}
+        <View className="items-center pb-12">
+          {authStatus === 'loading' && (
+            <Text className="text-base text-white/70">Memverifikasi...</Text>
+          )}
+        </View>
+      </View>
     </View>
   );
 }

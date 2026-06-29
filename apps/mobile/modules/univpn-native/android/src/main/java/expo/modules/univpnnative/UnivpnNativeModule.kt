@@ -42,6 +42,7 @@ class UnivpnNativeModule : Module() {
         }
       }
       backend!!.setState(tunnel!!, Tunnel.State.UP, wgConfig!!)
+      Unit
     }
 
     AsyncFunction("disconnect") {
@@ -49,6 +50,7 @@ class UnivpnNativeModule : Module() {
       val c = wgConfig
       val b = backend
       if (t != null && c != null && b != null) b.setState(t, Tunnel.State.DOWN, c)
+      Unit
     }
 
     AsyncFunction("getStatus") {

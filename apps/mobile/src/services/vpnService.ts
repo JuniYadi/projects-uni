@@ -1,7 +1,6 @@
-// VPN service — tiny wrapper over react-native-wireguard-vpn-patched.
+// VPN service — tiny wrapper over our local Expo native module.
 
-import WireGuardVpnModule from 'react-native-wireguard-vpn-patched'
-import { NativeEventEmitter, NativeModules } from 'react-native'
+import WireGuardVpnModule from '../../modules/univpn-native'
 import type { WireGuardConfig } from '@univpn/shared'
 
 type VpnState =
@@ -62,16 +61,9 @@ class VpnService {
   }
 
   /** Subscribe to VPN state changes. */
-  onStatusChange(cb: StatusCallback): () => void {
-    const emitter = new NativeEventEmitter({
-      ...NativeModules.WireGuardVpnModule,
-      addListener: () => {},
-      removeListeners: () => {},
-    })
-    const sub = emitter.addListener('vpnStateChanged', (payload: VpnConnectionStatus) => {
-      cb(payload.status)
-    })
-    return () => sub.remove()
+  onStatusChange(_cb: StatusCallback): () => void {
+    // ponytail: local module plumbing first; native events return when WireGuard code moves in.
+    return () => {}
   }
 
   /** Clean up resources. */

@@ -48,6 +48,16 @@ class UnivpnNativeModule : Module() {
       if (backend == null) backend = GoBackend(appContext.reactContext ?: throw Exception("React context unavailable"))
     }
 
+    AsyncFunction("requestVpnPermission") {
+      val context = appContext.reactContext ?: throw Exception("React context unavailable")
+      val intent = VpnService.prepare(context)
+      if (intent != null) {
+        appContext.currentActivity?.startActivityForResult(intent, 1000)
+        return@AsyncFunction false
+      }
+      return@AsyncFunction true
+    }
+
     AsyncFunction("connect") { config: Map<String, Any?> ->
       val context = appContext.reactContext ?: throw Exception("React context unavailable")
       val intent = VpnService.prepare(context)

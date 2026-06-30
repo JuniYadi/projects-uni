@@ -8,6 +8,10 @@ public class UnivpnNativeModule: Module {
       // ponytail: plumbing check first; real WireGuard code moves here after module links.
     }
 
+    AsyncFunction("requestVpnPermission") {
+      return true  // ponytail: iOS NEVPNManager permission flows in later
+    }
+
     AsyncFunction("connect") { (_: [String: Any?]) in
     }
 

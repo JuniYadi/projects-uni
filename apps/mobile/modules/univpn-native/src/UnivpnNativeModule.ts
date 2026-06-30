@@ -35,6 +35,7 @@ type UnivpnNativeEvents = {
 
 declare class UnivpnNativeModule extends NativeModule<UnivpnNativeEvents> {
   initialize(): Promise<void>;
+  requestVpnPermission(): Promise<boolean>;
   connect(config: WireGuardConfig): Promise<void>;
   disconnect(): Promise<void>;
   getStatus(): Promise<WireGuardStatus>;

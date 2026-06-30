@@ -1,7 +1,6 @@
-// VPN service — tiny wrapper over react-native-wireguard-vpn-patched.
+// VPN service — tiny wrapper over our local Expo native module.
 
-import WireGuardVpnModule from 'react-native-wireguard-vpn-patched'
-import { NativeEventEmitter, NativeModules } from 'react-native'
+import WireGuardVpnModule from '../../modules/univpn-native'
 import type { WireGuardConfig } from '@univpn/shared'
 
 type VpnState =
@@ -13,6 +12,7 @@ type VpnState =
   | 'UNKNOWN'
 
 type StatusCallback = (status: VpnState) => void
+type StatsCallback = (stats: { bytesReceived: number; bytesSent: number }) => void
 
 // ─── types from native module ────────────────────────────
 
@@ -62,15 +62,14 @@ class VpnService {
   }
 
   /** Subscribe to VPN state changes. */
-  onStatusChange(cb: StatusCallback): () => void {
-    const emitter = new NativeEventEmitter({
-      ...NativeModules.WireGuardVpnModule,
-      addListener: () => {},
-      removeListeners: () => {},
-    })
-    const sub = emitter.addListener('vpnStateChanged', (payload: VpnConnectionStatus) => {
-      cb(payload.status)
-    })
+  onStatusChange(_cb: StatusCallback): () => void {
+    // ponytail: only stats events are wired for now; status is still read by JS state.
+    return () => {}
+  }
+
+  /** Subscribe to native-pushed byte stats. */
+  onStatsChange(cb: StatsCallback): () => void {
+    const sub = WireGuardVpnModule.addListener('onStatsChanged', cb)
     return () => sub.remove()
   }
 

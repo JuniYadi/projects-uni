@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { vpnService } from '@/services/vpnService';
 import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import * as Cellular from 'expo-cellular';
@@ -241,7 +242,12 @@ export default function ConnectionDetailScreen() {
   const disconnect = useConnectionStore((s) => s.disconnect);
 
   const conn = { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, tunnelAddress, tunnelDns, error: connError };
+  const isActive = conn.profile?.id === id;
+  const connected = isActive && conn.status === 'connected';
+  const connecting = isActive && conn.status === 'connecting';
+  const disconnecting = isActive && conn.status === 'disconnecting';
   const tick = useConnectionStore((s) => s.tick);
+  const updateStats = useConnectionStore((s) => s.updateStats);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -255,6 +261,13 @@ export default function ConnectionDetailScreen() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [conn.status, tick]);
 
+  useEffect(() => {
+    if (!connected) return;
+    return vpnService.onStatsChange((stats) => {
+      updateStats(stats.bytesReceived, stats.bytesSent);
+    });
+  }, [connected, updateStats]);
+
   if (!profile) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -262,11 +275,6 @@ export default function ConnectionDetailScreen() {
       </View>
     );
   }
-
-  const isActive = conn.profile?.id === id;
-  const connected = isActive && conn.status === 'connected';
-  const connecting = isActive && conn.status === 'connecting';
-  const disconnecting = isActive && conn.status === 'disconnecting';
 
   const insets = useSafeAreaInsets();
 

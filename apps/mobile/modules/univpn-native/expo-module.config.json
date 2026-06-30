@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["UnivpnNativeModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.univpnnative.UnivpnNativeModule"]
+  }
+}

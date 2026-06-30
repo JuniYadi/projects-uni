@@ -60,5 +60,5 @@ jobs:
           packageName: com.pfnapp.univpn
           releaseFiles: apps/mobile/android/app/build/outputs/bundle/release/*.aab
           releaseName: ${{ github.event.release.tag_name }}
-          track: internal
+          tracks: internal
           status: completed

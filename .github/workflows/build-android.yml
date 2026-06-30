@@ -40,6 +40,8 @@ jobs:
           cd apps/mobile
           echo "$KEYSTORE_BASE64" | base64 -d > android/app/my-upload-key.keystore
 
+          # ensure trailing newline before appending
+          echo "" >> android/gradle.properties
           cat >> android/gradle.properties << EOSIGN
           MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
           MYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS

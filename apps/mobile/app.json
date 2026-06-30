@@ -2,7 +2,7 @@
   "expo": {
     "name": "UniVPN",
     "slug": "univpn",
-    "version": "1.0.0",
+    "version": "0.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "univpn",
@@ -35,7 +35,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "allowBackup": false
+      "allowBackup": false,
+      "versionCode": 8
     },
     "web": {
       "output": "static",

@@ -10,6 +10,8 @@ jobs:
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      EXPO_PUBLIC_API_BASE_URL: https://pgreen.tunnel.juniyadi.id/api/vpn/mobile
+      EXPO_PUBLIC_APP_URL: https://pgreen.tunnel.juniyadi.id
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6

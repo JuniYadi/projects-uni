@@ -1,4 +1,4 @@
-import { View, useColorScheme } from 'react-native';
+import { View, Text, useColorScheme } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { VpnProfile } from '@/types/vpn';
 
@@ -32,10 +32,12 @@ export default function FleetMap({ profiles, activeProfileId, height = 200 }: Pr
         lng: p.longitude ?? fallback?.lng ?? 0,
         name: p.name,
         code: p.countryCode,
+        country: p.country,
         active: p.id === activeProfileId,
       };
     });
 
+  const activeServer = servers.find((s) => s.active);
   const tileUrl = isDark
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -49,28 +51,43 @@ export default function FleetMap({ profiles, activeProfileId, height = 200 }: Pr
 *{margin:0;padding:0}
 body{background:transparent}
 #m{width:100vw;height:100vh}
-${isDark ? '.leaflet-control-attribution{display:none!important}' : ''}
+.leaflet-control-attribution{display:none!important}
+.marker-label{color:${isDark?'#fff':'#222'};font-size:11px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.6);white-space:nowrap;pointer-events:none;margin-top:-22px;margin-left:12px}
 </style>
 </head><body>
 <div id="m"></div>
 <script>
 var d=${JSON.stringify(servers)};
+var a=${JSON.stringify(activeServer)};
 var m=L.map('m',{zoomControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,touchZoom:false,keyboard:false});
 L.tileLayer('${tileUrl}',{maxZoom:18}).addTo(m);
 var g=L.featureGroup();
 d.forEach(function(s){
  if(!s.lat&&!s.lng)return;
- var c=s.active
-  ? L.circleMarker([s.lat,s.lng],{radius:7,fillColor:'#00C781',color:'#fff',weight:2,fillOpacity:1})
-  : L.circleMarker([s.lat,s.lng],{radius:3.5,fillColor:'#8e8e93',color:'#fff',weight:1,opacity:.5,fillOpacity:.35});
+ var c;
+ if(s.active){
+  c=L.circleMarker([s.lat,s.lng],{radius:9,fillColor:'#00C781',color:'#fff',weight:3,fillOpacity:1});
+  c.bindTooltip(s.country,{direction:'top',offset:[0,-12],className:'marker-label'});
+ }else{
+  c=L.circleMarker([s.lat,s.lng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
+ }
  c.addTo(m);g.addLayer(c);
 });
-if(g.getLayers().length>0)m.fitBounds(g.getBounds().pad(0.35));
+if(a){
+ m.setView([a.lat,a.lng],5);
+}else if(g.getLayers().length>0){
+ m.fitBounds(g.getBounds().pad(0.4));
+}
 </script>
 </body></html>`;
 
   return (
-    <View style={{ height, borderRadius: 16, overflow: 'hidden' }}>
+    <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden" style={{ height }}>
+      <View className="absolute top-2 left-3 z-10">
+        <Text className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase">
+          Server Locations
+        </Text>
+      </View>
       <WebView
         source={{ html }}
         scrollEnabled={false}
@@ -78,7 +95,7 @@ if(g.getLayers().length>0)m.fitBounds(g.getBounds().pad(0.35));
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        style={{ backgroundColor: 'transparent' }}
+        style={{ backgroundColor: 'transparent', marginTop: 20 }}
         androidLayerType="hardware"
       />
     </View>

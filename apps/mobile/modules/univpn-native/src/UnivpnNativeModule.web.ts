@@ -3,6 +3,9 @@ import type { WireGuardConfig, WireGuardStatus } from './UnivpnNativeModule';
 
 class UnivpnNativeModule extends NativeModule<{}> {
   async initialize(): Promise<void> {}
+  async requestVpnPermission(): Promise<boolean> {
+    return false;
+  }
   async connect(_config: WireGuardConfig): Promise<void> {}
   async disconnect(): Promise<void> {}
   async getStatus(): Promise<WireGuardStatus> {

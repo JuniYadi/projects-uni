@@ -33,6 +33,15 @@ export interface VpnConnectionStatus {
 class VpnService {
   private initialized = false
 
+  /** Request VPN permission from the system (Android: VPN dialog, iOS: NEVPNManager). Call early. */
+  async requestVpnPermission(): Promise<boolean> {
+    try {
+      return await WireGuardVpnModule.requestVpnPermission()
+    } catch {
+      return false
+    }
+  }
+
   /** Initialize the native VPN backend. Must be called once before connect. */
   async initialize(): Promise<void> {
     if (this.initialized) return

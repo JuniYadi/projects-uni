@@ -13,8 +13,10 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const reset = useConnectionStore((s) => s.reset);
 
-  // Subscribe to native VPN state changes
+  // Request VPN permission early (Android VPN dialog), subscribe to native state changes
   useEffect(() => {
+    vpnService.requestVpnPermission().catch(() => {});
+
     const unsub = vpnService.onStatusChange((status) => {
       if (status === 'DISCONNECTED' || status === 'ERROR') {
         stopHeartbeat();

@@ -35,7 +35,28 @@ jobs:
         run: cd android && ./gradlew assembleRelease
         working-directory: apps/mobile
 
-      - uses: actions/upload-artifact@v4
+      - name: Build AAB
+        run: cd android && ./gradlew bundleRelease
+        working-directory: apps/mobile
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: app-release-apk
           path: apps/mobile/android/app/build/outputs/apk/release/*.apk
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: apps/mobile/android/app/build/outputs/bundle/release/*.aab
+
+      - name: Upload to Google Play (internal track)
+        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.pfnapp.univpn
+          releaseFiles: apps/mobile/android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed

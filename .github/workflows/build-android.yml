@@ -31,21 +31,23 @@ jobs:
 
       - name: Setup release signing
         if: env.KEYSTORE_BASE64 != ''
-        shell: python3
+        shell: bash
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_KEY_PASSWORD: ${{ secrets.KEY_KEY_PASSWORD }}
         run: |
-          import os, base64
+          cd apps/mobile
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/my-upload-key.keystore
 
-          ks = base64.b64decode(os.environ['KEYSTORE_BASE64'])
-          with open('android/app/my-upload-key.keystore', 'wb') as f:
-              f.write(ks)
+          cat >> android/gradle.properties << EOSIGN
+          MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
+          MYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS
+          MYAPP_UPLOAD_STORE_PASSWORD=$KEY_STORE_PASSWORD
+          MYAPP_UPLOAD_KEY_PASSWORD=$KEY_KEY_PASSWORD
+          EOSIGN
 
-          with open('android/gradle.properties', 'a') as f:
-              f.write("\nMYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore")
-              f.write("\nMYAPP_UPLOAD_KEY_ALIAS=" + os.environ['KEY_ALIAS'])
-              f.write("\nMYAPP_UPLOAD_STORE_PASSWORD=" + os.environ['KEY_STORE_PASSWORD'])
-              f.write("\nMYAPP_UPLOAD_KEY_PASSWORD=" + os.environ['KEY_KEY_PASSWORD'])
-              f.write("\n")
-
+          python3 << 'PYSIGN'
           with open('android/app/build.gradle') as f:
               c = f.read()
 
@@ -62,12 +64,7 @@ jobs:
 
           with open('android/app/build.gradle', 'w') as f:
               f.write(c)
-        working-directory: apps/mobile
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_KEY_PASSWORD: ${{ secrets.KEY_KEY_PASSWORD }}
+          PYSIGN
 
       - name: Build APK + AAB
         run: cd android && ./gradlew assembleRelease bundleRelease

@@ -62,7 +62,7 @@ jobs:
               "\n        }"
           )
           c = c.replace('signingConfigs {', 'signingConfigs {' + release)
-          c = c.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release', 1)
+          c = c.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
 
           with open('android/app/build.gradle', 'w') as f:
               f.write(c)

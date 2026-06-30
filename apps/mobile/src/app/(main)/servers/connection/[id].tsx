@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import FleetMap from '@/components/fleet-map';
 import { vpnService } from '@/services/vpnService';
 import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
@@ -230,6 +231,7 @@ function NetworkInfo() {
 export default function ConnectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === id));
+  const allProfiles = useProfileStore((s) => s.profiles);
   const status = useConnectionStore((s) => s.status);
   const connectionProfile = useConnectionStore((s) => s.profile);
   const elapsed = useConnectionStore((s) => s.elapsed);
@@ -283,6 +285,9 @@ export default function ConnectionDetailScreen() {
       <BgGlow />
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
       <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
+        {/* fleet map */}
+        <FleetMap profiles={allProfiles} activeProfileId={connected ? id : null} height={180} />
+
         {/* status card */}
         <StatusCard
           profile={profile}

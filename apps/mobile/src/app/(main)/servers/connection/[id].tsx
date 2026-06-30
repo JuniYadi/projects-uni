@@ -286,7 +286,7 @@ export default function ConnectionDetailScreen() {
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
       <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
         {/* fleet map */}
-        <FleetMap profiles={allProfiles} activeProfileId={connected ? id : null} height={180} />
+        <FleetMap profiles={allProfiles} activeProfileId={connected ? id : null} selectedProfileId={id} height={180} />
 
         {/* status card */}
         <StatusCard

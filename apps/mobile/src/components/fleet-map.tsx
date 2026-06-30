@@ -15,10 +15,11 @@ const FALLBACK_COORDS: Record<string, { lat: number; lng: number }> = {
 interface Props {
   profiles: VpnProfile[];
   activeProfileId: string | null;
+  selectedProfileId?: string | null;
   height?: number;
 }
 
-export default function FleetMap({ profiles, activeProfileId, height = 200 }: Props) {
+export default function FleetMap({ profiles, activeProfileId, selectedProfileId = activeProfileId, height = 200 }: Props) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -34,6 +35,7 @@ export default function FleetMap({ profiles, activeProfileId, height = 200 }: Pr
         code: p.countryCode,
         country: p.country,
         active: p.id === activeProfileId,
+        selected: p.id === selectedProfileId,
       };
     });
 
@@ -52,7 +54,8 @@ export default function FleetMap({ profiles, activeProfileId, height = 200 }: Pr
 body{background:transparent}
 #m{width:100vw;height:100vh}
 .leaflet-control-attribution{display:none!important}
-.marker-label{color:${isDark?'#fff':'#222'};font-size:11px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.6);white-space:nowrap;pointer-events:none;margin-top:-22px;margin-left:12px}
+.marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:6px 8px;white-space:nowrap}
+.marker-label:before{display:none}
 </style>
 </head><body>
 <div id="m"></div>
@@ -65,16 +68,16 @@ var g=L.featureGroup();
 d.forEach(function(s){
  if(!s.lat&&!s.lng)return;
  var c;
- if(s.active){
-  c=L.circleMarker([s.lat,s.lng],{radius:9,fillColor:'#00C781',color:'#fff',weight:3,fillOpacity:1});
-  c.bindTooltip(s.country,{direction:'top',offset:[0,-12],className:'marker-label'});
+ if(s.active || s.selected){
+  c=L.circleMarker([s.lat,s.lng],{radius:s.active?9:7,fillColor:s.active?'#00C781':'#0A84FF',color:'#fff',weight:3,fillOpacity:1});
+  c.bindTooltip((s.code + ' · ' + s.country),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
  }else{
   c=L.circleMarker([s.lat,s.lng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
  }
  c.addTo(m);g.addLayer(c);
 });
 if(a){
- m.setView([a.lat,a.lng],5);
+ m.setView([a.lat,a.lng],7);
 }else if(g.getLayers().length>0){
  m.fitBounds(g.getBounds().pad(0.4));
 }

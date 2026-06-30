@@ -28,6 +28,9 @@ export interface VpnProfile {
   encryption: string;
   serverAddress: string;
   serverIp: string;
+  /** @default 0 — fleet map uses lookup by countryCode if unset */
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ConnectionInfo {

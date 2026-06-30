@@ -1,0 +1,41 @@
+name: Build Android
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Prebuild Android
+        run: bun expo prebuild --platform android
+        working-directory: apps/mobile
+        env:
+          EXPO_NO_DOTENV: 1
+
+      - name: Build APK
+        run: cd android && ./gradlew assembleRelease
+        working-directory: apps/mobile
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: apps/mobile/android/app/build/outputs/apk/release/*.apk

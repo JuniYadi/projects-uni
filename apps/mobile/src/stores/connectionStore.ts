@@ -6,7 +6,9 @@ import type { VpnProfile, ConnectionStatus } from '@/types/vpn'
 import { api } from '@/services/api'
 import { vpnService } from '@/services/vpnService'
 import { parseWireGuardConfig } from '@/utils/config-parser'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { startHeartbeat, stopHeartbeat } from '@/services/heartbeatService'
+
 
 interface ConnectionState {
   profile: VpnProfile | null
@@ -59,8 +61,10 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       // 3. Initialize VPN module
       await vpnService.initialize()
 
-      // 4. Connect
-      await vpnService.connect(wgConfig)
+      // 4. Connect, passing whitelisted apps as excluded apps for split tunneling
+      const { whitelistedApps } = useSettingsStore.getState()
+      const excludedApps = whitelistedApps.map((a) => a.packageName)
+      await vpnService.connect({ ...wgConfig, excludedApps })
 
       // 5. Connected
       set({ status: 'connected', startTime: Date.now(), elapsed: 0, tunnelAddress, tunnelDns: wgConfig.dns ?? [] })

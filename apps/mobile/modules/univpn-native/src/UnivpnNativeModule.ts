@@ -13,6 +13,8 @@ export interface WireGuardConfig {
   dns?: string[];
   mtu?: number;
   presharedKey?: string;
+  /** Apps that should bypass the VPN tunnel (split tunnel / whitelist). */
+  excludedApps?: string[];
 }
 
 export interface WireGuardStatus {

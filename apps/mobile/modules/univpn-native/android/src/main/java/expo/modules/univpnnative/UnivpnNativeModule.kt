@@ -115,6 +115,16 @@ class UnivpnNativeModule : Module() {
       iface.setMtu(it)
     }
 
+    // Split tunneling: whitelisted apps bypass the VPN tunnel.
+    list(config, "excludedApps").forEach { packageName ->
+      try {
+        iface.excludeApplication(packageName)
+      } catch (e: Exception) {
+        // Best-effort: ignore invalid packages and continue.
+        println("Failed to exclude app $packageName: ${e.message}")
+      }
+    }
+
     val peer = Peer.Builder()
     peer.parsePublicKey(requiredString(config, "publicKey"))
     string(config, "presharedKey")?.let { peer.setPreSharedKey(Key.fromBase64(it)) }

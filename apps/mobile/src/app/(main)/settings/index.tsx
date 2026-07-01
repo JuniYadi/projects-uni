@@ -256,6 +256,8 @@ export default function SettingsScreen() {
             <PickerRow icon="📡" label="Preferred Protocol">
               <ProtocolPicker />
             </PickerRow>
+            <Divider />
+            <ActionRow icon="📋" label="Whitelist (Bypass VPN)" onPress={() => router.push('/(main)/settings/whitelist')} />
           </View>
         </View>
 

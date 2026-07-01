@@ -36,8 +36,6 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
         code: p.countryCode,
         country: p.country,
         flag: countryFlag(p.countryCode),
-        protocol: p.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN',
-        port: p.port,
         active: p.id === activeProfileId,
         selected: p.id === selectedProfileId,
       };
@@ -75,7 +73,7 @@ d.forEach(function(s){
  var c;
  if(s.active || s.selected){
   c=L.circleMarker([s.lat,s.lng],{radius:s.active?9:7,fillColor:s.active?'#00C781':'#0A84FF',color:'#fff',weight:3,fillOpacity:1});
-  c.bindTooltip((s.flag + ' ' + s.country + '<small>' + s.protocol + ' · ' + s.port + '</small>'),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
+  c.bindTooltip((s.flag + ' ' + s.country),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
  }else{
   c=L.circleMarker([s.lat,s.lng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
  }

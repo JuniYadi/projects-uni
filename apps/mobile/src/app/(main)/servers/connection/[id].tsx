@@ -7,7 +7,7 @@ import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import FleetMap from '@/components/fleet-map';
 import { vpnService } from '@/services/vpnService';
-import { formatBytes, formatDuration, countryFlag } from '@/utils/formatters';
+import { formatBytes, formatDuration } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import * as Cellular from 'expo-cellular';
 import * as Network from 'expo-network';
@@ -84,7 +84,7 @@ function StatusCard({
       )}
 
       {/* flag badge */}
-      <Text className="text-lg font-bold text-black dark:text-white">{countryFlag(profile.countryCode)} {profile.name}</Text>
+      <Text className="text-lg font-bold text-black dark:text-white">{profile.name}</Text>
 
       {/* status indicator */}
       <View className="items-center gap-2">

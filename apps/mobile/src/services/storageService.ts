@@ -8,6 +8,7 @@ const KEYS = {
   EXPIRES_AT: 'auth_expires_at',
   SUB_ID: 'subscription_id',
   FINGERPRINT: 'device_fingerprint',
+  SELECTED_PROFILE_ID: 'selected_profile_id',
 } as const
 
 // ─── Token ────────────────────────────────────────────────
@@ -62,6 +63,20 @@ export async function setFingerprint(fp: string): Promise<void> {
   return SecureStore.setItemAsync(KEYS.FINGERPRINT, fp)
 }
 
+// ─── Selected Profile ─────────────────────────────────────
+
+export async function getSelectedProfileId(): Promise<string | null> {
+  return SecureStore.getItemAsync(KEYS.SELECTED_PROFILE_ID)
+}
+
+export async function setSelectedProfileId(id: string): Promise<void> {
+  return SecureStore.setItemAsync(KEYS.SELECTED_PROFILE_ID, id)
+}
+
+export async function removeSelectedProfileId(): Promise<void> {
+  return SecureStore.deleteItemAsync(KEYS.SELECTED_PROFILE_ID)
+}
+
 // ─── Clear All ────────────────────────────────────────────
 
 export async function clearAll(): Promise<void> {
@@ -69,6 +84,7 @@ export async function clearAll(): Promise<void> {
     SecureStore.deleteItemAsync(KEYS.TOKEN),
     SecureStore.deleteItemAsync(KEYS.EXPIRES_AT),
     SecureStore.deleteItemAsync(KEYS.SUB_ID),
+    SecureStore.deleteItemAsync(KEYS.SELECTED_PROFILE_ID),
     // fingerprint persists — device identity
   ])
 }

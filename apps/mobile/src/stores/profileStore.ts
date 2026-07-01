@@ -3,6 +3,7 @@ import type { VpnProfile, FilterState } from '@/types/vpn';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { api } from '@/services/api';
 import { pingHost } from '@/services/pingService';
+import * as storage from '@/services/storageService';
 
 // ponytail: dev bypass fallback
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
@@ -71,6 +72,7 @@ interface ProfileState {
   filteredProfiles: VpnProfile[];
   regions: string[];
   activeFilter: FilterState;
+  selectedProfileId: string | null;
   loading: boolean;
   pinging: boolean;
   error: string | null;
@@ -79,6 +81,8 @@ interface ProfileState {
   setFilter: (filter: Partial<FilterState>) => void;
   resetFilter: () => void;
   applyFilter: () => void;
+  loadSelectedProfileId: () => Promise<void>;
+  setSelectedProfileId: (id: string | null) => Promise<void>;
   _runPings: (signal: AbortSignal) => Promise<void>;
 }
 
@@ -87,6 +91,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   filteredProfiles: [],
   regions: [],
   activeFilter: DEFAULT_FILTER,
+  selectedProfileId: null,
   loading: false,
   pinging: false,
   error: null,
@@ -113,6 +118,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       if (signal.aborted) return
       set({ profiles: rawProfiles, regions, loading: false });
       get().applyFilter();
+
+      // Restore persisted selection and drop it if the server no longer exists
+      await get().loadSelectedProfileId();
 
       // Phase 2: background ping
       get()._runPings(signal);
@@ -161,6 +169,27 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   resetFilter: () => {
     set({ activeFilter: DEFAULT_FILTER });
     get().applyFilter();
+  },
+
+  loadSelectedProfileId: async () => {
+    const saved = await storage.getSelectedProfileId();
+    const { profiles } = get();
+    if (saved && profiles.some((p) => p.id === saved)) {
+      set({ selectedProfileId: saved });
+    } else if (saved) {
+      // Stale selection — clear it silently
+      set({ selectedProfileId: null });
+      await storage.removeSelectedProfileId();
+    }
+  },
+
+  setSelectedProfileId: async (id) => {
+    set({ selectedProfileId: id });
+    if (id) {
+      await storage.setSelectedProfileId(id);
+    } else {
+      await storage.removeSelectedProfileId();
+    }
   },
 
   applyFilter: () => {

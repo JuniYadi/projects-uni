@@ -220,7 +220,13 @@ export default function ConnectionDetailScreen() {
   const disconnecting = isActive && conn.status === 'disconnecting';
   const tick = useConnectionStore((s) => s.tick);
   const updateStats = useConnectionStore((s) => s.updateStats);
+  const setSelectedProfileId = useProfileStore((s) => s.setSelectedProfileId);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Remember this server as the user's chosen selection
+  useEffect(() => {
+    setSelectedProfileId(id);
+  }, [id, setSelectedProfileId]);
 
   useEffect(() => {
     if (conn.status === 'connected' && !intervalRef.current) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { ScrollView, Pressable, View, Text, RefreshControl, Alert, Animated, useColorScheme } from 'react-native';
+import { ScrollView, Pressable, View, Text, RefreshControl, Alert, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useProfileStore } from '@/stores/profileStore';
@@ -8,47 +8,15 @@ import { formatBytes, formatDuration, formatPing, countryFlag } from '@/utils/fo
 import type { VpnProfile } from '@/types/vpn';
 import { Colors } from '@/constants/theme';
 
-// ponytail: gradient-like background using overlapping circles — no linear-gradient dep
-function BgGlow() {
-  const scheme = useColorScheme();
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 280, overflow: 'hidden' }}>
-      <View
-        style={{
-          position: 'absolute',
-          top: -140,
-          alignSelf: 'center',
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: '#00C781',
-          opacity: scheme === 'dark' ? 0.06 : 0.04,
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: -80,
-          left: -60,
-          width: 200,
-          height: 200,
-          borderRadius: 100,
-          backgroundColor: '#007AFF',
-          opacity: scheme === 'dark' ? 0.04 : 0.03,
-        }}
-      />
-    </View>
-  );
-}
-
-// ─── helpers ───────────────────────────────────────────────
-
 function useAccent() {
   const scheme = useColorScheme();
   return scheme === 'dark' ? Colors.dark.accent : Colors.light.accent;
 }
 
-// ─── sub-components ────────────────────────────────────────
+function useFill() {
+  const scheme = useColorScheme();
+  return scheme === 'dark' ? Colors.dark.backgroundElement : Colors.light.backgroundElement;
+}
 
 function PingBadge({ ping }: { ping: number | null }) {
   const { label, color } = formatPing(ping);
@@ -63,12 +31,20 @@ function PingBadge({ ping }: { ping: number | null }) {
 function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () => void }) {
   const activeId = useConnectionStore((s) => s.profile?.id);
   const connect = useConnectionStore((s) => s.connect);
+  const setSelectedProfileId = useProfileStore((s) => s.setSelectedProfileId);
   const isActive = activeId === profile.id;
   const accent = useAccent();
+  const fill = useFill();
 
   const handleLongPress = useCallback(() => {
     Alert.alert(profile.name, undefined, [
-      { text: 'Connect', onPress: () => connect(profile) },
+      {
+        text: 'Connect',
+        onPress: async () => {
+          await setSelectedProfileId(profile.id);
+          connect(profile);
+        },
+      },
       {
         text: 'Copy Config',
         onPress: () => {
@@ -77,53 +53,37 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
       },
       { text: 'Cancel', style: 'cancel' },
     ]);
-  }, [profile, connect]);
+  }, [profile, connect, setSelectedProfileId]);
 
   return (
     <Pressable onPress={onPress} onLongPress={handleLongPress}>
       {({ pressed }) => (
         <View
-          className={`rounded-2xl overflow-hidden ${
-            isActive ? 'border-l-4' : ''
-          }`}
-          style={{
-            borderLeftColor: isActive ? accent : undefined,
-            backgroundColor: pressed
-              ? '#00000015'
-              : isActive
-                ? '#00C78110'
-                : undefined,
-          }}
+          className="flex-row items-center px-4 py-3.5"
+          style={{ opacity: pressed ? 0.6 : 1 }}
         >
           <View
-            className={`bg-black/5 dark:bg-white/10 py-4 ${
-              isActive ? '' : 'rounded-2xl'
-            } ${isActive ? 'rounded-r-2xl' : ''}`}
-            style={pressed ? { opacity: 0.7 } : undefined}
+            className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+            style={{ backgroundColor: fill }}
           >
-            <View className="flex-row items-center px-4">
-              {/* flag */}
-              <View className="w-12 h-12 rounded-xl bg-white/60 dark:bg-black/30 items-center justify-center mr-3 shadow-sm">
-                <Text className="text-2xl">{countryFlag(profile.countryCode)}</Text>
-              </View>
-
-              {/* info */}
-              <View className="flex-1 gap-1.5">
-                <View className="flex-row items-center gap-2">
-                  {isActive && (
-                    <View className="w-2 h-2 rounded-full bg-[#00C781]" />
-                  )}
-                  <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
-                    {profile.name}
-                  </Text>
-                  <PingBadge ping={profile.ping} />
-                </View>
-                {/* ponytail: removed WireGuard, port, load for compactness */}
-              </View>
-
-              {/* chevron */}
-              <Text className="text-lg text-neutral-300 dark:text-neutral-600 ml-2">›</Text>
+            <Text className="text-xl">{countryFlag(profile.countryCode)}</Text>
+          </View>
+          <View className="flex-1 gap-1">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
+                {profile.name}
+              </Text>
+              {isActive && (
+                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+              )}
             </View>
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400" numberOfLines={1}>
+              {profile.serverIp}
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-2 ml-2">
+            <PingBadge ping={profile.ping} />
+            <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
           </View>
         </View>
       )}
@@ -139,14 +99,15 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
   const bytesUploaded = useConnectionStore((s) => s.bytesUploaded);
   const tunnelAddress = useConnectionStore((s) => s.tunnelAddress);
   const disconnect = useConnectionStore((s) => s.disconnect);
+  const accent = useAccent();
   if (!profile || status !== 'connected') return null;
 
   return (
     <Pressable
       onPress={() => router.push(`/servers/connection/${profile.id}`)}
-      className="active:opacity-70 rounded-2xl overflow-hidden"
+      className="rounded-2xl overflow-hidden active:opacity-90"
     >
-      <View className="flex-row items-center gap-3 px-4 py-4" style={{ backgroundColor: '#00C781' }}>
+      <View className="flex-row items-center gap-3 px-4 py-4" style={{ backgroundColor: accent }}>
         <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center">
           <Text className="text-lg">{countryFlag(profile.countryCode)}</Text>
         </View>
@@ -164,31 +125,24 @@ function ConnectedBanner({ router }: { router: ReturnType<typeof useRouter> }) {
   );
 }
 
-// ─── pulse dot ─────────────────────────────────────────────
-
-function PulseDot({ color }: { color: string }) {
-  const opacity = useState(() => new Animated.Value(0.4))[0];
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.4, duration: 800, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [opacity]);
-
+function SectionHeader({ title, isRecommended }: { title: string; isRecommended?: boolean }) {
+  const accent = useAccent();
   return (
-    <Animated.View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color, opacity }} />
+    <View className="flex-row items-center gap-2 px-1 pb-1.5 pt-6">
+      {isRecommended && <View className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />}
+      <Text className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 tracking-wider uppercase">
+        {title}
+      </Text>
+    </View>
   );
 }
 
-// ─── main list ─────────────────────────────────────────────
+function Divider() {
+  return <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />;
+}
 
 function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
-  const { filteredProfiles, loading, error, pinging, activeFilter, loadProfiles } = useProfileStore();
+  const { filteredProfiles, loading, error, pinging, activeFilter, loadProfiles, setSelectedProfileId } = useProfileStore();
 
   const sections = useMemo(() => {
     if (filteredProfiles.length === 0) return [];
@@ -247,38 +201,38 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
   }
 
   return (
-    <View className="gap-6">
+    <View className="gap-2">
       {pinging && (
         <View className="flex-row items-center gap-2 px-1">
-          <PulseDot color="#007AFF" />
-          <Text className="text-xs font-semibold text-[#007AFF] tracking-widest uppercase">Measuring ping...</Text>
+          <View className="w-2 h-2 rounded-full bg-[#007AFF]" />
+          <Text className="text-xs font-semibold text-[#007AFF] tracking-wider">Measuring ping…</Text>
         </View>
       )}
       {sections.map(([region, profiles]) => (
-        <View key={region} className="gap-3">
-          {/* section header with accent for recommended */}
-          <View className="flex-row items-center gap-2 px-1">
-            {region === '__rec' && <PulseDot color="#00C781" />}
-            <Text className={`text-xs font-semibold tracking-widest uppercase ${
-              region === '__rec' ? 'text-[#00C781]' : 'text-neutral-400 dark:text-neutral-500'
-            }`}>
-              {region === '__rec' ? 'BEST PING' : region}
-            </Text>
+        <View key={region}>
+          <SectionHeader
+            title={region === '__rec' ? 'Recommended' : region}
+            isRecommended={region === '__rec'}
+          />
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            {profiles.map((p, index) => (
+              <View key={p.id}>
+                <ProfileCard
+                  profile={p}
+                  onPress={() => {
+                    setSelectedProfileId(p.id);
+                    router.push(`/servers/connection/${p.id}`);
+                  }}
+                />
+                {index < profiles.length - 1 && <Divider />}
+              </View>
+            ))}
           </View>
-          {profiles.map((p) => (
-            <ProfileCard
-              key={p.id}
-              profile={p}
-              onPress={() => router.push(`/servers/connection/${p.id}`)}
-            />
-          ))}
         </View>
       ))}
     </View>
   );
 }
-
-// ─── screen ────────────────────────────────────────────────
 
 export default function ServersScreen() {
   const router = useRouter();
@@ -299,7 +253,6 @@ export default function ServersScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <BgGlow />
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"

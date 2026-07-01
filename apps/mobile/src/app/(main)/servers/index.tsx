@@ -188,19 +188,34 @@ function PulseDot({ color }: { color: string }) {
 // ─── main list ─────────────────────────────────────────────
 
 function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
-  const { filteredProfiles, loading, error, loadProfiles } = useProfileStore();
+  const { filteredProfiles, loading, error, pinging, activeFilter, loadProfiles } = useProfileStore();
 
   const sections = useMemo(() => {
-    if (filteredProfiles.length === 0) return {};
+    if (filteredProfiles.length === 0) return [];
     const sorted = [...filteredProfiles].sort((a, b) => (a.ping ?? Infinity) - (b.ping ?? Infinity));
-    const recId = sorted[0].id;
+    const recId = sorted[0]?.id;
     const groups: Record<string, VpnProfile[]> = {};
     for (const p of filteredProfiles) {
       const key = p.id === recId ? '__rec' : p.region;
       (groups[key] ??= []).push(p);
     }
-    return groups;
+    const entries = Object.entries(groups);
+    const recIndex = entries.findIndex(([k]) => k === '__rec');
+    if (recIndex > 0) {
+      const [rec] = entries.splice(recIndex, 1);
+      entries.unshift(rec);
+    }
+    return entries;
   }, [filteredProfiles]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (activeFilter.protocol !== 'wireguard') count++;
+    if (activeFilter.region !== 'all') count++;
+    if (activeFilter.status !== 'all') count++;
+    if (activeFilter.sortBy !== 'ping') count++;
+    return count;
+  }, [activeFilter]);
 
   if (loading) return (
     <View className="flex-1 items-center justify-center py-20">
@@ -221,6 +236,11 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
     return (
       <View className="items-center gap-3 py-20">
         <Text className="text-neutral-400 dark:text-neutral-500">No servers found</Text>
+        {activeFilterCount > 0 && (
+          <Text className="text-neutral-500 dark:text-neutral-600 text-xs text-center px-8">
+            {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active. Tap reset to see all servers.
+          </Text>
+        )}
         <Host><Button variant="text" onPress={loadProfiles} label="Refresh" /></Host>
       </View>
     );
@@ -228,7 +248,13 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
 
   return (
     <View className="gap-6">
-      {Object.entries(sections).map(([region, profiles]) => (
+      {pinging && (
+        <View className="flex-row items-center gap-2 px-1">
+          <PulseDot color="#007AFF" />
+          <Text className="text-xs font-semibold text-[#007AFF] tracking-widest uppercase">Measuring ping...</Text>
+        </View>
+      )}
+      {sections.map(([region, profiles]) => (
         <View key={region} className="gap-3">
           {/* section header with accent for recommended */}
           <View className="flex-row items-center gap-2 px-1">

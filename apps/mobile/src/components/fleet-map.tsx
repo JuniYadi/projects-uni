@@ -103,7 +103,7 @@ if(a){
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        style={{ backgroundColor: 'transparent', marginTop: 20 }}
+        style={{ backgroundColor: 'transparent' }}
         androidLayerType="hardware"
       />
     </View>

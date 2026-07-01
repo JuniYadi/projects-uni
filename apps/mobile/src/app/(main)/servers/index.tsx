@@ -43,13 +43,6 @@ function BgGlow() {
 
 // ─── helpers ───────────────────────────────────────────────
 
-const LOAD_COLORS = { low: '#34c759', med: '#ff9f0a', high: '#ff453a' } as const;
-function loadColor(pct: number) {
-  if (pct < 50) return LOAD_COLORS.low;
-  if (pct < 80) return LOAD_COLORS.med;
-  return LOAD_COLORS.high;
-}
-
 function useAccent() {
   const scheme = useColorScheme();
   return scheme === 'dark' ? Colors.dark.accent : Colors.light.accent;
@@ -57,7 +50,7 @@ function useAccent() {
 
 // ─── sub-components ────────────────────────────────────────
 
-function PingBadge({ ping }: { ping: number }) {
+function PingBadge({ ping }: { ping: number | null }) {
   const { label, color } = formatPing(ping);
   return (
     <View className="flex-row items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-full">
@@ -125,18 +118,7 @@ function ProfileCard({ profile, onPress }: { profile: VpnProfile; onPress: () =>
                   </Text>
                   <PingBadge ping={profile.ping} />
                 </View>
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-xs font-semibold bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md text-neutral-500 dark:text-neutral-400 overflow-hidden">
-                    WireGuard
-                  </Text>
-                  <Text className="text-xs text-neutral-400 dark:text-neutral-500">
-                    ● {profile.port}
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <View className="w-2 h-2 rounded-full" style={{ backgroundColor: loadColor(profile.load) }} />
-                    <Text className="text-xs text-neutral-400 dark:text-neutral-500">{profile.load}% load</Text>
-                  </View>
-                </View>
+                {/* ponytail: removed WireGuard, port, load for compactness */}
               </View>
 
               {/* chevron */}
@@ -210,7 +192,7 @@ function ProfileList({ router }: { router: ReturnType<typeof useRouter> }) {
 
   const sections = useMemo(() => {
     if (filteredProfiles.length === 0) return {};
-    const sorted = [...filteredProfiles].sort((a, b) => a.ping - b.ping);
+    const sorted = [...filteredProfiles].sort((a, b) => (a.ping ?? Infinity) - (b.ping ?? Infinity));
     const recId = sorted[0].id;
     const groups: Record<string, VpnProfile[]> = {};
     for (const p of filteredProfiles) {

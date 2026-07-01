@@ -90,9 +90,11 @@ if(a){
   return (
     <View className="rounded-2xl overflow-hidden" style={{ height, backgroundColor: isDark ? '#111827' : '#eef2f7' }}>
       <View className="absolute top-2 left-3 z-10">
-        <Text className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase">
-          Server Locations
-        </Text>
+        <View className="bg-black/30 dark:bg-white/15 backdrop-blur-sm px-2 py-0.5 rounded-full">
+          <Text className="text-[10px] font-semibold text-white/80 dark:text-white/70 tracking-widest uppercase">
+            Server Locations
+          </Text>
+        </View>
       </View>
       <WebView
         source={{ html }}
@@ -101,7 +103,7 @@ if(a){
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        style={{ backgroundColor: 'transparent', marginTop: 20 }}
+        style={{ backgroundColor: 'transparent' }}
         androidLayerType="hardware"
       />
     </View>

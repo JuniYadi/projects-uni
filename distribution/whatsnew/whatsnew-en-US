@@ -1,1 +1,5 @@
-Updates and improvements
+- App whitelist (split tunnel) for WireGuard VPN
+- Ping indicator on server list
+- Active filter count badge
+- Persistent selected profile across sessions
+- UI refinements and performance improvements

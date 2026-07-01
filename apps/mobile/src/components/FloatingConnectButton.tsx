@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { View, Pressable, Animated, Text } from 'react-native';
+import { View, Pressable, Animated, Text, Alert } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import { useGlobalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { useProfileStore } from '@/stores/profileStore';
 
@@ -23,9 +23,10 @@ const BTN_SIZE = 58;
 export function FloatingConnectButton() {
   const conn = useConnectionStore();
   const profiles = useProfileStore((s) => s.profiles);
+  const filteredProfiles = useProfileStore((s) => s.filteredProfiles);
+  const selectedProfileId = useProfileStore((s) => s.selectedProfileId);
   const connect = useConnectionStore((s) => s.connect);
   const disconnect = useConnectionStore((s) => s.disconnect);
-  const { id } = useGlobalSearchParams<{ id?: string }>();
   const router = useRouter();
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -59,13 +60,21 @@ export function FloatingConnectButton() {
     if (conn.status === 'connected' || conn.status === 'disconnecting') {
       disconnect();
     } else if (conn.status === 'disconnected') {
-      const target = profiles.find((p) => p.id === id) || conn.profile || profiles[0];
+      // Pick the best server to connect to, never falling back to an unsupported protocol
+      const target =
+        profiles.find((p) => p.id === selectedProfileId && p.protocol === 'wireguard') ||
+        conn.profile ||
+        filteredProfiles.find((p) => p.protocol === 'wireguard') ||
+        profiles.find((p) => p.protocol === 'wireguard');
+
       if (target) {
         await connect(target);
         router.push(`/servers/connection/${target.id}`);
+      } else {
+        Alert.alert('No WireGuard server', 'Select a WireGuard server to connect.');
       }
     }
-  }, [conn.status, conn.profile, connect, disconnect, profiles, id, router]);
+  }, [conn.status, conn.profile, connect, disconnect, profiles, filteredProfiles, selectedProfileId, router]);
 
   const isConnected = conn.status === 'connected';
   const isConnecting = conn.status === 'connecting';

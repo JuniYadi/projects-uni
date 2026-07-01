@@ -30,18 +30,3 @@ export async function pingHost(host: string, signal?: AbortSignal): Promise<numb
   }).catch(() => null)
 }
 
-export async function withLivePing<T extends { ping: number; serverIp?: string | null; serverAddress: string }>(profiles: T[], signal?: AbortSignal): Promise<T[]> {
-  const pings = new Map<string, number | null>()
-
-  // ponytail: ICMP native module behaves like one runner on Android; keep it sequential.
-  for (const profile of profiles) {
-    if (signal?.aborted) break
-    const host = profile.serverIp || profile.serverAddress
-    if (!pings.has(host)) pings.set(host, await pingHost(host, signal))
-  }
-
-  return profiles.map((profile) => {
-    const ping = pings.get(profile.serverIp || profile.serverAddress)
-    return ping == null ? profile : { ...profile, ping }
-  })
-}

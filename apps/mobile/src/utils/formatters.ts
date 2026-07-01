@@ -24,7 +24,8 @@ export function formatDuration(seconds: number): string {
   return [h, m, s].map((v) => v.toString().padStart(2, '0')).join(':');
 }
 
-export function formatPing(ms: number): { label: string; color: string } {
+export function formatPing(ms: number | null): { label: string; color: string } {
+  if (ms === null) return { label: '—', color: '#8e8e93' };
   if (ms < 50) return { label: `${ms}ms`, color: '#34c759' };
   if (ms < 100) return { label: `${ms}ms`, color: '#ff9f0a' };
   return { label: `${ms}ms`, color: '#ff3b30' };

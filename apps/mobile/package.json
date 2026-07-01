@@ -38,6 +38,7 @@
     "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
+    "react-native-webview": "13.16.1",
     "react-native-wireguard-vpn-patched": "^1.0.22-patch.2",
     "react-native-worklets": "^0.10.0",
     "tailwind-merge": "^3.6.0",
@@ -47,6 +48,8 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-preset-expo": "~56.0.15",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "^57.0.0",
     "expo-mcp": "~0.2.1",
     "typescript": "~6.0.3"
   },

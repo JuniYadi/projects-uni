@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { VpnProfile, FilterState } from '@/types/vpn';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { api } from '@/services/api';
-import { withLivePing } from '@/services/pingService';
+import { pingHost } from '@/services/pingService';
 
 // ponytail: dev bypass fallback
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
@@ -78,6 +78,8 @@ interface ProfileState {
   setFilter: (filter: Partial<FilterState>) => void;
   resetFilter: () => void;
   applyFilter: () => void;
+  _runPings: (signal: AbortSignal) => Promise<void>;
+  _updateProfilePing: (id: string, ping: number | null) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -94,25 +96,56 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const signal = pingController.signal
     set({ loading: true, error: null });
     try {
+      let rawProfiles: VpnProfile[];
+      let regions: string[];
+
       if (SKIP_AUTH) {
-        // Dev bypass
         await new Promise((r) => setTimeout(r, 300));
+        rawProfiles = MOCK_PROFILES.map(p => ({ ...p, ping: null }));
+        regions = [...new Set(MOCK_PROFILES.map((p) => p.region))] as string[];
       } else {
         const res = await api.getProfiles();
-        const mapped = await withLivePing(res.profiles.map(mapProfile), signal);
-        if (signal.aborted) return
-        set({ profiles: mapped, loading: false });
-        get().applyFilter();
-        return;
+        rawProfiles = res.profiles.map(mapProfile).map(p => ({ ...p, ping: null }));
+        regions = [...new Set(rawProfiles.map((p) => p.region))] as string[];
       }
-      const regions = [...new Set(MOCK_PROFILES.map((p) => p.region))] as string[];
-      const profiles = await withLivePing(MOCK_PROFILES, signal);
+
       if (signal.aborted) return
-      set({ profiles, regions, loading: false });
+      set({ profiles: rawProfiles, regions, loading: false });
       get().applyFilter();
+
+      // Phase 2: background ping
+      get()._runPings(signal);
     } catch {
       if (!signal.aborted) set({ error: 'Failed to load servers', loading: false });
     }
+  },
+
+  _runPings: async (signal: AbortSignal) => {
+    const profiles = get().profiles;
+    const uniqueHosts = new Set(profiles.map(p => p.serverIp || p.serverAddress));
+    const hosts = [...uniqueHosts];
+
+    // ponytail: sequential ping per Android ICMP limitation
+    for (const host of hosts) {
+      if (signal.aborted) break;
+      const ping = await pingHost(host, signal);
+      if (signal.aborted) break;
+      // Find all profiles sharing this host and update them
+      for (const p of profiles) {
+        if ((p.serverIp || p.serverAddress) === host) {
+          get()._updateProfilePing(p.id, ping);
+        }
+      }
+    }
+  },
+
+  _updateProfilePing: (id: string, ping: number | null) => {
+    const { profiles } = get();
+    const idx = profiles.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    profiles[idx] = { ...profiles[idx], ping };
+    set({ profiles: [...profiles] });
+    get().applyFilter();
   },
 
   cancelLoadProfiles: () => {
@@ -146,7 +179,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     }
 
     if (activeFilter.sortBy === 'ping') {
-      result.sort((a, b) => a.ping - b.ping);
+      result.sort((a, b) => (a.ping ?? Infinity) - (b.ping ?? Infinity));
     } else if (activeFilter.sortBy === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (activeFilter.sortBy === 'region') {

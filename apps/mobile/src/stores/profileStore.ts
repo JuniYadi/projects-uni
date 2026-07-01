@@ -50,7 +50,7 @@ function mapProfile(apiProfile: {
     protocol: apiProfile.protocol === 'WIREGUARD' ? 'wireguard' : 'openvpn',
     port: apiProfile.protocol === 'WIREGUARD' ? 51820 : 1194,
     load: apiProfile.loadPercent ?? 0,
-    ping: null,
+    ping: apiProfile.pingMs ?? null,
     encryption: 'AES-256-GCM',
     serverAddress: apiProfile.hostname,
     serverIp: apiProfile.serverIp ?? apiProfile.hostname ?? apiProfile.serverName,
@@ -72,6 +72,7 @@ interface ProfileState {
   regions: string[];
   activeFilter: FilterState;
   loading: boolean;
+  pinging: boolean;
   error: string | null;
   loadProfiles: () => Promise<void>;
   cancelLoadProfiles: () => void;
@@ -87,24 +88,25 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   regions: [],
   activeFilter: DEFAULT_FILTER,
   loading: false,
+  pinging: false,
   error: null,
 
   loadProfiles: async () => {
     pingController?.abort()
     pingController = new AbortController()
     const signal = pingController.signal
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, pinging: false });
     try {
       let rawProfiles: VpnProfile[];
       let regions: string[];
 
       if (SKIP_AUTH) {
         await new Promise((r) => setTimeout(r, 300));
-        rawProfiles = MOCK_PROFILES.map(p => ({ ...p, ping: null }));
+        rawProfiles = MOCK_PROFILES.map(p => ({ ...p }));
         regions = [...new Set(MOCK_PROFILES.map((p) => p.region))] as string[];
       } else {
         const res = await api.getProfiles();
-        rawProfiles = res.profiles.map(mapProfile).map(p => ({ ...p, ping: null }));
+        rawProfiles = res.profiles.map(mapProfile);
         regions = [...new Set(rawProfiles.map((p) => p.region))] as string[];
       }
 
@@ -115,13 +117,24 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       // Phase 2: background ping
       get()._runPings(signal);
     } catch {
-      if (!signal.aborted) set({ error: 'Failed to load servers', loading: false });
+      if (!signal.aborted) set({ error: 'Failed to load servers', loading: false, pinging: false });
     }
   },
 
   _runPings: async (signal: AbortSignal) => {
-    const uniqueHosts = new Set(get().profiles.map(p => p.serverIp || p.serverAddress));
+    set({ pinging: true });
+    if (signal.aborted) {
+      set({ pinging: false });
+      return;
+    }
 
+    const uniqueHosts = [...new Set(get().profiles.map(p => p.serverIp || p.serverAddress))];
+    if (uniqueHosts.length === 0) {
+      set({ pinging: false });
+      return;
+    }
+
+    // ping-react-native does not support concurrent ICMP sessions, so run sequentially
     for (const host of uniqueHosts) {
       if (signal.aborted) break;
       const ping = await pingHost(host, signal);
@@ -130,11 +143,14 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({ profiles: profiles.map(p => (p.serverIp || p.serverAddress) === host ? { ...p, ping } : p) });
       get().applyFilter();
     }
+
+    if (!signal.aborted) set({ pinging: false });
   },
 
   cancelLoadProfiles: () => {
     pingController?.abort()
     pingController = null
+    set({ pinging: false });
   },
 
   setFilter: (filter) => {

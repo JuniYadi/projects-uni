@@ -55,13 +55,14 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
 *{margin:0;padding:0}
 body{background:transparent}
 #m{width:100vw;height:100vh}
+#m.dark{filter:brightness(1.25)contrast(1.15)}
 .leaflet-control-attribution{display:none!important}
 .marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap}
 .marker-label small{color:${isDark?'#d1d5db':'#6b7280'};display:block;font-size:10px;font-weight:600;margin-top:1px}
 .marker-label:before{display:none}
 </style>
 </head><body>
-<div id="m"></div>
+<div id="m"${isDark?' class="dark"':''}></div>
 <script>
 var d=${JSON.stringify(servers)};
 var a=${JSON.stringify(activeServer)};

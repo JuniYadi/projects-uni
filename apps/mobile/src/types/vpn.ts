@@ -24,7 +24,7 @@ export interface VpnProfile {
   protocol: VpnProtocol;
   port: number;
   load: number;
-  ping: number;
+  ping: number | null;
   encryption: string;
   serverAddress: string;
   serverIp: string;

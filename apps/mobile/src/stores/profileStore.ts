@@ -141,9 +141,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   _updateProfilePing: (id: string, ping: number | null) => {
     const { profiles } = get();
-    const next = profiles.map(p => p.id === id ? { ...p, ping } : p);
-    if (next === profiles) return;
-    set({ profiles: next });
+    set({ profiles: profiles.map(p => p.id === id ? { ...p, ping } : p) });
     get().applyFilter();
   },
 

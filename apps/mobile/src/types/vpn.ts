@@ -53,6 +53,14 @@ export interface AppSettings {
   killSwitch: boolean;
   preferredProtocol: VpnProtocol | 'auto';
   dnsServer: 'default' | 'cloudflare' | 'google' | string;
+  /** Apps that should bypass the VPN tunnel (split-tunnel whitelist). */
+  whitelistedApps: VpnApp[];
+}
+
+export interface VpnApp {
+  packageName: string;
+  appName?: string;
+  addedAt: number;
 }
 
 export interface SubscriptionInfo {

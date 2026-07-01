@@ -74,15 +74,15 @@ jobs:
         run: cd android && ./gradlew assembleRelease bundleRelease
         working-directory: apps/mobile
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: app-release-apk-${{ github.event.release.tag_name }}
-          path: apps/mobile/android/app/build/outputs/apk/release/*.apk
+      # - uses: actions/upload-artifact@v7
+      #   with:
+      #     name: app-release-apk-${{ github.event.release.tag_name }}
+      #     path: apps/mobile/android/app/build/outputs/apk/release/*.apk
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: app-release-aab-${{ github.event.release.tag_name }}
-          path: apps/mobile/android/app/build/outputs/bundle/release/*.aab
+      # - uses: actions/upload-artifact@v7
+      #   with:
+      #     name: app-release-aab-${{ github.event.release.tag_name }}
+      #     path: apps/mobile/android/app/build/outputs/bundle/release/*.aab
 
       - name: Upload to Google Play (internal track)
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
@@ -94,3 +94,4 @@ jobs:
           releaseName: ${{ github.event.release.tag_name }}
           tracks: internal
           status: completed
+          whatsNewDirectory: distribution/whatsnew

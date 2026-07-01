@@ -43,7 +43,7 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
 
   const activeServer = servers.find((s) => s.active);
   const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    ? 'https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   const html = `<!DOCTYPE html>
@@ -55,7 +55,7 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
 *{margin:0;padding:0}
 body{background:transparent}
 #m{width:100vw;height:100vh}
-#m.dark{filter:brightness(1.25)contrast(1.15)}
+#m.dark{filter:brightness(1.3)contrast(1.3)saturate(0.9)}
 .leaflet-control-attribution{display:none!important}
 .marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap}
 .marker-label small{color:${isDark?'#d1d5db':'#6b7280'};display:block;font-size:10px;font-weight:600;margin-top:1px}

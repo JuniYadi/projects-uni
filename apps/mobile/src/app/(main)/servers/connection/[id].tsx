@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ScrollView, View, Text, Animated, useColorScheme } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import { Host, Button } from '@expo/ui';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
@@ -13,27 +12,6 @@ import type { VpnProfile } from '@/types/vpn';
 import * as Cellular from 'expo-cellular';
 import * as Network from 'expo-network';
 import { Colors } from '@/constants/theme';
-
-// ponytail: gradient-like bg glow — overlapping views, no dep
-function BgGlow() {
-  const scheme = useColorScheme();
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 300, overflow: 'hidden' }}>
-      <View
-        style={{
-          position: 'absolute',
-          top: -120,
-          alignSelf: 'center',
-          width: 320,
-          height: 320,
-          borderRadius: 160,
-          backgroundColor: '#00C781',
-          opacity: scheme === 'dark' ? 0.08 : 0.05,
-        }}
-      />
-    </View>
-  );
-}
 
 function StatusBolt({ color, size = 30 }: { color: string; size?: number }) {
   return (
@@ -48,11 +26,11 @@ function StatusBolt({ color, size = 30 }: { color: string; size?: number }) {
 
 // ─── data-row ──────────────────────────────────────────────
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoCell({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center py-2 px-4">
-      <Text className="text-xs text-neutral-500 dark:text-neutral-400 w-24">{label}</Text>
-      <Text className="text-xs flex-1 text-black dark:text-white font-medium" selectable numberOfLines={1}>{value}</Text>
+    <View className="flex-1 min-w-[45%] px-4 py-2">
+      <Text className="text-[10px] text-neutral-500 dark:text-neutral-400">{label}</Text>
+      <Text className="text-xs text-black dark:text-white font-medium mt-0.5" selectable numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -107,12 +85,6 @@ function StatusCard({
 
       {/* flag badge */}
       <Text className="text-lg font-bold text-black dark:text-white">{countryFlag(profile.countryCode)} {profile.name}</Text>
-      <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-        {profile.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN'}  ●  {profile.port}
-      </Text>
-
-      {/* divider */}
-      <View className="w-12 h-0.5 rounded-full my-3" style={{ backgroundColor: colors.backgroundSelected }} />
 
       {/* status indicator */}
       <View className="items-center gap-2">
@@ -240,8 +212,6 @@ export default function ConnectionDetailScreen() {
   const tunnelAddress = useConnectionStore((s) => s.tunnelAddress);
   const tunnelDns = useConnectionStore((s) => s.tunnelDns);
   const connError = useConnectionStore((s) => s.error);
-  const connect = useConnectionStore((s) => s.connect);
-  const disconnect = useConnectionStore((s) => s.disconnect);
 
   const conn = { status, profile: connectionProfile, elapsed, bytesDownloaded, bytesUploaded, tunnelAddress, tunnelDns, error: connError };
   const isActive = conn.profile?.id === id;
@@ -282,7 +252,6 @@ export default function ConnectionDetailScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <BgGlow />
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
       <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
         {/* fleet map */}
@@ -303,16 +272,12 @@ export default function ConnectionDetailScreen() {
           <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
             Server Information
           </Text>
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl">
-            <InfoRow label="Server" value={profile.serverAddress} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="IP Server" value={profile.serverIp} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="IP Lokal" value={conn.tunnelAddress.join(', ') || 'Connect untuk lihat IP'} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="DNS" value={conn.tunnelDns.join(', ') || 'Connect untuk lihat DNS'} />
-            <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />
-            <InfoRow label="Encryption" value={profile.encryption} />
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl flex-row flex-wrap py-1">
+            <InfoCell label="Server" value={profile.serverAddress} />
+            <InfoCell label="IP Server" value={profile.serverIp} />
+            <InfoCell label="IP Lokal" value={conn.tunnelAddress.join(', ') || 'Connect untuk lihat IP'} />
+            <InfoCell label="DNS" value={conn.tunnelDns.join(', ') || 'Connect untuk lihat DNS'} />
+            <InfoCell label="Encryption" value={profile.encryption} />
           </View>
         </View>
 
@@ -326,29 +291,6 @@ export default function ConnectionDetailScreen() {
           </View>
         )}
 
-        {/* connect / disconnect button */}
-        <Host style={{ width: '100%', minHeight: 48 }}>
-          <Button
-            variant="filled"
-            onPress={() => {
-              if (connected) {
-                disconnect();
-              } else if (!connecting && !disconnecting) {
-                connect(profile);
-              }
-            }}
-            disabled={connecting || disconnecting}
-            label={
-              connecting
-                ? 'Connecting...'
-                : disconnecting
-                  ? 'Disconnecting...'
-                  : connected
-                    ? 'Disconnect'
-                    : 'Connect'
-            }
-          />
-        </Host>
       </View>
     </ScrollView>
     </View>

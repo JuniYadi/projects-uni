@@ -1,6 +1,7 @@
 import { View, Text, useColorScheme } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { VpnProfile } from '@/types/vpn';
+import { countryFlag } from '@/utils/formatters';
 
 // ponytail: static coords per countryCode fallback, add real geocoding API later
 const FALLBACK_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -34,6 +35,9 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
         name: p.name,
         code: p.countryCode,
         country: p.country,
+        flag: countryFlag(p.countryCode),
+        protocol: p.protocol === 'wireguard' ? 'WireGuard' : 'OpenVPN',
+        port: p.port,
         active: p.id === activeProfileId,
         selected: p.id === selectedProfileId,
       };
@@ -54,7 +58,8 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
 body{background:transparent}
 #m{width:100vw;height:100vh}
 .leaflet-control-attribution{display:none!important}
-.marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:6px 8px;white-space:nowrap}
+.marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap}
+.marker-label small{color:${isDark?'#d1d5db':'#6b7280'};display:block;font-size:10px;font-weight:600;margin-top:1px}
 .marker-label:before{display:none}
 </style>
 </head><body>
@@ -70,7 +75,7 @@ d.forEach(function(s){
  var c;
  if(s.active || s.selected){
   c=L.circleMarker([s.lat,s.lng],{radius:s.active?9:7,fillColor:s.active?'#00C781':'#0A84FF',color:'#fff',weight:3,fillOpacity:1});
-  c.bindTooltip((s.code + ' · ' + s.country),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
+  c.bindTooltip((s.flag + ' ' + s.country + '<small>' + s.protocol + ' · ' + s.port + '</small>'),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
  }else{
   c=L.circleMarker([s.lat,s.lng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
  }
@@ -85,7 +90,7 @@ if(a){
 </body></html>`;
 
   return (
-    <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden" style={{ height }}>
+    <View className="rounded-2xl overflow-hidden" style={{ height, backgroundColor: isDark ? '#111827' : '#eef2f7' }}>
       <View className="absolute top-2 left-3 z-10">
         <Text className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase">
           Server Locations

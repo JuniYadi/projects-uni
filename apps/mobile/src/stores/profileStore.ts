@@ -50,7 +50,7 @@ function mapProfile(apiProfile: {
     protocol: apiProfile.protocol === 'WIREGUARD' ? 'wireguard' : 'openvpn',
     port: apiProfile.protocol === 'WIREGUARD' ? 51820 : 1194,
     load: apiProfile.loadPercent ?? 0,
-    ping: apiProfile.pingMs ?? 999,
+    ping: null,
     encryption: 'AES-256-GCM',
     serverAddress: apiProfile.hostname,
     serverIp: apiProfile.serverIp ?? apiProfile.hostname ?? apiProfile.serverName,
@@ -79,7 +79,6 @@ interface ProfileState {
   resetFilter: () => void;
   applyFilter: () => void;
   _runPings: (signal: AbortSignal) => Promise<void>;
-  _updateProfilePing: (id: string, ping: number | null) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -121,28 +120,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   _runPings: async (signal: AbortSignal) => {
-    const profiles = get().profiles;
-    const uniqueHosts = new Set(profiles.map(p => p.serverIp || p.serverAddress));
-    const hosts = [...uniqueHosts];
+    const uniqueHosts = new Set(get().profiles.map(p => p.serverIp || p.serverAddress));
 
-    // ponytail: sequential ping per Android ICMP limitation
-    for (const host of hosts) {
+    for (const host of uniqueHosts) {
       if (signal.aborted) break;
       const ping = await pingHost(host, signal);
       if (signal.aborted) break;
-      // Find all profiles sharing this host and update them
-      for (const p of profiles) {
-        if ((p.serverIp || p.serverAddress) === host) {
-          get()._updateProfilePing(p.id, ping);
-        }
-      }
+      const { profiles } = get();
+      set({ profiles: profiles.map(p => (p.serverIp || p.serverAddress) === host ? { ...p, ping } : p) });
+      get().applyFilter();
     }
-  },
-
-  _updateProfilePing: (id: string, ping: number | null) => {
-    const { profiles } = get();
-    set({ profiles: profiles.map(p => p.id === id ? { ...p, ping } : p) });
-    get().applyFilter();
   },
 
   cancelLoadProfiles: () => {

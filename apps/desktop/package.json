@@ -11,7 +11,8 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "dist": "electron-builder",
-    "verify": "bun run scripts/verify.ts"
+    "verify": "bun run scripts/verify.ts",
+    "compile:helper": "bun build --compile ../../packages/vpn-platform/src/wg-helper.ts --outfile resources/wg-helper.exe"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",

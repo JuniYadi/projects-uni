@@ -19,7 +19,11 @@ const resourcesDir =
   import.meta.dirname
 
 export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlatformDriver {
-  const helperPath = options.helperPath ?? path.join(resourcesDir, 'wg-helper.ts')
+  // ponytail: prefer .exe (compiled), fallback to .ts for dev
+  const helperPath = options.helperPath ?? (() => {
+    const exe = path.join(resourcesDir, 'wg-helper.exe')
+    return existsSync(exe) ? exe : path.join(resourcesDir, 'wg-helper.ts')
+  })()
   const adapterName = options.adapterName ?? 'UniVPN'
   const tunnelDllPath = options.tunnelDllPath ?? path.join(resourcesDir, 'win', 'tunnel.dll')
   const wireguardDllPath = options.wireguardDllPath ?? path.join(resourcesDir, 'win', 'wireguard.dll')

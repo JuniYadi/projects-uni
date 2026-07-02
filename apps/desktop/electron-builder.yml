@@ -9,9 +9,9 @@ files:
   - out/**/*
   - package.json
 extraResources:
-  # Bun helper script for Windows WireGuard FFI
-  - from: ../../packages/vpn-platform/src/wg-helper.ts
-    to: wg-helper.ts
+  # Compiled wg-helper for Windows WireGuard FFI (built via bun build --compile)
+  - from: resources/wg-helper.exe
+    to: wg-helper.exe
   # Windows WireGuard DLLs (place DLLs here before building for real tunnel)
   - from: resources/win
     to: resources/win

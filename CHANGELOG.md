@@ -2,6 +2,15 @@
 
 All notable changes to UniVPN are documented here.
 
+
+## [v0.1.0] - 2026-07-02
+
+### Added
+
+### Changed
+
+### Fixed
+
 ## [v0.0.10] - 2026-07-02
 
 ### Added
@@ -132,3 +141,4 @@ The initial application was built across the following areas before the first ta
 [v0.0.3]: https://github.com/JuniYadi/projects-uni/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/JuniYadi/projects-uni/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/JuniYadi/projects-uni/releases/tag/v0.0.1
+

@@ -1,0 +1,45 @@
+name: Build Desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API base URL (optional)'
+        required: false
+        default: 'https://pgreen.tunnel.juniyadi.id/api/vpn/mobile'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build desktop app
+        env:
+          UNIVPN_API_BASE_URL: ${{ github.event.inputs.api_url }}
+        run: |
+          cd apps/desktop
+          bun run build
+
+      - name: Package with electron-builder
+        env:
+          UNIVPN_API_BASE_URL: ${{ github.event.inputs.api_url }}
+        run: |
+          cd apps/desktop
+          bun run dist
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: univpn-desktop-windows
+          path: apps/desktop/dist/*.exe
+          if-no-files-found: error

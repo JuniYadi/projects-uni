@@ -1,0 +1,53 @@
+name: Update WireGuard DLLs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-commit:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone wireguard-windows
+        shell: pwsh
+        run: git clone --depth 1 https://git.zx2c4.com/wireguard-windows "$env:TEMP\wireguard-windows"
+
+      - name: Build tunnel.dll
+        shell: pwsh
+        run: |
+          cd "$env:TEMP\wireguard-windows\embeddable-dll-service"
+          ./build.bat
+
+      - name: Download wireguard.dll
+        shell: pwsh
+        run: |
+          cd "$env:TEMP"
+          Invoke-WebRequest -Uri https://download.wireguard.com/wireguard-nt/wireguard-nt-1.1.zip -OutFile wireguard-nt.zip
+          Expand-Archive -Path wireguard-nt.zip -DestinationPath . -Force
+
+      - name: Copy DLLs to repo
+        shell: pwsh
+        run: |
+          $dest = "apps/desktop/resources/win"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item "$env:TEMP\wireguard-windows\embeddable-dll-service\amd64\tunnel.dll" "$dest\tunnel.dll" -Force
+          Copy-Item "$env:TEMP\wireguard-nt\bin\amd64\wireguard.dll" "$dest\wireguard.dll" -Force
+
+      - name: Commit and push
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/desktop/resources/win/*.dll
+          git status
+          git diff --staged --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "chore: update WireGuard DLLs [skip ci]"
+            git push
+          } else {
+            Write-Host "No changes to commit"
+          }

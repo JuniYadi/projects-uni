@@ -1,0 +1,19 @@
+{
+  "name": "@univpn/vpn-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@univpn/shared": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "bun-types": "^1.1.0",
+    "typescript": "~6.0.3"
+  }
+}

@@ -1,4 +1,4 @@
-import { View, Text, useColorScheme } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { VpnProfile } from '@/types/vpn';
 import { countryFlag } from '@/utils/formatters';
@@ -78,7 +78,7 @@ body{background:transparent}
 var d=${JSON.stringify(servers)};
 var f=${JSON.stringify(focusedServer)};
 var u=${JSON.stringify(userLocation ?? null)};
-var m=L.map('m',{zoomControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,touchZoom:false,keyboard:false});
+var m=L.map('m',{zoomControl:true,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,touchZoom:false,keyboard:false});
 L.tileLayer('${tileUrl}',{maxZoom:18}).addTo(m);
 var g=L.featureGroup();
 d.forEach(function(s){
@@ -100,7 +100,9 @@ if(u){
   L.polyline([[u.lat,u.lng],[f.lat,f.lng]],{color:'#00C781',weight:2.5,opacity:0.85,dashArray:'8, 8',className:'animated-line'}).addTo(m);
  }
 }
-if(f){
+if(u && f){
+ m.fitBounds([[u.lat,u.lng],[f.lat,f.lng]],{padding:[60,60],maxZoom:5});
+}else if(f){
  m.setView([f.lat,f.lng],7);
 }else if(g.getLayers().length>0){
  m.fitBounds(g.getBounds().pad(0.4));
@@ -110,13 +112,6 @@ if(f){
 
   return (
     <View className="rounded-2xl overflow-hidden" style={{ height, backgroundColor: isDark ? '#111827' : '#eef2f7' }}>
-      <View className="absolute top-2 left-3 z-10">
-        <View className="bg-black/30 dark:bg-white/15 backdrop-blur-sm px-2 py-0.5 rounded-full">
-          <Text className="text-[10px] font-semibold text-white/80 dark:text-white/70 tracking-widest uppercase">
-            Server Locations
-          </Text>
-        </View>
-      </View>
       <WebView
         source={{ html }}
         scrollEnabled={false}

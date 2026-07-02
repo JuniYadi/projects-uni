@@ -145,6 +145,7 @@ export default function MainLayout() {
                 height: 116,
                 borderRadius: 58,
                 backgroundColor: bg,
+                alignSelf: 'center',
               }}
             />
             <View pointerEvents="box-none" style={{ marginTop: -44, zIndex: 2, elevation: 10 }}>

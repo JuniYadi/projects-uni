@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import { ScrollView, Alert, View, Text, Pressable, useColorScheme, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, Alert, Modal, View, Text, Pressable, useColorScheme, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
-import { Host, Picker } from '@expo/ui';
 import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -94,7 +93,7 @@ function InfoRow({ label, value, selectable }: { label: string; value: string; s
   );
 }
 
-function PickerRow({
+function SelectRow({
   label,
   selectedValue,
   onValueChange,
@@ -105,23 +104,85 @@ function PickerRow({
   onValueChange: (value: string) => void;
   options: { label: string; value: string }[];
 }) {
+  const [visible, setVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+  const selectedLabel = options.find((o) => o.value === selectedValue)?.label ?? selectedValue;
+
   return (
-    <View className="flex-row items-center py-1.5 px-4">
-      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
-        {label}
-      </Text>
-      <Host matchContents>
-        <Picker
-          selectedValue={selectedValue}
-          onValueChange={onValueChange}
-          appearance="menu"
+    <>
+      <Pressable
+        onPress={() => setVisible(true)}
+        className="flex-row items-center py-3 px-4 active:opacity-60"
+      >
+        <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
+          {label}
+        </Text>
+        <Text
+          className="text-base text-neutral-500 dark:text-neutral-400 mr-2 max-w-[50%]"
+          numberOfLines={1}
         >
-          {options.map((o) => (
-            <Picker.Item key={o.value} label={o.label} value={o.value} />
-          ))}
-        </Picker>
-      </Host>
-    </View>
+          {selectedLabel}
+        </Text>
+        <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
+      </Pressable>
+
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-end">
+          <Pressable className="flex-1" onPress={() => setVisible(false)} />
+          <View
+            className="bg-white dark:bg-zinc-900 rounded-t-3xl overflow-hidden"
+            style={{ paddingBottom: insets.bottom }}
+          >
+            <View className="items-center py-2">
+              <View className="w-10 h-1 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+            </View>
+            <Text
+              className="text-center font-semibold text-base text-black dark:text-white mb-2 px-4"
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+
+            <View className="mx-4 mb-4 rounded-xl bg-black/5 dark:bg-white/10 overflow-hidden">
+              {options.map((o, index) => (
+                <View key={o.value}>
+                  <Pressable
+                    onPress={() => {
+                      onValueChange(o.value);
+                      setVisible(false);
+                    }}
+                    className="flex-row items-center py-3 px-4 active:opacity-60"
+                  >
+                    <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
+                      {o.label}
+                    </Text>
+                    {o.value === selectedValue && (
+                      <Text className="text-base font-semibold text-blue-500 ml-2">✓</Text>
+                    )}
+                  </Pressable>
+                  {index < options.length - 1 && (
+                    <View className="h-px bg-black/10 dark:bg-white/10 ml-4" />
+                  )}
+                </View>
+              ))}
+            </View>
+
+            <Pressable
+              onPress={() => setVisible(false)}
+              className="mx-4 mb-4 rounded-xl bg-white dark:bg-zinc-800 py-3.5 items-center active:opacity-60"
+            >
+              <Text className="text-base font-semibold text-blue-500">Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -239,6 +300,8 @@ export default function SettingsScreen() {
             <SectionHeader title="Account" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
               <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
+              <Divider />
+              <LinkRow label="Logout" onPress={handleLogout} destructive />
             </View>
           </View>
 
@@ -246,7 +309,7 @@ export default function SettingsScreen() {
           <View className="gap-2">
             <SectionHeader title="Connection" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <PickerRow
+              <SelectRow
                 label="DNS Server"
                 selectedValue={settings.dnsServer}
                 onValueChange={(v) => update('dnsServer', v)}
@@ -270,7 +333,7 @@ export default function SettingsScreen() {
           <View className="gap-2">
             <SectionHeader title="Appearance" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <PickerRow
+              <SelectRow
                 label="Theme"
                 selectedValue={settings.theme}
                 onValueChange={(v) => update('theme', v as AppTheme)}
@@ -304,10 +367,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Logout */}
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-            <LinkRow label="Logout" onPress={handleLogout} destructive />
-          </View>
         </View>
       </ScrollView>
     </View>

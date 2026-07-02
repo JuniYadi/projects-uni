@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ScrollView, View, Text, Animated, useColorScheme } from 'react-native';
-import { SymbolView } from 'expo-symbols';
+import { ScrollView, View, Text, Animated } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
@@ -8,116 +7,96 @@ import { useConnectionStore } from '@/stores/connectionStore';
 import FleetMap from '@/components/fleet-map';
 import { vpnService } from '@/services/vpnService';
 import { formatBytes, formatDuration } from '@/utils/formatters';
-import type { VpnProfile } from '@/types/vpn';
 import * as Cellular from 'expo-cellular';
 import * as Network from 'expo-network';
-import { Colors } from '@/constants/theme';
 
-function StatusBolt({ color, size = 30 }: { color: string; size?: number }) {
+// ─── shared UI primitives (matches settings, compact) ──────
+
+function Divider() {
+  return <View className="h-px bg-black/10 dark:bg-white/10 ml-4" />;
+}
+
+function SectionHeader({ title }: { title: string }) {
   return (
-    <SymbolView
-      name={{ ios: 'bolt.fill', android: 'bolt', web: 'bolt' }}
-      tintColor={color}
-      size={size}
-      style={{ width: size, height: size }}
-    />
+    <Text className="px-1 pb-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+      {title}
+    </Text>
   );
 }
 
-// ─── data-row ──────────────────────────────────────────────
-
-function InfoCell({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
   return (
-    <View className="flex-1 min-w-[45%] px-4 py-2">
-      <Text className="text-[10px] text-neutral-500 dark:text-neutral-400">{label}</Text>
-      <Text className="text-xs text-black dark:text-white font-medium mt-0.5" selectable numberOfLines={1}>{value}</Text>
+    <View className="flex-row items-center py-2.5 px-4">
+      <Text className="flex-1 text-sm text-black dark:text-white" numberOfLines={1}>
+        {label}
+      </Text>
+      <Text
+        className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[55%] text-right"
+        selectable={selectable}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
 
-// ─── status card ───────────────────────────────────────────
+// ─── floating map overlays ─────────────────────────────────
 
-function StatusCard({
-  profile,
+function StatusBadge({
   connected,
   connecting,
   disconnecting,
-  conn,
-  isActive,
 }: {
-  profile: VpnProfile;
   connected: boolean;
   connecting: boolean;
   disconnecting: boolean;
-  conn: { elapsed: number; bytesDownloaded: number; bytesUploaded: number };
-  isActive: boolean;
 }) {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-
-  const statusColor = connected ? '#34c759' : connecting ? '#ff9f0a' : '#8e8e93';
-  const statusLabel = connected ? 'CONNECTED' : connecting ? 'CONNECTING...' : disconnecting ? 'DISCONNECTING...' : 'DISCONNECTED';
-  const boltScale = useRef(new Animated.Value(1)).current;
+  const statusColor = connected ? '#00C781' : connecting ? '#ff9f0a' : '#8e8e93';
+  const statusLabel = connected ? 'CONNECTED' : connecting ? 'CONNECTING' : disconnecting ? 'DISCONNECTING' : 'DISCONNECTED';
+  const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!connecting) {
-      boltScale.setValue(1);
+      pulse.setValue(1);
       return;
     }
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(boltScale, { toValue: 1.15, duration: 450, useNativeDriver: true }),
-        Animated.timing(boltScale, { toValue: 1, duration: 450, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1.5, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
       ])
     );
     anim.start();
     return () => anim.stop();
-  }, [connecting, boltScale]);
+  }, [connecting, pulse]);
 
   return (
-    <View className="items-center py-5 px-6 rounded-2xl overflow-hidden"
-      style={{ backgroundColor: connected ? '#00C78110' : colors.backgroundElement }}
-    >
-      {/* accent bar when connected */}
-      {connected && (
-        <View className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: '#00C781' }} />
-      )}
+    <View className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full flex-row items-center gap-1.5">
+      <Animated.View style={{ transform: [{ scale: pulse }] }}>
+        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: statusColor }} />
+      </Animated.View>
+      <Text className="text-[10px] font-bold text-white tracking-wider">{statusLabel}</Text>
+    </View>
+  );
+}
 
-      {/* flag badge */}
-      <Text className="text-lg font-bold text-black dark:text-white">{profile.name}</Text>
-
-      {/* status indicator */}
-      <View className="items-center gap-2">
-        <View className="items-center justify-center" style={{ width: 32, height: 32 }}>
-          {connecting ? (
-            <Animated.View style={{ transform: [{ scale: boltScale }] }}>
-              <StatusBolt color="#ffcc00" />
-            </Animated.View>
-          ) : (
-            <StatusBolt color={connected ? '#ffcc00' : statusColor} />
-          )}
-        </View>
-        <Text className="text-xs font-semibold tracking-widest" style={{ color: statusColor }}>
-          {statusLabel}
-        </Text>
-      </View>
-
-      {/* timer */}
-      <Text className="text-4xl font-light text-black dark:text-white mt-3 tabular-nums tracking-wider">
-        {formatDuration(isActive ? conn.elapsed : 0)}
+function TimerOverlay({ serverName, elapsed }: { serverName: string; elapsed: number }) {
+  return (
+    <View className="bg-black/40 backdrop-blur-sm px-3 py-2 rounded-xl">
+      <Text className="text-xs font-bold text-white" numberOfLines={1}>{serverName}</Text>
+      <Text className="text-2xl font-light text-white tabular-nums tracking-wider mt-0.5">
+        {formatDuration(elapsed)}
       </Text>
+    </View>
+  );
+}
 
-      {/* data stats */}
-      <View className="flex-row gap-8 mt-3">
-        <View className="items-center">
-          <Text className="text-base font-semibold text-black dark:text-white">▼ {formatBytes(isActive ? conn.bytesDownloaded : 0)}</Text>
-          <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Download</Text>
-        </View>
-        <View className="items-center">
-          <Text className="text-base font-semibold text-black dark:text-white">▲ {formatBytes(isActive ? conn.bytesUploaded : 0)}</Text>
-          <Text className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Upload</Text>
-        </View>
-      </View>
+function SpeedOverlay({ downloaded, uploaded }: { downloaded: number; uploaded: number }) {
+  return (
+    <View className="bg-black/40 backdrop-blur-sm px-3 py-2 rounded-xl">
+      <Text className="text-xs font-bold text-white text-right">▼ {formatBytes(downloaded)}</Text>
+      <Text className="text-xs font-bold text-white text-right mt-1">▲ {formatBytes(uploaded)}</Text>
     </View>
   );
 }
@@ -132,7 +111,6 @@ function NetworkInfo() {
 
   useEffect(() => {
     Network.getIpAddressAsync().then(setIp);
-    // Always try cellular — returns null if no cellular interface
     Cellular.getCarrierNameAsync().then(setCarrierName);
     Cellular.getCellularGenerationAsync().then(setGeneration);
   }, [type]);
@@ -153,46 +131,19 @@ function NetworkInfo() {
     generation === Cellular.CellularGeneration.CELLULAR_3G ? '3G' :
     generation === Cellular.CellularGeneration.CELLULAR_2G ? '2G' : null;
 
+  const networkValue = carrierName && genLabel ? `${carrierName} · ${genLabel}` : carrierName ?? genLabel ?? '—';
+
   return (
-    <View className="gap-1">
-      <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
-        Network Status
-      </Text>
-      <View className="bg-black/5 dark:bg-white/10 rounded-2xl p-3 gap-y-2">
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Connection</Text>
-            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{typeLabel}</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Internet</Text>
-            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{internetLabel}</Text>
-          </View>
-        </View>
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">IP Address</Text>
-            <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1} selectable>{ip && ip !== '0.0.0.0' ? ip : '—'}</Text>
-          </View>
-          {carrierName && genLabel ? (
-            <View className="flex-1">
-              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Network</Text>
-              <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{carrierName} · {genLabel}</Text>
-            </View>
-          ) : carrierName ? (
-            <View className="flex-1">
-              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Carrier</Text>
-              <Text className="text-xs text-black dark:text-white font-medium mt-0.5" numberOfLines={1}>{carrierName}</Text>
-            </View>
-          ) : genLabel ? (
-            <View className="flex-1">
-              <Text className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Signal</Text>
-              <Text className="text-xs text-black dark:text-white font-medium mt-0.5">{genLabel}</Text>
-            </View>
-          ) : (
-            <View className="flex-1" />
-          )}
-        </View>
+    <View className="gap-2">
+      <SectionHeader title="Network Status" />
+      <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+        <InfoRow label="Connection" value={typeLabel} />
+        <Divider />
+        <InfoRow label="Internet" value={internetLabel} />
+        <Divider />
+        <InfoRow label="IP Address" value={ip && ip !== '0.0.0.0' ? ip : '—'} selectable />
+        <Divider />
+        <InfoRow label="Network" value={networkValue} />
       </View>
     </View>
   );
@@ -246,6 +197,8 @@ export default function ConnectionDetailScreen() {
     });
   }, [connected, updateStats]);
 
+  const insets = useSafeAreaInsets();
+
   if (!profile) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -254,51 +207,60 @@ export default function ConnectionDetailScreen() {
     );
   }
 
-  const insets = useSafeAreaInsets();
+  const mapHeight = 280;
 
   return (
     <View className="flex-1 bg-white dark:bg-black">
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
-      <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
-        {/* fleet map */}
-        <FleetMap profiles={allProfiles} activeProfileId={connected ? id : null} selectedProfileId={id} height={180} />
+        <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 80 }}>
+          {/* Map with floating connection stats */}
+          <View className="rounded-2xl overflow-hidden" style={{ height: mapHeight }}>
+            <FleetMap
+              profiles={allProfiles}
+              activeProfileId={connected ? id : null}
+              selectedProfileId={id}
+              height={mapHeight}
+            />
 
-        {/* status card */}
-        <StatusCard
-          profile={profile}
-          connected={connected}
-          connecting={connecting}
-          disconnecting={disconnecting}
-          conn={conn}
-          isActive={isActive}
-        />
+            <View className="absolute top-3 right-3 z-10" pointerEvents="box-none">
+              <StatusBadge connected={connected} connecting={connecting} disconnecting={disconnecting} />
+            </View>
 
-        {/* server info */}
-        <View className="gap-1">
-          <Text className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-widest uppercase px-1">
-            Server Information
-          </Text>
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl flex-row flex-wrap py-1">
-            <InfoCell label="Server" value={profile.serverAddress} />
-            <InfoCell label="IP Server" value={profile.serverIp} />
-            <InfoCell label="IP Lokal" value={conn.tunnelAddress.join(', ') || 'Connect untuk lihat IP'} />
-            <InfoCell label="DNS" value={conn.tunnelDns.join(', ') || 'Connect untuk lihat DNS'} />
-            <InfoCell label="Encryption" value={profile.encryption} />
+            <View className="absolute bottom-3 left-3 z-10" pointerEvents="box-none">
+              <TimerOverlay serverName={profile.name} elapsed={isActive ? conn.elapsed : 0} />
+            </View>
+
+            <View className="absolute bottom-3 right-3 z-10" pointerEvents="box-none">
+              <SpeedOverlay downloaded={isActive ? conn.bytesDownloaded : 0} uploaded={isActive ? conn.bytesUploaded : 0} />
+            </View>
           </View>
+
+          {/* server info */}
+          <View className="gap-2">
+            <SectionHeader title="Server Information" />
+            <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+              <InfoRow label="Server" value={profile.serverAddress} />
+              <Divider />
+              <InfoRow label="IP Server" value={profile.serverIp} />
+              <Divider />
+              <InfoRow label="IP Lokal" value={conn.tunnelAddress.join(', ') || 'Connect untuk lihat IP'} />
+              <Divider />
+              <InfoRow label="DNS" value={conn.tunnelDns.join(', ') || 'Connect untuk lihat DNS'} />
+            </View>
+          </View>
+
+          {/* network status */}
+          <NetworkInfo />
+
+          {/* error */}
+          {conn.error && (
+            <View className="bg-red-500/10 rounded-xl px-4 py-3">
+              <Text className="text-red-500 text-sm">{conn.error}</Text>
+            </View>
+          )}
+
         </View>
-
-        {/* network status */}
-        <NetworkInfo />
-
-        {/* error */}
-        {conn.error && (
-          <View className="bg-red-500/10 rounded-xl px-4 py-3">
-            <Text className="text-red-500 text-sm">{conn.error}</Text>
-          </View>
-        )}
-
-      </View>
-    </ScrollView>
+      </ScrollView>
     </View>
   );
 }

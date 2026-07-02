@@ -6,10 +6,22 @@ All notable changes to UniVPN are documented here.
 ## [v0.1.0] - 2026-07-02
 
 ### Added
+- **Mobile**: Dark mode support with persistent theme override (system/light/dark) in settings
+- **Mobile**: Redesigned connection detail screen with compact layout and map overlays
+- **Mobile**: IP geolocation service to fetch and display user location on FleetMap
+- **Mobile**: Theme picker using native modal action sheet
+- **Desktop**: Scaffolded electron-vite build pipeline for Windows desktop application
+- **Desktop**: Compiled `wg-helper` to executable for production with TS fallback in dev
+- **CI**: Added Desktop build and WireGuard DLL update workflows
 
 ### Changed
+- **Mobile**: Replaced `@expo/ui` Picker with plain rows and action sheet for theme selection
+- **Mobile**: Updated map to center and adjust view based on user location with zoom controls
 
 ### Fixed
+- **Mobile**: Mapped latitude/longitude properly from API response in profile store
+- **Mobile**: Center-aligned tab bar icons
+- **CI**: Increased Gradle heap to 4.6GB and added `--stacktrace` to fix APK packaging OOM errors
 
 ## [v0.0.10] - 2026-07-02
 
@@ -132,6 +144,7 @@ The initial application was built across the following areas before the first ta
 - lightningcss pinned to 1.30.1
 - ESLint config added
 
+[v0.1.0]: https://github.com/JuniYadi/projects-uni/compare/v0.0.10...v0.1.0
 [v0.0.10]: https://github.com/JuniYadi/projects-uni/compare/v0.0.9...v0.0.10
 [v0.0.9]: https://github.com/JuniYadi/projects-uni/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://github.com/JuniYadi/projects-uni/compare/v0.0.7...v0.0.8

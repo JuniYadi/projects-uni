@@ -3,6 +3,13 @@ import { WebView } from 'react-native-webview';
 import type { VpnProfile } from '@/types/vpn';
 import { countryFlag } from '@/utils/formatters';
 
+export interface UserLocation {
+  lat: number;
+  lng: number;
+  country?: string;
+  city?: string;
+}
+
 // ponytail: static coords per countryCode fallback, add real geocoding API later
 const FALLBACK_COORDS: Record<string, { lat: number; lng: number }> = {
   SG: { lat: 1.3521, lng: 103.8198 },
@@ -18,9 +25,10 @@ interface Props {
   activeProfileId: string | null;
   selectedProfileId?: string | null;
   height?: number;
+  userLocation?: UserLocation | null;
 }
 
-export default function FleetMap({ profiles, activeProfileId, selectedProfileId = activeProfileId, height = 200 }: Props) {
+export default function FleetMap({ profiles, activeProfileId, selectedProfileId = activeProfileId, height = 200, userLocation }: Props) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -42,6 +50,8 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
     });
 
   const activeServer = servers.find((s) => s.active);
+  const selectedServer = servers.find((s) => s.selected);
+  const focusedServer = selectedServer || activeServer;
   const tileUrl = isDark
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -59,12 +69,15 @@ body{background:transparent}
 .marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap}
 .marker-label small{color:${isDark?'#d1d5db':'#6b7280'};display:block;font-size:10px;font-weight:600;margin-top:1px}
 .marker-label:before{display:none}
+.animated-line{animation: dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
 </style>
 </head><body>
 <div id="m"></div>
 <script>
 var d=${JSON.stringify(servers)};
-var a=${JSON.stringify(activeServer)};
+var f=${JSON.stringify(focusedServer)};
+var u=${JSON.stringify(userLocation ?? null)};
 var m=L.map('m',{zoomControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,touchZoom:false,keyboard:false});
 L.tileLayer('${tileUrl}',{maxZoom:18}).addTo(m);
 var g=L.featureGroup();
@@ -79,8 +92,16 @@ d.forEach(function(s){
  }
  c.addTo(m);g.addLayer(c);
 });
-if(a){
- m.setView([a.lat,a.lng],7);
+if(u){
+ var uc=L.circleMarker([u.lat,u.lng],{radius:7,fillColor:'#0A84FF',color:'#fff',weight:2,fillOpacity:1});
+ uc.bindTooltip('You',{permanent:true,direction:'bottom',offset:[0,10],className:'marker-label'});
+ uc.addTo(m);g.addLayer(uc);
+ if(f){
+  L.polyline([[u.lat,u.lng],[f.lat,f.lng]],{color:'#00C781',weight:2.5,opacity:0.85,dashArray:'8, 8',className:'animated-line'}).addTo(m);
+ }
+}
+if(f){
+ m.setView([f.lat,f.lng],7);
 }else if(g.getLayers().length>0){
  m.fitBounds(g.getBounds().pad(0.4));
 }

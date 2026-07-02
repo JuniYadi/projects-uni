@@ -7,7 +7,7 @@ import { useColorScheme } from 'react-native';
 export default function ErrorScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

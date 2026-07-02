@@ -1,20 +1,26 @@
+import { useColorScheme } from 'react-native';
 import { Stack } from 'expo-router/stack';
-import { colors } from '@/theme/colors';
-import { Platform } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 export default function ServersLayout() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const backgroundColor = isDark ? Colors.dark.background : Colors.light.background;
+  const textColor = isDark ? Colors.dark.text : Colors.light.text;
+  const accentColor = isDark ? Colors.dark.accent : Colors.light.accent;
+
   return (
     <Stack
       screenOptions={{
         headerLargeTitle: true,
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
-        headerLargeStyle: { backgroundColor: colors.systemBackground },
-        headerStyle: { backgroundColor: colors.systemBackground },
-        headerTitleStyle: { color: colors.label },
-        headerTintColor: colors.systemBlue,
+        headerLargeStyle: { backgroundColor },
+        headerStyle: { backgroundColor },
+        headerTitleStyle: { color: textColor },
+        headerTintColor: accentColor,
         headerBackButtonDisplayMode: 'minimal',
-        contentStyle: { backgroundColor: colors.systemBackground },
+        contentStyle: { backgroundColor },
       }}
     >
       <Stack.Screen
@@ -34,7 +40,7 @@ export default function ServersLayout() {
           presentation: 'formSheet',
           sheetGrabberVisible: true,
           sheetAllowedDetents: [0.5, 0.85],
-          contentStyle: { backgroundColor: colors.systemBackground },
+          contentStyle: { backgroundColor },
           title: 'Filter',
         }}
       />

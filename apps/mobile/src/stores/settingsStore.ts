@@ -10,7 +10,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   preferredProtocol: 'auto',
   dnsServer: 'default',
   whitelistedApps: [],
+  theme: 'system',
 };
+
 
 interface SettingsState extends AppSettings {
   loaded: boolean;

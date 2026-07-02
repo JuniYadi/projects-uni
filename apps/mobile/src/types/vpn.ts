@@ -48,6 +48,8 @@ export interface FilterState {
   sortBy: 'name' | 'ping' | 'region';
 }
 
+export type AppTheme = 'system' | 'light' | 'dark';
+
 export interface AppSettings {
   autoConnect: boolean;
   killSwitch: boolean;
@@ -55,6 +57,8 @@ export interface AppSettings {
   dnsServer: 'default' | 'cloudflare' | 'google' | string;
   /** Apps that should bypass the VPN tunnel (split-tunnel whitelist). */
   whitelistedApps: VpnApp[];
+  /** Theme override: 'system' follows OS, 'light'/'dark' force the app theme. */
+  theme: AppTheme;
 }
 
 export interface VpnApp {

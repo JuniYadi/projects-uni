@@ -1,50 +1,38 @@
 {
-  "name": "@univpn/desktop",
-  "private": true,
+  "name": "desktop",
   "version": "1.0.0",
-  "main": "main/main.js",
+  "description": "UniVPN Desktop MVP",
+  "author": "UniVPN",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron .",
-    "build": "electron-builder",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "dist": "electron-builder",
+    "verify": "bun run scripts/verify.ts"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "zustand": "^5.0.0",
-    "axios": "^1.7.0",
-    "zod": "^3.23.0",
-    "electron-store": "^10.0.0",
-    "@univpn/shared": "*"
+    "@electron-toolkit/utils": "^4.0.0",
+    "@univpn/api": "1.0.0",
+    "@univpn/shared": "1.0.0",
+    "@univpn/vpn-core": "1.0.0",
+    "@univpn/vpn-platform": "1.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.0.0",
-    "typescript": "~5.3.0",
-    "jest": "^29.0.0",
-    "@types/react": "^19.0.0"
-  },
-  "build": {
-    "appId": "com.univpn.desktop",
-    "productName": "UniVPN",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "main/**/*",
-      "renderer/**/*",
-      "resources/**/*"
-    ],
-    "mac": {
-      "target": "dmg"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "dotenv": "^17.4.2",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^3.0.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "~6.0.3",
+    "vite": "^6.0.0"
   }
 }

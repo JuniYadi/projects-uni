@@ -38,6 +38,8 @@ function mapProfile(apiProfile: {
   serverIp?: string | null;
   pingMs?: number;
   loadPercent?: number;
+  latitude?: number;
+  longitude?: number;
 }): VpnProfile {
   const country = apiProfile.country ?? apiProfile.region;
   const countryCode = COUNTRY_CODES[country.toUpperCase()] ?? COUNTRY_CODES[apiProfile.region.toUpperCase()] ?? country;
@@ -55,6 +57,8 @@ function mapProfile(apiProfile: {
     encryption: 'AES-256-GCM',
     serverAddress: apiProfile.hostname,
     serverIp: apiProfile.serverIp ?? apiProfile.hostname ?? apiProfile.serverName,
+    latitude: apiProfile.latitude,
+    longitude: apiProfile.longitude,
   };
 }
 

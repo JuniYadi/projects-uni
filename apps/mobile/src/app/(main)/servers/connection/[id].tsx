@@ -6,6 +6,8 @@ import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import FleetMap from '@/components/fleet-map';
 import { vpnService } from '@/services/vpnService';
+import { getIpLocation } from '@/services/geoLocationService';
+import type { UserLocation } from '@/components/fleet-map';
 import { formatBytes, formatDuration } from '@/utils/formatters';
 import * as Cellular from 'expo-cellular';
 import * as Network from 'expo-network';
@@ -173,11 +175,17 @@ export default function ConnectionDetailScreen() {
   const updateStats = useConnectionStore((s) => s.updateStats);
   const setSelectedProfileId = useProfileStore((s) => s.setSelectedProfileId);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   // Remember this server as the user's chosen selection
   useEffect(() => {
     setSelectedProfileId(id);
   }, [id, setSelectedProfileId]);
+
+  // Fetch approximate IP-based user location once
+  useEffect(() => {
+    getIpLocation().then(setUserLocation);
+  }, []);
 
   useEffect(() => {
     if (conn.status === 'connected' && !intervalRef.current) {
@@ -220,6 +228,7 @@ export default function ConnectionDetailScreen() {
               activeProfileId={connected ? id : null}
               selectedProfileId={id}
               height={mapHeight}
+              userLocation={userLocation}
             />
 
             <View className="absolute top-3 right-3 z-10" pointerEvents="box-none">

@@ -17,7 +17,11 @@ bun.lock.bak
 .idea/
 screenshoot/
 screenshots/
-goals/
+goals/*
+!goals/desktop-prd.md
+!goals/desktop
 temp/
-docs/
+docs/*
 .tmp/
+out/
+goals/

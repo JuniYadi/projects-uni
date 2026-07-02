@@ -35,7 +35,7 @@ export default function FilterSheet() {
   const { activeFilter, setFilter, resetFilter, regions } = useProfileStore();
 
   return (
-    <View className="flex-1 p-6 gap-6">
+    <View className="flex-1 p-6 gap-6 bg-white dark:bg-black">
       {/* Header */}
       <View className="flex-row gap-2 items-center">
         <Text className="text-xl font-bold flex-1 text-black dark:text-white">Filter</Text>

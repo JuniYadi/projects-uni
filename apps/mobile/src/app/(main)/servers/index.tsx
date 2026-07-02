@@ -252,7 +252,7 @@ export default function ServersScreen() {
   }, [loadProfiles]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-white dark:bg-black">
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"

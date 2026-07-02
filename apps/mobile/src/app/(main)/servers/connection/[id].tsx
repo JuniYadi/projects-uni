@@ -257,7 +257,7 @@ export default function ConnectionDetailScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-white dark:bg-black">
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
       <View className="px-4 pt-3 gap-4" style={{ paddingBottom: insets.bottom + 132 }}>
         {/* fleet map */}

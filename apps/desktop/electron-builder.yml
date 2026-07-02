@@ -1,0 +1,34 @@
+appId: com.univpn.desktop
+productName: UniVPN
+# ponytail: no code signing for MVP; Windows Defender may warn
+copyright: Copyright © 2026 UniVPN
+directories:
+  output: dist
+  buildResources: build-resources
+files:
+  - out/**/*
+  - package.json
+extraResources:
+  # Bun helper script for Windows WireGuard FFI
+  - from: ../../packages/vpn-platform/src/wg-helper.ts
+    to: wg-helper.ts
+  # Windows WireGuard DLLs (place DLLs here before building for real tunnel)
+  - from: resources/win
+    to: resources/win
+    filter:
+      - '**/*'
+win:
+  target:
+    - portable
+  artifactName: 'UniVPN-${version}-${arch}.${ext}'
+nsis:
+  oneClick: true
+  artifactName: 'UniVPN-Setup-${version}-${arch}.${ext}'
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.utilities
+  hardenedRuntime: true
+  entitlements: build-resources/entitlements.mac.plist
+  entitlementsInherit: build-resources/entitlements.mac.plist

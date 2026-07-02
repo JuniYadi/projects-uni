@@ -1,15 +1,18 @@
-import { useEffect, useCallback } from 'react';
-import { ScrollView, Alert, View, Text, Pressable, useColorScheme } from 'react-native';
+import { useCallback, useEffect, useMemo } from 'react';
+import { ScrollView, Alert, View, Text, Pressable, useColorScheme, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
-import { Host, Switch, Picker } from '@expo/ui';
+import { Host, Picker } from '@expo/ui';
 import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { Colors } from '@/constants/theme';
-import type { VpnProtocol } from '@/types/vpn';
+import { useTheme } from '@/hooks/use-theme';
+import type { AppTheme } from '@/types/vpn';
+
+// ─── theme helpers ─────────────────────────────────────────
 
 function useFill() {
   const scheme = useColorScheme();
@@ -21,54 +24,65 @@ function useAccent() {
   return scheme === 'dark' ? Colors.dark.accent : Colors.light.accent;
 }
 
+// ─── shared UI primitives ─────────────────────────────────
+
 function Divider() {
-  return <View className="h-px bg-black/10 dark:bg-white/10 mx-4" />;
+  return <View className="h-px bg-black/10 dark:bg-white/10 ml-4" />;
 }
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="px-1 pb-1.5 pt-6 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+    <Text className="px-1 pb-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
       {title}
     </Text>
   );
 }
 
-function Icon({ emoji }: { emoji: string }) {
-  const fill = useFill();
+function SectionFooter({ text }: { text: string }) {
   return (
-    <View className="w-8 h-8 rounded-lg items-center justify-center mr-3" style={{ backgroundColor: fill }}>
-      <Text className="text-base">{emoji}</Text>
-    </View>
+    <Text className="px-1 pt-1.5 text-xs text-neutral-500 dark:text-neutral-400 leading-4">
+      {text}
+    </Text>
   );
 }
 
-function ToggleRow({ icon, label, value, onChange }: { icon: string; label: string; value: boolean; onChange: (v: boolean) => void }) {
+function LinkRow({
+  label,
+  value,
+  onPress,
+  destructive,
+}: {
+  label: string;
+  value?: string;
+  onPress: () => void;
+  destructive?: boolean;
+}) {
   return (
-    <View className="flex-row items-center py-3 px-4">
-      <Icon emoji={icon} />
-      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
-      <Host matchContents>
-        <Switch value={value} onValueChange={onChange} />
-      </Host>
-    </View>
+    <Pressable onPress={onPress} className="flex-row items-center py-3 px-4 active:opacity-60">
+      <Text
+        className={`flex-1 text-base ${
+          destructive ? 'text-red-500' : 'text-black dark:text-white'
+        }`}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+      {value && (
+        <Text className="text-base text-neutral-500 dark:text-neutral-400 mr-2" numberOfLines={1}>
+          {value}
+        </Text>
+      )}
+      <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
+    </Pressable>
   );
 }
 
-function PickerRow({ icon, label, children }: { icon: string; label: string; children: React.ReactNode }) {
+function InfoRow({ label, value, selectable }: { label: string; value: string; selectable?: boolean }) {
   return (
     <View className="flex-row items-center py-3 px-4">
-      <Icon emoji={icon} />
-      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>{label}</Text>
-      {children}
-    </View>
-  );
-}
-
-function InfoRow({ icon, label, value, selectable }: { icon?: string; label: string; value: string; selectable?: boolean }) {
-  return (
-    <View className="flex-row items-center py-3 px-4">
-      {icon && <Icon emoji={icon} />}
-      <Text className="flex-1 text-base text-black dark:text-white">{label}</Text>
+      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
+        {label}
+      </Text>
       <Text
         className="text-base text-neutral-500 dark:text-neutral-400 max-w-[55%] text-right"
         selectable={selectable}
@@ -80,114 +94,114 @@ function InfoRow({ icon, label, value, selectable }: { icon?: string; label: str
   );
 }
 
-function ProtocolPicker() {
-  const preferredProtocol = useSettingsStore((s) => s.preferredProtocol);
-  const update = useSettingsStore((s) => s.update);
+function PickerRow({
+  label,
+  selectedValue,
+  onValueChange,
+  options,
+}: {
+  label: string;
+  selectedValue: string;
+  onValueChange: (value: string) => void;
+  options: { label: string; value: string }[];
+}) {
   return (
-    <Host matchContents>
-      <Picker
-        selectedValue={preferredProtocol}
-        onValueChange={(v) => update('preferredProtocol', v as VpnProtocol | 'auto')}
-        appearance="menu"
-      >
-        <Picker.Item label="Auto" value="auto" />
-        <Picker.Item label="WireGuard" value="wireguard" />
-        <Picker.Item label="OpenVPN" value="openvpn" />
-      </Picker>
-    </Host>
+    <View className="flex-row items-center py-1.5 px-4">
+      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
+        {label}
+      </Text>
+      <Host matchContents>
+        <Picker
+          selectedValue={selectedValue}
+          onValueChange={onValueChange}
+          appearance="menu"
+        >
+          {options.map((o) => (
+            <Picker.Item key={o.value} label={o.label} value={o.value} />
+          ))}
+        </Picker>
+      </Host>
+    </View>
   );
 }
 
-function DnsPicker() {
-  const dnsServer = useSettingsStore((s) => s.dnsServer);
-  const update = useSettingsStore((s) => s.update);
-  return (
-    <Host matchContents>
-      <Picker
-        selectedValue={dnsServer}
-        onValueChange={(v) => update('dnsServer', v as string)}
-        appearance="menu"
-      >
-        <Picker.Item label="Default (system)" value="default" />
-        <Picker.Item label="Cloudflare 1.1.1.1" value="cloudflare" />
-        <Picker.Item label="Google 8.8.8.8" value="google" />
-      </Picker>
-    </Host>
-  );
-}
-
-function ActionRow({ icon, label, onPress, destructive }: { icon: string; label: string; onPress: () => void; destructive?: boolean }) {
-  return (
-    <Pressable onPress={onPress} className="flex-row items-center py-3 px-4 active:opacity-60">
-      <Icon emoji={icon} />
-      <View className="flex-1">
-        <Text className={`text-base ${destructive ? 'text-red-500' : 'text-black dark:text-white'}`}>{label}</Text>
-      </View>
-      <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
-    </Pressable>
-  );
-}
+// ─── profile card ──────────────────────────────────────────
 
 function ProfileCard({
   subscription,
   subscriptionId,
 }: {
-  subscription: { id: string; status: string; expiresAt: string } | null;
+  subscription: { id: string; status: string; expiresAt?: string } | null;
   subscriptionId: string | null;
 }) {
   const fill = useFill();
   const accent = useAccent();
+  const theme = useTheme();
 
-  const statusColor =
-    subscription?.status === 'active'
-      ? accent
-      : subscription?.status === 'expired'
-        ? '#ff453a'
-        : '#8e8e93';
+  const statusColor = useMemo(() => {
+    if (subscription?.status === 'active') return accent;
+    if (subscription?.status === 'expired') return '#ff453a';
+    return theme.textSecondary;
+  }, [subscription, accent, theme]);
 
-  const statusLabel =
-    subscription?.status === 'active'
-      ? 'Active'
-      : subscription?.status === 'expired'
-        ? 'Expired'
-        : 'No subscription';
+  const statusLabel = useMemo(() => {
+    if (subscription?.status === 'active') return 'Active';
+    if (subscription?.status === 'expired') return 'Expired';
+    return 'No subscription';
+  }, [subscription]);
+
+  const displayName = subscriptionId || 'Not signed in';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <View className="items-center py-6 px-4">
-      <View className="w-16 h-16 rounded-full items-center justify-center mb-3" style={{ backgroundColor: fill }}>
-        <Text className="text-2xl">👤</Text>
+    <View className="flex-row items-center px-4 py-3.5">
+      <View
+        className="w-11 h-11 rounded-full items-center justify-center mr-3"
+        style={{ backgroundColor: fill }}
+      >
+        <Text className="text-lg font-semibold text-black dark:text-white">{initial}</Text>
       </View>
-      <Text className="text-lg font-semibold text-black dark:text-white">
-        {subscriptionId || 'Not signed in'}
-      </Text>
-      <View className="flex-row items-center gap-2 mt-1.5">
-        <View className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColor }} />
-        <Text className="text-sm text-neutral-500 dark:text-neutral-400">{statusLabel}</Text>
+      <View className="flex-1 gap-0.5">
+        <Text className="font-semibold text-base text-black dark:text-white" numberOfLines={1}>
+          {displayName}
+        </Text>
+        <View className="flex-row items-center gap-2">
+          <View className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColor }} />
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">{statusLabel}</Text>
+        </View>
       </View>
       {subscription?.expiresAt && (
-        <Text className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-          Expires {subscription.expiresAt}
-        </Text>
+        <Text className="text-xs text-neutral-400 dark:text-neutral-500">{subscription.expiresAt}</Text>
       )}
     </View>
   );
 }
+
+// ─── main screen ───────────────────────────────────────────
 
 export default function SettingsScreen() {
   const router = useRouter();
   const auth = useAuthStore();
   const settings = useSettingsStore();
   const disconnect = useConnectionStore((s) => s.disconnect);
-
   const loadSettings = useSettingsStore((s) => s.load);
-  useEffect(() => { loadSettings(); }, [loadSettings]);
+  const update = useSettingsStore((s) => s.update);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleLogout = useCallback(() => {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Logout', style: 'destructive',
-        onPress: async () => { await disconnect(); await auth.logout(); router.replace('/(auth)/login'); },
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await disconnect();
+          await auth.logout();
+          router.replace('/(auth)/login');
+        },
       },
     ]);
   }, [auth, disconnect, router]);
@@ -197,74 +211,102 @@ export default function SettingsScreen() {
   }, []);
 
   const handleCheckUpdates = useCallback(() => {
-    Alert.alert('Up to Date', 'You have the latest version.');
+    const version = Application.nativeApplicationVersion ?? '1.0.0';
+    const build = Application.nativeBuildVersion ?? '—';
+    Alert.alert('UniVPN', `Version ${version} (${build})\nYou have the latest version.`);
   }, []);
 
-  const insets = useSafeAreaInsets();
+  const whitelistCount = settings.whitelistedApps.length;
+  const whitelistValue = whitelistCount > 0 ? `${whitelistCount} app${whitelistCount > 1 ? 's' : ''}` : undefined;
 
-  if (!settings.loaded) return null;
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  if (!settings.loaded) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
+        <ActivityIndicator color={theme.accent} />
+      </View>
+    );
+  }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-white dark:bg-black">
       <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1">
-        <View className="px-4 pt-4 gap-6" style={{ paddingBottom: insets.bottom + 20 }}>
-          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-            <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
-          </View>
-
-          <View className="gap-2">
-            <SectionHeader title="Connection" />
-            <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <ToggleRow icon="🔗" label="Auto-Connect" value={settings.autoConnect} onChange={(v) => settings.update('autoConnect', v)} />
-              <Divider />
-              <ToggleRow icon="🛡️" label="Kill Switch" value={settings.killSwitch} onChange={(v) => settings.update('killSwitch', v)} />
-              <Divider />
-              <PickerRow icon="📡" label="Preferred Protocol">
-                <ProtocolPicker />
-              </PickerRow>
-              <Divider />
-              <ActionRow icon="📋" label="Whitelist (Bypass VPN)" onPress={() => router.push('/(main)/settings/whitelist')} />
-            </View>
-          </View>
-
-          <View className="gap-2">
-            <SectionHeader title="DNS" />
-            <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <PickerRow icon="🌐" label="DNS Server">
-                <DnsPicker />
-              </PickerRow>
-            </View>
-          </View>
-
+        <View className="px-4 pt-2 gap-4" style={{ paddingBottom: insets.bottom + 20 }}>
+          {/* Profile */}
           <View className="gap-2">
             <SectionHeader title="Account" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <InfoRow icon="📋" label="Subscription" value={auth.subscription?.id || '—'} selectable />
-              <Divider />
-              <InfoRow icon="📊" label="Status" value={auth.subscription?.status || '—'} />
-              <Divider />
-              <InfoRow icon="⏰" label="Expires" value={auth.subscription?.expiresAt || '—'} />
+              <ProfileCard subscription={auth.subscription} subscriptionId={auth.subscriptionId} />
             </View>
           </View>
 
+          {/* Connection */}
           <View className="gap-2">
-            <SectionHeader title="Actions" />
+            <SectionHeader title="Connection" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <ActionRow icon="🌐" label="Manage via Web Portal" onPress={handleWebPortal} />
+              <PickerRow
+                label="DNS Server"
+                selectedValue={settings.dnsServer}
+                onValueChange={(v) => update('dnsServer', v)}
+                options={[
+                  { label: 'Default (system)', value: 'default' },
+                  { label: 'Cloudflare 1.1.1.1', value: 'cloudflare' },
+                  { label: 'Google 8.8.8.8', value: 'google' },
+                ]}
+              />
               <Divider />
-              <ActionRow icon="🚪" label="Logout" onPress={handleLogout} destructive />
+              <LinkRow
+                label="Whitelist (Bypass VPN)"
+                value={whitelistValue}
+                onPress={() => router.push('/(main)/settings/whitelist')}
+              />
+            </View>
+            <SectionFooter text="Choose a DNS server and manage apps that bypass the VPN tunnel." />
+          </View>
+
+          {/* Appearance */}
+          <View className="gap-2">
+            <SectionHeader title="Appearance" />
+            <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+              <PickerRow
+                label="Theme"
+                selectedValue={settings.theme}
+                onValueChange={(v) => update('theme', v as AppTheme)}
+                options={[
+                  { label: 'System', value: 'system' },
+                  { label: 'Light', value: 'light' },
+                  { label: 'Dark', value: 'dark' },
+                ]}
+              />
+            </View>
+            <SectionFooter text="System follows your device theme. Light or Dark forces the app appearance." />
+          </View>
+
+          {/* Support / Actions */}
+          <View className="gap-2">
+            <SectionHeader title="Support" />
+            <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+              <LinkRow label="Manage via Web Portal" onPress={handleWebPortal} />
               <Divider />
-              <ActionRow icon="📱" label="Check for Updates" onPress={handleCheckUpdates} />
+              <LinkRow label="Check for Updates" onPress={handleCheckUpdates} />
             </View>
           </View>
 
+          {/* About */}
           <View className="gap-2">
             <SectionHeader title="About" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
-              <InfoRow icon="📦" label="Version" value={Application.nativeApplicationVersion ?? '1.0.0'} />
+              <InfoRow label="Version" value={Application.nativeApplicationVersion ?? '1.0.0'} />
               <Divider />
-              <InfoRow icon="🔨" label="Build" value={Application.nativeBuildVersion ?? '—'} />
+              <InfoRow label="Build" value={Application.nativeBuildVersion ?? '—'} />
             </View>
+          </View>
+
+          {/* Logout */}
+          <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+            <LinkRow label="Logout" onPress={handleLogout} destructive />
           </View>
         </View>
       </ScrollView>

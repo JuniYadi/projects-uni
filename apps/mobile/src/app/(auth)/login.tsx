@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, Pressable } from 'react-native';
+import { ScrollView, View, Text, TextInput, Pressable, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Host, Button } from '@expo/ui';
@@ -8,6 +8,8 @@ import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
   const loginWithSubId = useAuthStore((s) => s.loginWithSubId);
   const authStatus = useAuthStore((s) => s.status);
   const authError = useAuthStore((s) => s.error);
@@ -64,7 +66,7 @@ export default function LoginScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-black">
       <ScrollView
         className="flex-1"
         contentContainerClassName="grow justify-center px-6 py-10"
@@ -80,26 +82,26 @@ export default function LoginScreen() {
               style={{ width: 72, height: 72 }}
             />
           </View>
-          <Text className="text-[30px] font-bold text-[#1C1C1E] tracking-tight mt-2">UniVPN</Text>
-          <Text className="text-[15px] text-[#8E8E93] mt-0.5">Fast & Private</Text>
+          <Text className="text-[30px] font-bold text-black dark:text-white tracking-tight mt-2">UniVPN</Text>
+          <Text className="text-[15px] text-neutral-500 dark:text-neutral-400 mt-0.5">Fast & Private</Text>
         </View>
 
         {/* ─── Form ─── */}
         <View className="gap-4">
           {/* Input */}
           <View className="gap-1.5">
-            <Text className="text-sm font-semibold text-[#1C1C1E]">Subscription ID</Text>
+            <Text className="text-sm font-semibold text-black dark:text-white">Subscription ID</Text>
             <TextInput
               value={subId}
               onChangeText={handleChangeText}
               placeholder="Enter your subscription ID..."
               autoCapitalize="characters"
               autoCorrect={false}
-              placeholderTextColor="#C7C7CC"
-              className="px-4 py-4 text-base text-[#1C1C1E] rounded-xl bg-[#F2F2F7]"
+              placeholderTextColor={isDark ? '#8E8E93' : '#C7C7CC'}
+              className="px-4 py-4 text-base text-black dark:text-white rounded-xl bg-[#F2F2F7] dark:bg-[#1C1C1E]"
               style={{
                 borderWidth: 1,
-                borderColor: authError ? '#FF3B30' : '#E5E5EA',
+                borderColor: authError ? '#FF3B30' : (isDark ? '#38383A' : '#E5E5EA'),
               }}
             />
             {authError && <Text className="text-xs text-[#FF3B30]">{authError}</Text>}
@@ -122,11 +124,11 @@ export default function LoginScreen() {
           >
             <SymbolView
               name={{ ios: 'qrcode.viewfinder', android: 'qr_code_scanner', web: 'qr_code' }}
-              tintColor="#8E8E93"
+              tintColor={isDark ? '#8E8E93' : '#8E8E93'}
               size={18}
               style={{ width: 18, height: 18 }}
             />
-            <Text className="text-sm font-medium text-[#8E8E93]">Scan QR Code</Text>
+            <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Scan QR Code</Text>
           </Pressable>
         </View>
 
@@ -139,11 +141,11 @@ export default function LoginScreen() {
           }}
           className="flex-row items-center justify-center gap-1.5 mt-6 active:opacity-60"
         >
-          <Text className="text-sm text-[#8E8E93]">Get one at our website</Text>
-          <Text className="text-sm text-[#8E8E93]">↗</Text>
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">Get one at our website</Text>
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">↗</Text>
         </Pressable>
 
-        <Text className="mt-12 text-center text-xs text-[#C7C7CC]">─── v{Application.nativeApplicationVersion ?? '1.0.0'} ───</Text>
+        <Text className="mt-12 text-center text-xs text-neutral-400 dark:text-neutral-600">─── v{Application.nativeApplicationVersion ?? '1.0.0'} ───</Text>
       </ScrollView>
     </View>
   );

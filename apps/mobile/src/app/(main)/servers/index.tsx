@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { ScrollView, Pressable, View, Text, RefreshControl, Alert, useColorScheme } from 'react-native';
+import { ScrollView, Pressable, View, Text, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { useProfileStore } from '@/stores/profileStore';
@@ -7,6 +7,7 @@ import { useConnectionStore } from '@/stores/connectionStore';
 import { formatBytes, formatDuration, formatPing, countryFlag } from '@/utils/formatters';
 import type { VpnProfile } from '@/types/vpn';
 import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 function useAccent() {
   const scheme = useColorScheme();

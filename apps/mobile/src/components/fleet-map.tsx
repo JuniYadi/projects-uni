@@ -1,4 +1,5 @@
-import { View, useColorScheme } from 'react-native';
+import { View } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WebView } from 'react-native-webview';
 import type { VpnProfile } from '@/types/vpn';
 import { countryFlag } from '@/utils/formatters';
@@ -29,8 +30,8 @@ interface Props {
 }
 
 export default function FleetMap({ profiles, activeProfileId, selectedProfileId = activeProfileId, height = 200, userLocation }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const servers = profiles
     .filter((p) => p.latitude || p.longitude || FALLBACK_COORDS[p.countryCode])

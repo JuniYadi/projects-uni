@@ -74,20 +74,20 @@ function StatusBadge({
   }, [connecting, pulse]);
 
   return (
-    <View className="bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full flex-row items-center gap-1.5">
+    <View className="bg-white/90 dark:bg-black/60 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/10 px-2.5 py-1 rounded-full flex-row items-center gap-1.5" style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 }}>
       <Animated.View style={{ transform: [{ scale: pulse }] }}>
         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: statusColor }} />
       </Animated.View>
-      <Text className="text-[10px] font-bold text-white tracking-wider">{statusLabel}</Text>
+      <Text className="text-[10px] font-bold text-black/80 dark:text-white tracking-wider">{statusLabel}</Text>
     </View>
   );
 }
 
 function TimerOverlay({ serverName, elapsed }: { serverName: string; elapsed: number }) {
   return (
-    <View className="bg-black/40 backdrop-blur-sm px-3 py-2 rounded-xl">
-      <Text className="text-xs font-bold text-white" numberOfLines={1}>{serverName}</Text>
-      <Text className="text-2xl font-light text-white tabular-nums tracking-wider mt-0.5">
+    <View className="bg-white/90 dark:bg-black/60 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/10 px-3 py-2 rounded-xl" style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 }}>
+      <Text className="text-xs font-bold text-black/80 dark:text-white" numberOfLines={1}>{serverName}</Text>
+      <Text className="text-2xl font-light text-black dark:text-white tabular-nums tracking-wider mt-0.5">
         {formatDuration(elapsed)}
       </Text>
     </View>
@@ -96,9 +96,9 @@ function TimerOverlay({ serverName, elapsed }: { serverName: string; elapsed: nu
 
 function SpeedOverlay({ downloaded, uploaded }: { downloaded: number; uploaded: number }) {
   return (
-    <View className="bg-black/40 backdrop-blur-sm px-3 py-2 rounded-xl">
-      <Text className="text-xs font-bold text-white text-right">▼ {formatBytes(downloaded)}</Text>
-      <Text className="text-xs font-bold text-white text-right mt-1">▲ {formatBytes(uploaded)}</Text>
+    <View className="bg-white/90 dark:bg-black/60 backdrop-blur-md shadow-sm border border-black/5 dark:border-white/10 px-3 py-2 rounded-xl" style={{ elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 }}>
+      <Text className="text-xs font-bold text-black/80 dark:text-white text-right">▼ {formatBytes(downloaded)}</Text>
+      <Text className="text-xs font-bold text-black/80 dark:text-white text-right mt-1">▲ {formatBytes(uploaded)}</Text>
     </View>
   );
 }

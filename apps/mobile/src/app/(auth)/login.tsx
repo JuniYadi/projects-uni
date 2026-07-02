@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, Pressable, useColorScheme } from 'react-native';
+import { ScrollView, View, Text, TextInput, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Host, Button } from '@expo/ui';
 import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function LoginScreen() {
   const router = useRouter();

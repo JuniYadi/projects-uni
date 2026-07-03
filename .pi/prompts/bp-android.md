@@ -19,12 +19,16 @@ Rules:
   - `expo.android.versionCode` = `major * 10000 + minor * 100 + patch`
 - Update `CHANGELOG.md`:
   - Insert a new `## [v{version}] - {date}` entry at the top (after the intro line)
-  - Include empty `### Added`, `### Changed`, `### Fixed` sections as placeholders
+  - Populate `### Added`, `### Changed`, `### Fixed` from git commit history since the previous version tag
+  - Find commits with `git log v{prev}..HEAD --format='%s%n%b'` and categorize by conventional commit prefix (`feat:`/`add:`/`ui:` → Added, `chore:`/`refactor:`/`perf:`/`ci:`/`docs:`/`style:` → Changed, `fix:` → Fixed)
+  - To find previous version tag: `git tag --sort=-version:refname | head -1`. If no tags exist, use `git log --oneline` and let user pick the range.
+  - If no commits are found, use empty sections as a last resort
   - Date format: YYYY-MM-DD, use current date
 - Create/update `distribution/whatsnew/` release notes:
   - `whatsnew-id-ID` — Indonesian release notes
   - `whatsnew-en-US` — English release notes
   - Content is the actual release notes for this version (bullet points from CHANGELOG.md, localized)
+  - **Must not be empty** — always populate from the CHANGELOG entry above, which is generated from git history
 - Keep existing Android config intact.
 - Commit changes with message `chore(android): bump version to $1`.
 - Push the branch.
@@ -38,10 +42,15 @@ Minimal implementation hint:
 VERSION_RAW="$1"
 VERSION="${VERSION_RAW#v}"
 DATE=$(date +%F)
+# find previous version tag
+PREV_TAG=$(git tag --sort=-version:refname | head -1)
+[ -z "$PREV_TAG" ] && PREV_TAG=v0.1.0  # fallback
 node -e '
 const fs = require("fs");
+const { execSync } = require("child_process");
 const raw = process.env.VERSION;
 const date = process.env.DATE;
+const prevTag = process.env.PREV_TAG || "HEAD~10";
 if (!/^\d+\.\d+\.\d+$/.test(raw)) throw new Error("Invalid semver");
 const [major, minor, patch] = raw.split(".").map(Number);
 
@@ -53,27 +62,43 @@ j.expo.android ??= {};
 j.expo.android.versionCode = major * 10000 + minor * 100 + patch;
 fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
 
-// CHANGELOG.md — insert new version entry before the first existing entry
+// read git log since prev tag
+const log = execSync(`git log ${prevTag}..HEAD --format="%s%n%b"`, { encoding: "utf8" });
+const lines = log.split("\n");
+const added = [], changed = [], fixed = [];
+for (const l of lines) {
+  const s = l.trim().replace(/^\(.*\)\s*/, "").replace(/^\*\s*/,"");
+  if (/^(feat|add|ui)/i.test(s)) added.push("- " + s.replace(/^(feat|add|ui)[\s(:]*(.+)/i, "$2"));
+  else if (/^(chore|refactor|perf|ci|docs|style|test)/i.test(s)) changed.push("- " + s.replace(/^(chore|refactor|perf|ci|docs|style|test)[\s(:]*/i, ""));
+  else if (/^fix/i.test(s)) fixed.push("- " + s.replace(/^fix[\s(:]*/i, ""));
+}
+
+// clamp to actual items, skip placeholders if empty
+const addSection = added.length ? "### Added\n\n" + added.join("\n") + "\n" : "### Added\n\n";
+const chgSection = changed.length ? "### Changed\n\n" + changed.join("\n") + "\n" : "### Changed\n\n";
+const fixSection = fixed.length ? "### Fixed\n\n" + fixed.join("\n") + "\n" : "### Fixed\n\n";
+const entry = "\n## [v" + raw + "] - " + date + "\n\n" + addSection + chgSection + fixSection;
+
+// CHANGELOG.md — insert before first existing ## [
 const changelog = "CHANGELOG.md";
 const cl = fs.readFileSync(changelog, "utf8");
-const entry = `\\n## [v${raw}] - ${date}\\n\\n### Added\\n\\n### Changed\\n\\n### Fixed\\n`;
-const lines = cl.split("\\n");
-let insertAt = lines.findIndex(l => l.startsWith("## ["));
-if (insertAt === -1) insertAt = lines.length;
-lines.splice(insertAt, 0, entry);
-fs.writeFileSync(changelog, lines.join("\\n") + "\\n");
+const clLines = cl.split("\n");
+let insertAt = clLines.findIndex(l => l.startsWith("## ["));
+if (insertAt === -1) insertAt = clLines.length;
+clLines.splice(insertAt, 0, entry);
+fs.writeFileSync(changelog, clLines.join("\n") + "\n");
 
-// whatsnew — bullet points from CHANGELOG entry (same for both locales)
-const clLines = fs.readFileSync(changelog, "utf8").split("\\n");
-const idx = clLines.findIndex(l => l.startsWith(`## [v${raw}]`));
+// whatsnew — extract bullets from the entry we just wrote
 let notes = "";
-for (let i = idx + 1; i < clLines.length && !clLines[i].startsWith("## ["); i++) {
-  if (clLines[i].startsWith("- ")) notes += clLines[i] + "\\n";
+const clText = fs.readFileSync(changelog, "utf8");
+const idx = clText.split("\n").findIndex(l => l.startsWith("## [v" + raw + "]"));
+for (let i = idx + 1; i < clText.split("\n").length && !clText.split("\n")[i].startsWith("## ["); i++) {
+  if (clText.split("\n")[i].startsWith("- ")) notes += clText.split("\n")[i] + "\n";
 }
 const dir = "distribution/whatsnew";
 fs.mkdirSync(dir, { recursive: true });
-fs.writeFileSync(dir + "/whatsnew-en-US", notes);
-fs.writeFileSync(dir + "/whatsnew-id-ID", notes);
+fs.writeFileSync(dir + "/whatsnew-en-US", notes || "No changes");
+fs.writeFileSync(dir + "/whatsnew-id-ID", notes || "Tidak ada perubahan");
 
 console.log(`app: ${raw} (code: ${j.expo.android.versionCode})`);
 '

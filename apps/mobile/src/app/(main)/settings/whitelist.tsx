@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Platform, ScrollView, TextInput, View, Text, Pressable, useColorScheme } from 'react-native';
+import { Platform, ScrollView, TextInput, View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { CURATED_CATEGORIES, CURATED_WHITELIST_APPS } from '@/constants/whitelist-apps';
 import { validatePackageName, extractPackageNameFromUrl } from '@/utils/package-name';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 function AddButton({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
   return (

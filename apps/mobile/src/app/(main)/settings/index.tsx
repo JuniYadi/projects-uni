@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, Alert, Modal, View, Text, Pressable, useColorScheme, ActivityIndicator } from 'react-native';
+import { ScrollView, Alert, Modal, View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -10,6 +10,7 @@ import { useConnectionStore } from '@/stores/connectionStore';
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { AppTheme } from '@/types/vpn';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 // ─── theme helpers ─────────────────────────────────────────
 

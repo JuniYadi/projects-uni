@@ -1,8 +1,9 @@
-import { View, Text, Pressable, useColorScheme } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname, useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { FloatingConnectButton } from './FloatingConnectButton';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function BottomTabBar() {
   const insets = useSafeAreaInsets();

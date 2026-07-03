@@ -2,7 +2,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Host, Button } from '@expo/ui';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 
 export default function ErrorScreen() {
   const router = useRouter();

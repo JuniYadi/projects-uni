@@ -40,9 +40,19 @@ function mapProfile(apiProfile: {
   loadPercent?: number;
   latitude?: number;
   longitude?: number;
+  lat?: number;
+  lng?: number;
+  lang?: number;
+  long?: number;
 }): VpnProfile {
   const country = apiProfile.country ?? apiProfile.region;
   const countryCode = COUNTRY_CODES[country.toUpperCase()] ?? COUNTRY_CODES[apiProfile.region.toUpperCase()] ?? country;
+
+  if (process.env.EXPO_PUBLIC_APP_DEBUG === 'true') {
+    console.log(`[ProfileStore] Raw profile keys for ${apiProfile.serverName}:`, Object.keys(apiProfile));
+    console.log(`[ProfileStore] Raw profile object for ${apiProfile.serverName}:`, JSON.stringify(apiProfile, null, 2));
+  }
+
   return {
     id: apiProfile.id,
     name: apiProfile.serverName,
@@ -57,8 +67,8 @@ function mapProfile(apiProfile: {
     encryption: 'AES-256-GCM',
     serverAddress: apiProfile.hostname,
     serverIp: apiProfile.serverIp ?? apiProfile.hostname ?? apiProfile.serverName,
-    latitude: apiProfile.latitude,
-    longitude: apiProfile.longitude,
+    latitude: apiProfile.latitude ?? apiProfile.lat ?? apiProfile.lang,
+    longitude: apiProfile.longitude ?? apiProfile.lng ?? apiProfile.long,
   };
 }
 
@@ -115,10 +125,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         regions = [...new Set(MOCK_PROFILES.map((p) => p.region))] as string[];
       } else {
         const res = await api.getProfiles();
+        if (process.env.EXPO_PUBLIC_APP_DEBUG === 'true') {
+          console.log('[ProfileStore] Raw API /profiles response:', JSON.stringify(res, null, 2));
+        }
         rawProfiles = res.profiles.map(mapProfile);
         regions = [...new Set(rawProfiles.map((p) => p.region))] as string[];
       }
-
       if (signal.aborted) return
       set({ profiles: rawProfiles, regions, loading: false });
       get().applyFilter();

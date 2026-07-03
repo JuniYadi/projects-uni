@@ -1,6 +1,7 @@
-import { useColorScheme } from 'react-native';
+
 import { Stack } from 'expo-router/stack';
 import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function ServersLayout() {
   const scheme = useColorScheme();

@@ -59,6 +59,12 @@ export interface AppSettings {
   whitelistedApps: VpnApp[];
   /** Theme override: 'system' follows OS, 'light'/'dark' force the app theme. */
   theme: AppTheme;
+  lastKnownLocation?: {
+    lat: number;
+    lng: number;
+    country: string;
+    city: string;
+  };
 }
 
 export interface VpnApp {

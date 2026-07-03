@@ -3,6 +3,21 @@
 All notable changes to UniVPN are documented here.
 
 
+
+## [v0.1.1] - 2026-07-03
+
+### Added
+- **Mobile**: Fleet map component with server location visualization
+- **Mobile**: Connection stats (bytes up/down, elapsed time) on connection detail screen
+- **Mobile**: Filtered profiles logic and new VPN connection state types
+
+### Changed
+- **Android**: Enable R8, shrink resources, and PNG crunch for optimized builds
+- **Mobile**: Improved connection overlays with shadows in light mode and synced dark mode
+
+### Fixed
+- **Android**: Restore transparent PNG assets (removed incorrect JPG conversions)
+
 ## [v0.1.0] - 2026-07-02
 
 ### Added
@@ -154,4 +169,5 @@ The initial application was built across the following areas before the first ta
 [v0.0.3]: https://github.com/JuniYadi/projects-uni/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/JuniYadi/projects-uni/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/JuniYadi/projects-uni/releases/tag/v0.0.1
+
 

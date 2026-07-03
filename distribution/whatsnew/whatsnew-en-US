@@ -1,5 +1,10 @@
-What's new in v0.1.0:
-- Dark Mode is here! Seamlessly switch between System, Light, and Dark themes.
-- Better map integration: View your connection and current location directly on the map.
-- Redesigned connection screen for a cleaner, more compact look.
-- Under-the-hood fixes and performance improvements for a smoother VPN experience.
+v0.1.1 is now available!
+
+- **Mobile**: Fleet map component with server location visualization
+- **Mobile**: Connection stats (bytes up/down, elapsed time) on connection detail screen
+- **Mobile**: Filtered profiles logic and new VPN connection state types
+
+- **Android**: Enable R8, shrink resources, and PNG crunch for optimized builds
+- **Mobile**: Improved connection overlays with shadows in light mode and synced dark mode
+
+- **Android**: Restore transparent PNG assets (removed incorrect JPG conversions)

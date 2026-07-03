@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/stores/profileStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import FleetMap from '@/components/fleet-map';
 import { vpnService } from '@/services/vpnService';
 import { getIpLocation } from '@/services/geoLocationService';
@@ -182,9 +183,21 @@ export default function ConnectionDetailScreen() {
     setSelectedProfileId(id);
   }, [id, setSelectedProfileId]);
 
-  // Fetch approximate IP-based user location once
+  // Fetch approximate IP-based user location once, save if not connected
   useEffect(() => {
-    getIpLocation().then(setUserLocation);
+    const lastLoc = useSettingsStore.getState().lastKnownLocation;
+    if (conn.status !== 'connected' && conn.status !== 'connecting') {
+      getIpLocation().then((loc) => {
+        if (loc) {
+          setUserLocation(loc);
+          useSettingsStore.getState().update('lastKnownLocation', loc);
+        } else if (lastLoc) {
+          setUserLocation(lastLoc);
+        }
+      });
+    } else if (lastLoc) {
+      setUserLocation(lastLoc);
+    }
   }, []);
 
   useEffect(() => {

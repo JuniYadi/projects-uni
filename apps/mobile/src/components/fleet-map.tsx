@@ -34,7 +34,13 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
   const isDark = colorScheme === 'dark';
 
   const servers = profiles
-    .filter((p) => p.latitude || p.longitude || FALLBACK_COORDS[p.countryCode])
+    .filter((p) => {
+      const hasCoords = p.latitude || p.longitude || FALLBACK_COORDS[p.countryCode];
+      if (!hasCoords) {
+        console.warn(`[FleetMap] Server missing coordinates and fallback: ${p.name} (Country Code: ${p.countryCode})`);
+      }
+      return hasCoords;
+    })
     .map((p) => {
       const fallback = FALLBACK_COORDS[p.countryCode];
       return {
@@ -67,6 +73,7 @@ export default function FleetMap({ profiles, activeProfileId, selectedProfileId 
 body{background:transparent}
 #m{width:100vw;height:100vh}
 .leaflet-control-attribution{display:none!important}
+.leaflet-container{background:transparent!important}
 .marker-label{background:${isDark?'rgba(17,24,39,.92)':'rgba(255,255,255,.92)'};border:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);color:${isDark?'#fff':'#111'};font-size:12px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap}
 .marker-label small{color:${isDark?'#d1d5db':'#6b7280'};display:block;font-size:10px;font-weight:600;margin-top:1px}
 .marker-label:before{display:none}
@@ -84,12 +91,17 @@ L.tileLayer('${tileUrl}',{maxZoom:18}).addTo(m);
 var g=L.featureGroup();
 d.forEach(function(s){
  if(!s.lat&&!s.lng)return;
+ var slng=s.lng;
+ if(u){
+  if(slng-u.lng>180)slng-=360;
+  else if(u.lng-slng>180)slng+=360;
+ }
  var c;
  if(s.active || s.selected){
-  c=L.circleMarker([s.lat,s.lng],{radius:s.active?9:7,fillColor:s.active?'#00C781':'#0A84FF',color:'#fff',weight:3,fillOpacity:1});
+  c=L.circleMarker([s.lat,slng],{radius:s.active?9:7,fillColor:s.active?'#00C781':'#0A84FF',color:'#fff',weight:3,fillOpacity:1});
   c.bindTooltip((s.flag + ' ' + s.country),{permanent:true,direction:'top',offset:[0,-14],className:'marker-label'});
  }else{
-  c=L.circleMarker([s.lat,s.lng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
+  c=L.circleMarker([s.lat,slng],{radius:5,fillColor:'#8e8e93',color:undefined,weight:0,fillOpacity:0.6});
  }
  c.addTo(m);g.addLayer(c);
 });
@@ -98,11 +110,17 @@ if(u){
  uc.bindTooltip('You',{permanent:true,direction:'bottom',offset:[0,10],className:'marker-label'});
  uc.addTo(m);g.addLayer(uc);
  if(f){
-  L.polyline([[u.lat,u.lng],[f.lat,f.lng]],{color:'#00C781',weight:2.5,opacity:0.85,dashArray:'8, 8',className:'animated-line'}).addTo(m);
+  var flng=f.lng;
+  if(flng-u.lng>180)flng-=360;
+  else if(u.lng-flng>180)flng+=360;
+  L.polyline([[u.lat,u.lng],[f.lat,flng]],{color:'#00C781',weight:2.5,opacity:0.85,dashArray:'8, 8',className:'animated-line'}).addTo(m);
  }
 }
 if(u && f){
- m.fitBounds([[u.lat,u.lng],[f.lat,f.lng]],{padding:[60,60],maxZoom:5});
+ var flng=f.lng;
+ if(flng-u.lng>180)flng-=360;
+ else if(u.lng-flng>180)flng+=360;
+ m.fitBounds([[u.lat,u.lng],[f.lat,flng]],{padding:[30,30],maxZoom:5});
 }else if(f){
  m.setView([f.lat,f.lng],7);
 }else if(g.getLayers().length>0){

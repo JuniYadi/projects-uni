@@ -5,6 +5,12 @@
     "packages/*",
     "apps/*"
   ],
+  "scripts": {
+    "android": "bun run --cwd apps/mobile android",
+    "ios": "bun run --cwd apps/mobile ios",
+    "mobile": "bun run --cwd apps/mobile start",
+    "desktop": "bun run --cwd apps/desktop dev"
+  },
   "overrides": {
     "lightningcss": "1.30.1"
   }

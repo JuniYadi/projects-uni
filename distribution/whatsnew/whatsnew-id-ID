@@ -1,5 +1,10 @@
-Yang baru di v0.1.0:
-- Mode Gelap (Dark Mode) telah hadir! Pilih tema Sistem, Terang, atau Gelap dengan mudah.
-- Peta lebih baik: Lihat lokasi koneksi dan lokasi Anda saat ini langsung di peta.
-- Desain ulang layar koneksi yang lebih rapi dan ringkas.
-- Perbaikan performa dan bug untuk pengalaman VPN yang lebih lancar.
+v0.1.1 telah tersedia!
+
+- **Mobile**: Fleet map component with server location visualization
+- **Mobile**: Connection stats (bytes up/down, elapsed time) on connection detail screen
+- **Mobile**: Filtered profiles logic and new VPN connection state types
+
+- **Android**: Enable R8, shrink resources, and PNG crunch for optimized builds
+- **Mobile**: Improved connection overlays with shadows in light mode and synced dark mode
+
+- **Android**: Restore transparent PNG assets (removed incorrect JPG conversions)

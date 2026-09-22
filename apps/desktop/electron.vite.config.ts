@@ -6,7 +6,7 @@ const workspaceDeps = ['@univpn/api', '@univpn/shared', '@univpn/vpn-core', '@un
 
 const apiBaseUrl =
   process.env.UNIVPN_API_BASE_URL ??
-  'https://pgreen.tunnel.juniyadi.id/api/vpn/mobile'
+  'https://pfnapp.id/api/vpn/mobile'
 
 export default defineConfig({
   main: {

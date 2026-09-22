@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { AppTheme } from '@/types/vpn';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { APP_URL } from '@univpn/shared';
 // ─── theme helpers ─────────────────────────────────────────
 
 function useFill() {
@@ -269,7 +270,7 @@ export default function SettingsScreen() {
   }, [auth, disconnect, router]);
 
   const handleWebPortal = useCallback(() => {
-    WebBrowser.openBrowserAsync('https://univpn.example.com/portal');
+    WebBrowser.openBrowserAsync(`${APP_URL}/portal`);
   }, []);
 
   const handleCheckUpdates = useCallback(() => {

@@ -3,6 +3,15 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - testing
 
 jobs:
   build:
@@ -10,10 +19,22 @@ jobs:
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-      EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
-      EXPO_PUBLIC_APP_URL: ${{ secrets.EXPO_PUBLIC_APP_URL }}
     steps:
       - uses: actions/checkout@v7
+      - name: Set API Environment
+        shell: bash
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "testing" ]; then
+            echo "Building for TESTING environment (pfnapp.my.id)"
+            echo "EXPO_PUBLIC_API_BASE_URL=https://pfnapp.my.id/api/vpn/mobile" >> $GITHUB_ENV
+            echo "EXPO_PUBLIC_APP_URL=https://pfnapp.my.id" >> $GITHUB_ENV
+          else
+            echo "Building for PRODUCTION environment (pfnapp.id)"
+            API_URL="${{ secrets.EXPO_PUBLIC_API_BASE_URL }}"
+            APP_URL="${{ secrets.EXPO_PUBLIC_APP_URL }}"
+            echo "EXPO_PUBLIC_API_BASE_URL=${API_URL:-https://pfnapp.id/api/vpn/mobile}" >> $GITHUB_ENV
+            echo "EXPO_PUBLIC_APP_URL=${APP_URL:-https://pfnapp.id}" >> $GITHUB_ENV
+          fi
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -94,7 +115,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.pfnapp.univpn
           releaseFiles: apps/mobile/android/app/build/outputs/bundle/release/*.aab
-          releaseName: ${{ github.event.release.tag_name }}
+          releaseName: ${{ github.event.release.tag_name || github.ref_name }}
           tracks: internal
           status: completed
           whatsNewDirectory: distribution/whatsnew

@@ -3,6 +3,17 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v1.2.0] - 2026-09-22
+
+### Added
+- **API**: Configured testing (`https://pfnapp.my.id`) and production (`https://pfnapp.id`) domain settings
+- **CI**: Added environment selector (`production` / `testing`) to Android build workflow dispatch
+- **Config**: Added `.env.example` templates for mobile and desktop environments
+
+### Changed
+- **Mobile**: Dynamic web portal link in settings based on `APP_URL`
+- **Shared**: Updated default fallback API and app URLs
+
 
 ## [v0.1.1] - 2026-07-03
 

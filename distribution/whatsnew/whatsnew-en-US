@@ -1,10 +1,6 @@
-v0.1.1 is now available!
+v1.2.0 is now available!
 
-- **Mobile**: Fleet map component with server location visualization
-- **Mobile**: Connection stats (bytes up/down, elapsed time) on connection detail screen
-- **Mobile**: Filtered profiles logic and new VPN connection state types
-
-- **Android**: Enable R8, shrink resources, and PNG crunch for optimized builds
-- **Mobile**: Improved connection overlays with shadows in light mode and synced dark mode
-
-- **Android**: Restore transparent PNG assets (removed incorrect JPG conversions)
+- Configured testing and production API domain environments
+- Added environment selection (testing/production) to Android build workflow
+- Dynamic web portal link in settings based on app environment
+- Updated default API and application fallback URLs

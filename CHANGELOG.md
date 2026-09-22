@@ -3,7 +3,7 @@
 All notable changes to UniVPN are documented here.
 
 
-## [v1.2.0] - 2026-09-22
+## [v0.2.0] - 2026-09-22
 
 ### Added
 - **API**: Configured testing (`https://pfnapp.my.id`) and production (`https://pfnapp.id`) domain settings

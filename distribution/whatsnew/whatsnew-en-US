@@ -1,4 +1,4 @@
-v1.2.0 is now available!
+v0.2.0 is now available!
 
 - Configured testing and production API domain environments
 - Added environment selection (testing/production) to Android build workflow

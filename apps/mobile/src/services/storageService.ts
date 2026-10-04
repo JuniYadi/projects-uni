@@ -9,6 +9,7 @@ const KEYS = {
   SUB_ID: 'subscription_id',
   FINGERPRINT: 'device_fingerprint',
   SELECTED_PROFILE_ID: 'selected_profile_id',
+  VPN_PERMISSION_SEEN: 'vpn_permission_seen',
 } as const
 
 // ─── Token ────────────────────────────────────────────────
@@ -87,4 +88,13 @@ export async function clearAll(): Promise<void> {
     SecureStore.deleteItemAsync(KEYS.SELECTED_PROFILE_ID),
     // fingerprint persists — device identity
   ])
+}
+// ─── VPN permission screen (shown once, Android) ─────────
+
+export async function getVpnPermissionSeen(): Promise<boolean> {
+  return (await SecureStore.getItemAsync(KEYS.VPN_PERMISSION_SEEN)) === '1'
+}
+
+export async function setVpnPermissionSeen(): Promise<void> {
+  return SecureStore.setItemAsync(KEYS.VPN_PERMISSION_SEEN, '1')
 }

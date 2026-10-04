@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { app, ipcMain } from 'electron'
 import { getErrorMessage } from '@univpn/api'
 import type { VpnStats, VpnStatus } from '@univpn/vpn-platform'
 import { api } from './api'
@@ -54,6 +54,7 @@ ipcMain.handle('vpn:getProfiles', async () => {
 ipcMain.handle('vpn:connect', async (_event, profileId: string) => {
   try {
     await vpnService.connect(profileId)
+    setSettings({ lastProfileId: profileId })
     return { ok: true }
   } catch (err) {
     return { ok: false, error: getErrorMessage((err as Error).message) }
@@ -75,9 +76,16 @@ ipcMain.handle('vpn:status', async () => {
   return { status, stats, profileId: vpnService.getCurrentProfileId() }
 })
 
-ipcMain.handle('settings:get', async () => getSettings())
+ipcMain.handle('settings:get', async () => ({
+  ...getSettings(),
+  openAtLogin: app.getLoginItemSettings().openAtLogin,
+}))
 
-ipcMain.handle('settings:set', async (_event, settings: { theme?: 'light' | 'dark' | 'system' }) => {
-  setSettings(settings)
-  return settings
-})
+ipcMain.handle(
+  'settings:set',
+  async (_event, { openAtLogin, ...settings }: { theme?: 'light' | 'dark' | 'system'; openAtLogin?: boolean }) => {
+    setSettings(settings)
+    // '--hidden' → index.ts starts to tray without showing the window
+    if (openAtLogin !== undefined) app.setLoginItemSettings({ openAtLogin, args: ['--hidden'] })
+  }
+)

@@ -49,11 +49,9 @@ export default function RootLayout() {
     setColorScheme(theme === 'system' ? (Platform.OS === 'ios' ? null : 'unspecified') : theme as any);
   }, [ready, theme]);
 
-  // Request VPN permission early (Android VPN dialog), subscribe to native state changes
+  // Subscribe to native state changes (VPN permission is asked on the (auth)/vpn-permission screen)
   useEffect(() => {
     if (!ready) return;
-    vpnService.requestVpnPermission().catch(() => {});
-
     const unsub = vpnService.onStatusChange((status) => {
       if (status === 'DISCONNECTED' || status === 'ERROR') {
         stopHeartbeat();

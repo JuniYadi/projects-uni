@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SymbolView } from 'expo-symbols';
 import { useAuthStore } from '@/stores/authStore';
+import { authErrorText, Strings } from '@/constants/strings';
+import { routeAfterLogin } from '@/utils/post-login';
 
 export default function QrScanScreen() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function QrScanScreen() {
   const authStatus = useAuthStore((s) => s.status);
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleBarcodeScanned = useCallback(
     async (result: { data: string }) => {
@@ -19,9 +22,12 @@ export default function QrScanScreen() {
 
       try {
         await loginWithQr(result.data);
-        router.replace('/(main)/servers');
-      } catch {
-        router.back();
+        router.replace(await routeAfterLogin());
+      } catch (err) {
+        const code = (err as Error).message;
+        if (code === 'SUBSCRIPTION_EXPIRED') return router.replace('/(auth)/expired');
+        setError(authErrorText(code));
+        setScanned(false); // allow another scan
       }
     },
     [scanned, authStatus, loginWithQr, router],
@@ -41,16 +47,16 @@ export default function QrScanScreen() {
           style={{ width: 48, height: 48 }}
         />
         <Text className="text-center text-base text-white/70">
-          Kamera diperlukan untuk memindai QR Code
+          {Strings.auth.cameraNeeded}
         </Text>
         <Pressable
           onPress={requestPermission}
-          className="rounded-xl bg-[#208AEF] px-6 py-3 active:opacity-80"
+          className="min-h-[44px] justify-center rounded-xl bg-[#208AEF] px-6 active:opacity-80"
         >
-          <Text className="text-base font-semibold text-white">Izinkan Kamera</Text>
+          <Text className="text-base font-semibold text-white">{Strings.auth.allowCamera}</Text>
         </Pressable>
         <Pressable onPress={() => router.back()} className="py-2 active:opacity-60">
-          <Text className="text-sm text-white/50">Kembali</Text>
+          <Text className="text-sm text-white/50">{Strings.auth.back}</Text>
         </Pressable>
       </View>
     );
@@ -79,7 +85,7 @@ export default function QrScanScreen() {
               style={{ width: 20, height: 20 }}
             />
           </Pressable>
-          <Text className="ml-3 text-lg font-semibold text-white">Scan QR Code</Text>
+          <Text className="ml-3 text-lg font-semibold text-white">{Strings.auth.qrTitle}</Text>
         </View>
 
         {/* Center guide */}
@@ -94,15 +100,23 @@ export default function QrScanScreen() {
             />
           </View>
           <Text className="mt-6 text-sm text-white/50">
-            Arahkan kamera ke QR Code
+            {Strings.auth.qrHint}
           </Text>
         </View>
 
         {/* Bottom */}
-        <View className="items-center pb-12">
+        <View className="items-center gap-3 px-6 pb-12">
           {authStatus === 'loading' && (
-            <Text className="text-base text-white/70">Memverifikasi...</Text>
+            <Text className="text-base text-white/70">{Strings.auth.qrChecking}</Text>
           )}
+          {error && (
+            <Text accessibilityLiveRegion="polite" className="text-center text-base text-white">
+              {error}
+            </Text>
+          )}
+          <Pressable onPress={() => router.back()} className="min-h-[44px] justify-center active:opacity-60">
+            <Text className="text-base font-semibold text-white underline">{Strings.auth.manualId}</Text>
+          </Pressable>
         </View>
       </View>
     </View>

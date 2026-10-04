@@ -1,33 +1,27 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Host, Button } from '@expo/ui';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
+import { Button } from '@/components/ui/button';
+import { Strings } from '@/constants/strings';
+import { Figtree } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function ErrorScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={styles.emoji}>⚠️</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Something went wrong</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        This page doesn't exist or encountered an error.
+    <View
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, backgroundColor: theme.background }}
+    >
+      <Text accessibilityRole="header" style={{ fontFamily: Figtree.semibold, fontSize: 20, color: theme.text }}>
+        {Strings.error.title}
       </Text>
-      <Host style={styles.btnWrapper}>
-        <Button variant="filled" onPress={() => router.replace('/')} label="Go Home" />
-      </Host>
+      <Text style={{ fontFamily: Figtree.regular, fontSize: 14, color: theme.textSecondary, textAlign: 'center' }}>
+        {Strings.error.message}
+      </Text>
+      <View style={{ alignSelf: 'stretch', marginTop: 8 }}>
+        <Button label={Strings.error.home} onPress={() => router.replace('/')} />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 8 },
-  emoji: { fontSize: 48, marginBottom: 8 },
-  title: { fontSize: 20, fontWeight: '700' },
-  subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  btnWrapper: { width: '100%', marginTop: 16 },
-});

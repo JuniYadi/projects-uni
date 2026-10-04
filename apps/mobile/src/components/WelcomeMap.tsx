@@ -61,7 +61,7 @@ export function WelcomeMap({ onDone }: { onDone: () => void }) {
     p.set(withTiming(1, { duration: WELCOME_MAP_MS, easing: Easing.linear }, (done) => {
       if (done) scheduleOnRN(onDone);
     }));
-  }, [reduced]);
+  }, [reduced, onDone, p]);
 
   const pulse = useAnimatedProps(() => {
     const t = ramp(p.value, 0, 0.3);

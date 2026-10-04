@@ -1,5 +1,6 @@
 
 import { Stack } from 'expo-router/stack';
+import { Strings } from '@/constants/strings';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -24,21 +25,11 @@ export default function SettingsLayout() {
         contentStyle: { backgroundColor },
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: 'Settings',
-        }}
-      />
-      <Stack.Screen
-        name="whitelist"
-        options={{
-          headerShown: true,
-          title: 'Whitelist',
-          presentation: 'card',
-          headerLargeTitle: false,
-        }}
-      />
+      <Stack.Screen name="index" options={{ title: Strings.settings.title }} />
+      <Stack.Screen name="whitelist" options={{ title: Strings.settings.pickApps, headerLargeTitle: false }} />
+      <Stack.Screen name="akun" options={{ title: Strings.account.title, headerLargeTitle: false }} />
+      <Stack.Screen name="lanjutan" options={{ title: Strings.settings.advanced, headerLargeTitle: false }} />
+      <Stack.Screen name="detail-koneksi" options={{ title: Strings.detail.title, headerLargeTitle: false }} />
     </Stack>
   );
 }

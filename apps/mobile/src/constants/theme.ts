@@ -7,33 +7,42 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    accent: '#00C781',
-    accentLight: '#E6FBF4',
-    accentDark: '#009E68',
+    text: '#0F172A',
+    background: '#F1F5F9',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#E2E8F0',
+    textSecondary: '#64748B',
+    accent: '#16A34A',
+    accentLight: '#DCFCE7',
+    accentDark: '#15803D',
+    error: '#DC2626',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    accent: '#00C781',
-    accentLight: '#1A3A30',
-    accentDark: '#00E08E',
+    text: '#F8FAFC',
+    background: '#0F172A',
+    backgroundElement: '#192134',
+    backgroundSelected: '#263148',
+    textSecondary: '#94A3B8',
+    accent: '#22C55E',
+    accentLight: '#14352A',
+    accentDark: '#4ADE80',
+    error: '#F87171',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/** Figtree weights, loaded in the root layout (see `FigtreeFonts`). */
+export const Figtree = {
+  regular: 'Figtree_400Regular',
+  medium: 'Figtree_500Medium',
+  semibold: 'Figtree_600SemiBold',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
+    sans: 'Figtree_400Regular',
     /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
     /** iOS `UIFontDescriptorSystemDesignRounded` */
@@ -42,7 +51,7 @@ export const Fonts = Platform.select({
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'Figtree_400Regular',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',

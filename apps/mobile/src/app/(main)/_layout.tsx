@@ -1,10 +1,11 @@
-import { useRef, useCallback, type ComponentType } from 'react';
+import { useRef, useCallback, useEffect, type ComponentType } from 'react';
 import { View, Pressable, Text, Animated } from 'react-native';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import type { TabTriggerSlotProps } from 'expo-router/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FloatingConnectButton } from '@/components/FloatingConnectButton';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useConnectionStore } from '@/stores/connectionStore';
 
 // ─── View-based icons (no SVG dependency) ──────────────
 
@@ -107,6 +108,11 @@ export default function MainLayout() {
   const bg = isDark ? '#1C1C1E' : '#FFFFFF';
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 24);
+  const tryAutoConnect = useConnectionStore((s) => s.tryAutoConnect);
+
+  useEffect(() => {
+    void tryAutoConnect();
+  }, [tryAutoConnect]);
 
   return (
     <Tabs>

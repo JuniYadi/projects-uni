@@ -11,23 +11,27 @@ type Props = {
   selected?: boolean;
   favorite?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
+  /** Replaces the speed label (e.g. while measuring). */
+  subtitle?: string;
   onToggleFavorite?: () => void;
 };
 
-export function LocationRow({ profile, selected, favorite, onPress, onToggleFavorite }: Props) {
+export function LocationRow({ profile, selected, favorite, onPress, onLongPress, subtitle, onToggleFavorite }: Props) {
   const theme = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
+      onLongPress={onLongPress}
       style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}
     >
       <CountryBadge code={profile.countryCode} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>{profile.name}</Text>
         <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary }}>
-          {latencyLabel(profile.ping)}
+          {subtitle ?? latencyLabel(profile.ping)}
         </Text>
       </View>
       {selected && <Icon name="check" color={theme.accent} size={20} />}

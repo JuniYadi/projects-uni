@@ -130,7 +130,6 @@ export const Strings = {
     mapSummary: 'Lokasi dipilih',
     noneSelected: 'Belum ada lokasi dipilih',
   },
-  account: { subscriptionId: 'ID Langganan' },
   account: {
     title: 'Akun',
     subscriptionId: 'ID Langganan',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, Alert, Modal, View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { ScrollView, Alert, Switch, Modal, View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,6 +7,7 @@ import * as Application from 'expo-application';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useConnectionStore } from '@/stores/connectionStore';
+import { vpnService } from '@/services/vpnService';
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { AppTheme } from '@/types/vpn';
@@ -75,6 +76,17 @@ function LinkRow({
       )}
       <Text className="text-lg text-neutral-300 dark:text-neutral-600">›</Text>
     </Pressable>
+  );
+}
+
+function ToggleRow({ label, value, onValueChange }: { label: string; value: boolean; onValueChange: (v: boolean) => void }) {
+  return (
+    <View className="flex-row items-center py-2 px-4">
+      <Text className="flex-1 text-base text-black dark:text-white" numberOfLines={1}>
+        {label}
+      </Text>
+      <Switch value={value} onValueChange={onValueChange} />
+    </View>
   );
 }
 
@@ -279,6 +291,22 @@ export default function SettingsScreen() {
     Alert.alert('UniVPN', `Version ${version} (${build})\nYou have the latest version.`);
   }, []);
 
+  const handleKillSwitch = useCallback(
+    (on: boolean) => {
+      update('killSwitch', on);
+      if (!on) return;
+      Alert.alert(
+        'Kill switch',
+        'Android enforces this in system settings. Enable "Always-on VPN" and "Block connections without VPN" for UniVPN.',
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Open settings', onPress: () => vpnService.openVpnSettings().catch(() => {}) },
+        ],
+      );
+    },
+    [update],
+  );
+
   const whitelistCount = settings.whitelistedApps.length;
   const whitelistValue = whitelistCount > 0 ? `${whitelistCount} app${whitelistCount > 1 ? 's' : ''}` : undefined;
 
@@ -311,6 +339,10 @@ export default function SettingsScreen() {
           <View className="gap-2">
             <SectionHeader title="Connection" />
             <View className="bg-black/5 dark:bg-white/10 rounded-2xl overflow-hidden">
+              <ToggleRow label="Auto-connect" value={settings.autoConnect} onValueChange={(v) => update('autoConnect', v)} />
+              <Divider />
+              <ToggleRow label="Kill switch" value={settings.killSwitch} onValueChange={handleKillSwitch} />
+              <Divider />
               <SelectRow
                 label="DNS Server"
                 selectedValue={settings.dnsServer}
@@ -328,7 +360,7 @@ export default function SettingsScreen() {
                 onPress={() => router.push('/(main)/settings/whitelist')}
               />
             </View>
-            <SectionFooter text="Choose a DNS server and manage apps that bypass the VPN tunnel." />
+            <SectionFooter text="Auto-connect reconnects to your last server on app start. Kill switch blocks traffic outside the VPN (set in Android system settings). Choose a DNS server and manage apps that bypass the tunnel." />
           </View>
 
           {/* Appearance */}

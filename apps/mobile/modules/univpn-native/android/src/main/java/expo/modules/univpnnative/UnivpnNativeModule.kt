@@ -1,6 +1,8 @@
 package expo.modules.univpnnative
 
+import android.content.Intent
 import android.net.VpnService
+import android.provider.Settings
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -99,6 +101,14 @@ class UnivpnNativeModule : Module() {
     }
 
     AsyncFunction("isSupported") { true }
+
+    // Kill switch: Android only lets the user enable Always-on VPN + "Block connections without VPN"
+    // from system settings; an app cannot toggle it. Deep-link there.
+    AsyncFunction("openVpnSettings") {
+      val activity = appContext.currentActivity ?: throw Exception("Activity unavailable")
+      activity.startActivity(Intent(Settings.ACTION_VPN_SETTINGS))
+      Unit
+    }
   }
 
   private fun buildConfig(config: Map<String, Any?>): Config {

@@ -42,6 +42,8 @@ declare class UnivpnNativeModule extends NativeModule<UnivpnNativeEvents> {
   disconnect(): Promise<void>;
   getStatus(): Promise<WireGuardStatus>;
   isSupported(): Promise<boolean>;
+  /** Android: open system VPN settings (Always-on VPN / Block connections without VPN). */
+  openVpnSettings(): Promise<void>;
 }
 
 export default requireNativeModule<UnivpnNativeModule>('UnivpnNative');

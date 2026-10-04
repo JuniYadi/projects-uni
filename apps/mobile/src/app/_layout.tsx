@@ -7,6 +7,7 @@ import { Stack } from 'expo-router/stack';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { Host } from '@expo/ui';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold } from '@expo-google-fonts/figtree';
 import { vpnService } from '@/services/vpnService';
 import { useAuthStore } from '@/stores/authStore';
 import { useConnectionStore } from '@/stores/connectionStore';
@@ -25,6 +26,7 @@ export default function RootLayout() {
   const loadSettings = useSettingsStore((s) => s.load);
   const theme = useSettingsStore((s) => s.theme);
   const [ready, setReady] = useState(false);
+  const [fontsLoaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold });
   const isDark = colorScheme === 'dark';
   const backgroundColor = isDark ? Colors.dark.background : Colors.light.background;
 
@@ -62,7 +64,7 @@ export default function RootLayout() {
   }, [ready, reset]);
 
   // Don't render navigation until auth is resolved — native splash covers the wait
-  if (!ready) return null;
+  if (!ready || !(fontsLoaded || fontError)) return null;
 
   return (
     <Host style={{ flex: 1, backgroundColor }}>

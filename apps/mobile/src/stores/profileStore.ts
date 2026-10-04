@@ -9,16 +9,16 @@ import * as storage from '@/services/storageService';
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
 
 const MOCK_PROFILES: VpnProfile[] = [
-  { id: 'sg-1', name: 'Singapore 1', country: 'Singapore', countryCode: 'SG', city: 'Singapore', region: 'Asia', protocol: 'wireguard', port: 51820, load: 45, ping: 12, encryption: 'AES-256-GCM', serverAddress: 'sg1.vpn.example.com', serverIp: '203.0.113.10', latitude: 1.3521, longitude: 103.8198 },
-  { id: 'sg-2', name: 'Singapore 2', country: 'Singapore', countryCode: 'SG', city: 'Singapore', region: 'Asia', protocol: 'openvpn', port: 1194, load: 30, ping: 15, encryption: 'AES-256-GCM', serverAddress: 'sg2.vpn.example.com', serverIp: '203.0.113.11', latitude: 1.3521, longitude: 103.8198 },
-  { id: 'jp-1', name: 'Tokyo 1', country: 'Japan', countryCode: 'JP', city: 'Tokyo', region: 'Asia', protocol: 'wireguard', port: 51820, load: 67, ping: 45, encryption: 'AES-256-GCM', serverAddress: 'jp1.vpn.example.com', serverIp: '203.0.113.20', latitude: 35.6762, longitude: 139.6503 },
-  { id: 'jp-2', name: 'Tokyo 2', country: 'Japan', countryCode: 'JP', city: 'Tokyo', region: 'Asia', protocol: 'openvpn', port: 1194, load: 80, ping: 80, encryption: 'AES-256-GCM', serverAddress: 'jp2.vpn.example.com', serverIp: '203.0.113.21', latitude: 35.6762, longitude: 139.6503 },
-  { id: 'hk-1', name: 'Hong Kong 1', country: 'Hong Kong', countryCode: 'HK', city: 'Hong Kong', region: 'Asia', protocol: 'openvpn', port: 443, load: 55, ping: 89, encryption: 'AES-256-GCM', serverAddress: 'hk1.vpn.example.com', serverIp: '203.0.113.30', latitude: 22.3193, longitude: 114.1694 },
-  { id: 'nl-1', name: 'Amsterdam 1', country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam', region: 'Europe', protocol: 'wireguard', port: 51820, load: 35, ping: 120, encryption: 'AES-256-GCM', serverAddress: 'nl1.vpn.example.com', serverIp: '203.0.113.40', latitude: 52.3676, longitude: 4.9041 },
-  { id: 'de-1', name: 'Frankfurt 1', country: 'Germany', countryCode: 'DE', city: 'Frankfurt', region: 'Europe', protocol: 'openvpn', port: 1194, load: 60, ping: 145, encryption: 'AES-256-GCM', serverAddress: 'de1.vpn.example.com', serverIp: '203.0.113.50', latitude: 50.1109, longitude: 8.6821 },
+  { id: 'id-1', name: 'Indonesia', country: 'Indonesia', countryCode: 'ID', city: 'Indonesia', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 18, encryption: 'AES-256-GCM', serverAddress: 'id-1.vpn.example.com', serverIp: '203.0.113.28', latitude: -6.2088, longitude: 106.8456 },
+  { id: 'sg-1', name: 'Singapore', country: 'Singapore', countryCode: 'SG', city: 'Singapore', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 32, encryption: 'AES-256-GCM', serverAddress: 'sg-1.vpn.example.com', serverIp: '203.0.113.42', latitude: 1.3521, longitude: 103.8198 },
+  { id: 'hk-1', name: 'Hong Kong', country: 'Hong Kong', countryCode: 'HK', city: 'Hong Kong', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 74, encryption: 'AES-256-GCM', serverAddress: 'hk-1.vpn.example.com', serverIp: '203.0.113.84', latitude: 22.3193, longitude: 114.1694 },
+  { id: 'jp-1', name: 'Japan', country: 'Japan', countryCode: 'JP', city: 'Japan', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 120, encryption: 'AES-256-GCM', serverAddress: 'jp-1.vpn.example.com', serverIp: '203.0.113.130', latitude: 35.6762, longitude: 139.6503 },
+  { id: 'us-la', name: 'Los Angeles', country: 'United States', countryCode: 'US', city: 'Los Angeles', region: 'Amerika', protocol: 'wireguard', port: 51820, load: 40, ping: 210, encryption: 'AES-256-GCM', serverAddress: 'us-la.vpn.example.com', serverIp: '203.0.113.20', latitude: 34.0522, longitude: -118.2437 },
+  { id: 'us-dal', name: 'Dallas', country: 'United States', countryCode: 'US', city: 'Dallas', region: 'Amerika', protocol: 'wireguard', port: 51820, load: 40, ping: 260, encryption: 'AES-256-GCM', serverAddress: 'us-dal.vpn.example.com', serverIp: '203.0.113.70', latitude: 32.7767, longitude: -96.797 },
 ];
 
 const COUNTRY_CODES: Record<string, string> = {
+  INDONESIA: 'ID',
   'HONG KONG': 'HK',
   JAPAN: 'JP',
   SINGAPORE: 'SG',
@@ -87,6 +87,7 @@ interface ProfileState {
   regions: string[];
   activeFilter: FilterState;
   selectedProfileId: string | null;
+  favoriteIds: string[];
   loading: boolean;
   pinging: boolean;
   error: string | null;
@@ -97,6 +98,7 @@ interface ProfileState {
   applyFilter: () => void;
   loadSelectedProfileId: () => Promise<void>;
   setSelectedProfileId: (id: string | null) => Promise<void>;
+  toggleFavorite: (id: string) => void;
   _runPings: (signal: AbortSignal) => Promise<void>;
 }
 
@@ -106,6 +108,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   regions: [],
   activeFilter: DEFAULT_FILTER,
   selectedProfileId: null,
+  favoriteIds: [],
   loading: false,
   pinging: false,
   error: null,
@@ -137,6 +140,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
       // Restore persisted selection and drop it if the server no longer exists
       await get().loadSelectedProfileId();
+      set({ favoriteIds: await storage.getFavoriteIds() });
 
       // Phase 2: background ping
       get()._runPings(signal);
@@ -206,6 +210,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     } else {
       await storage.removeSelectedProfileId();
     }
+  },
+
+  toggleFavorite: (id) => {
+    const { favoriteIds } = get();
+    const next = favoriteIds.includes(id) ? favoriteIds.filter((f) => f !== id) : [...favoriteIds, id];
+    set({ favoriteIds: next });
+    storage.setFavoriteIds(next).catch(() => {});
   },
 
   applyFilter: () => {

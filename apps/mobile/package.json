@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo-google-fonts/figtree": "^0.4.1",
     "@expo/ui": "~56.0.18",
     "@tailwindcss/postcss": "^4.3.1",
     "@univpn/shared": "1.0.0",
@@ -37,6 +38,7 @@
     "react-native-reanimated": "^4.5.0",
     "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-webview": "13.16.1",
     "react-native-wireguard-vpn-patched": "^1.0.22-patch.2",

@@ -1,164 +1,24 @@
-import { useRef, useCallback, type ComponentType } from 'react';
-import { View, Pressable, Text, Animated } from 'react-native';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
-import type { TabTriggerSlotProps } from 'expo-router/ui';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FloatingConnectButton } from '@/components/FloatingConnectButton';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { TabBar, TabBarItem } from '@/components/ui/tab-bar';
+import { Strings } from '@/constants/strings';
 
-// ─── View-based icons (no SVG dependency) ──────────────
-
-function ServersIcon({ color, size = 22 }: { color: string; size?: number }) {
-  const bar = (y: number, w: number) => ({
-    width: size * w,
-    height: size * 0.18,
-    borderRadius: size * 0.08,
-    backgroundColor: color,
-    marginTop: y > 0 ? size * 0.12 : 0,
-  });
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={bar(0, 0.55)} />
-      <View style={bar(1, 0.7)} />
-      <View style={bar(2, 0.55)} />
-    </View>
-  );
-}
-
-function SettingsIcon({ color, size = 22 }: { color: string; size?: number }) {
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View
-        style={{
-          width: size * 0.78,
-          height: size * 0.78,
-          borderRadius: size * 0.39,
-          borderWidth: 2,
-          borderColor: color,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <View
-          style={{
-            width: size * 0.32,
-            height: size * 0.32,
-            borderRadius: size * 0.16,
-            backgroundColor: color,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
-// ─── Tab Button ──────────────────────────────────────────
-
-function TabItem({
-  isFocused,
-  onPress,
-  onLongPress,
-  label,
-  icon: Icon,
-  isDark,
-}: TabTriggerSlotProps & { label: string; icon: ComponentType<{ color: string }>; isDark: boolean }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const activeColor = isDark ? '#FFFFFF' : '#000000';
-  const inactiveColor = '#8e8e93';
-  const color = isFocused ? activeColor : inactiveColor;
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scale, { toValue: 0.92, useNativeDriver: true }).start();
-  }, [scale]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
-  }, [scale]);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 2 }}
-    >
-      <Animated.View style={{ transform: [{ scale }], alignItems: 'center', gap: 2 }}>
-        <Icon color={color} />
-        <Text
-          style={{
-            fontSize: 9,
-            fontWeight: '600',
-            color,
-          }}
-        >
-          {label}
-        </Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-// ─── Main Layout ────────────────────────────────────────
-
+// Tabs are final: home / locations / settings. Screens live in (main)/<tab>/.
 export default function MainLayout() {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
-  const bg = isDark ? '#1C1C1E' : '#FFFFFF';
-  const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 24);
-
   return (
     <Tabs>
       <TabSlot />
-
       <TabList asChild>
-        <View
-          style={{
-            flexDirection: 'row',
-            backgroundColor: bg,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            paddingBottom: bottomInset,
-            paddingTop: 10,
-            paddingHorizontal: 16,
-            alignItems: 'flex-start',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -3 },
-            shadowOpacity: isDark ? 0.25 : 0.08,
-            shadowRadius: 10,
-            elevation: 8,
-          }}
-        >
-          {/* ── Servers tab ── */}
-          <TabTrigger name="servers" href="/(main)/servers" asChild>
-            <TabItem label="Servers" icon={ServersIcon} isDark={isDark} />
+        <TabBar>
+          <TabTrigger name="home" href="/(main)/home" asChild>
+            <TabBarItem label={Strings.tabs.home} icon="home" />
           </TabTrigger>
-
-          {/* ── Center: connect dock with shape ── */}
-          <View pointerEvents="box-none" style={{ flex: 1.2, alignItems: 'center', overflow: 'visible' }}>
-            <View
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                top: -44,
-                width: 116,
-                height: 116,
-                borderRadius: 58,
-                backgroundColor: bg,
-                alignSelf: 'center',
-              }}
-            />
-            <View pointerEvents="box-none" style={{ marginTop: -44, zIndex: 2, elevation: 10 }}>
-              <FloatingConnectButton />
-            </View>
-          </View>
-
-          {/* ── Settings tab ── */}
+          <TabTrigger name="locations" href="/(main)/locations" asChild>
+            <TabBarItem label={Strings.tabs.locations} icon="locations" />
+          </TabTrigger>
           <TabTrigger name="settings" href="/(main)/settings" asChild>
-            <TabItem label="Settings" icon={SettingsIcon} isDark={isDark} />
+            <TabBarItem label={Strings.tabs.settings} icon="settings" />
           </TabTrigger>
-        </View>
+        </TabBar>
       </TabList>
     </Tabs>
   );

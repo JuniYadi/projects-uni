@@ -5,6 +5,6 @@ export default function AuthGate() {
   const status = useAuthStore((s) => s.status);
 
   // Only renders after root layout resolves auth + hides native splash
-  if (status === 'valid') return <Redirect href="/(main)/servers" />;
+  if (status === 'valid') return <Redirect href="/(main)/home" />;
   return <Redirect href="/(auth)/login" />;
 }

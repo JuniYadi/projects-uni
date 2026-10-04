@@ -16,7 +16,7 @@ export default function VpnPermissionScreen() {
   const handleAllow = async () => {
     await vpnService.requestVpnPermission(); // shows the system dialog if not granted yet
     await storage.setVpnPermissionSeen();
-    router.replace('/(main)/servers');
+    router.replace('/(main)/home');
   };
 
   return (

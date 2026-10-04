@@ -6,5 +6,5 @@ export async function routeAfterLogin() {
   if (Platform.OS === 'android' && !(await storage.getVpnPermissionSeen())) {
     return '/(auth)/vpn-permission' as const;
   }
-  return '/(main)/servers' as const;
+  return '/(main)/home' as const;
 }

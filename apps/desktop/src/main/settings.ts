@@ -6,6 +6,7 @@ const SETTINGS_FILE = 'settings.json'
 
 interface Settings {
   theme?: 'light' | 'dark' | 'system'
+  lastProfileId?: string
 }
 
 function settingsPath(): string {
@@ -24,5 +25,5 @@ export function getSettings(): Settings {
 }
 
 export function setSettings(settings: Settings): void {
-  writeFileSync(settingsPath(), JSON.stringify(settings), 'utf8')
+  writeFileSync(settingsPath(), JSON.stringify({ ...getSettings(), ...settings }), 'utf8')
 }

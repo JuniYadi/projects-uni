@@ -2,4 +2,66 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ponytail: minimal custom styles; expand later */
+/* Token v2 (Screens - Mobile v2 Android / apps/mobile/src/constants/theme.ts). */
+:root {
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --selected: #e2e8f0;
+  --fg: #0f172a;
+  --dim: #64748b;
+  --accent: #16a34a;
+  --accent-soft: #dcfce7;
+  --error: #dc2626;
+}
+.dark {
+  --bg: #0f172a;
+  --card: #192134;
+  --selected: #263148;
+  --fg: #f8fafc;
+  --dim: #94a3b8;
+  --accent: #22c55e;
+  --accent-soft: #14352a;
+  --error: #f87171;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-selected: var(--selected);
+  --color-fg: var(--fg);
+  --color-dim: var(--dim);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-error: var(--error);
+  --font-sans: Figtree, Inter, system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 14px/1.4 var(--font-sans);
+  user-select: none;
+}
+input {
+  user-select: text;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 1.2s linear infinite;
+}
+
+/* reduced-motion: animasi lompat ke keadaan akhir */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

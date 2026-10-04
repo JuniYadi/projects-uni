@@ -158,6 +158,25 @@ assert(profiles.profiles.length === 0, 'getProfiles berhasil setelah restore')
 
 globalThis.fetch = originalFetch
 
+// ─── 4. Ikon tray: 4 status × (Windows 16/20/32/64, macOS 18/36) ─
+
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const trayDir = join(import.meta.dir, '../resources/tray')
+const pngSize = (f: string) => {
+  const b = readFileSync(join(trayDir, f))
+  return b.subarray(1, 4).toString() === 'PNG' ? b.readUInt32BE(16) : -1
+}
+for (const state of ['idle', 'connecting', 'connected', 'failed']) {
+  for (const s of [16, 20, 32, 64]) {
+    const f = `win-${state}-${s}.png`
+    assert(existsSync(join(trayDir, f)) && pngSize(f) === s, `tray ${f} ada dan berukuran ${s}px`)
+  }
+  assert(pngSize(`mac-${state}Template.png`) === 18, `tray mac ${state} 18px`)
+  assert(pngSize(`mac-${state}Template@2x.png`) === 36, `tray mac ${state} @2x 36px`)
+}
+
 // ─── Summary ─────────────────────────────────────────────────
 
 console.log(`\n${passed} passed, ${failed} failed`)

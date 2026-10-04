@@ -9,6 +9,7 @@ const KEYS = {
   SUB_ID: 'subscription_id',
   FINGERPRINT: 'device_fingerprint',
   SELECTED_PROFILE_ID: 'selected_profile_id',
+  FAVORITE_IDS: 'favorite_profile_ids',
   VPN_PERMISSION_SEEN: 'vpn_permission_seen',
 } as const
 
@@ -78,6 +79,22 @@ export async function removeSelectedProfileId(): Promise<void> {
   return SecureStore.deleteItemAsync(KEYS.SELECTED_PROFILE_ID)
 }
 
+// ─── Favorite Profiles ────────────────────────────────────
+
+export async function getFavoriteIds(): Promise<string[]> {
+  try {
+    const raw = await SecureStore.getItemAsync(KEYS.FAVORITE_IDS)
+    const ids = raw ? JSON.parse(raw) : []
+    return Array.isArray(ids) ? ids.filter((i) => typeof i === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+export async function setFavoriteIds(ids: string[]): Promise<void> {
+  return SecureStore.setItemAsync(KEYS.FAVORITE_IDS, JSON.stringify(ids))
+}
+
 // ─── Clear All ────────────────────────────────────────────
 
 export async function clearAll(): Promise<void> {
@@ -86,6 +103,7 @@ export async function clearAll(): Promise<void> {
     SecureStore.deleteItemAsync(KEYS.EXPIRES_AT),
     SecureStore.deleteItemAsync(KEYS.SUB_ID),
     SecureStore.deleteItemAsync(KEYS.SELECTED_PROFILE_ID),
+    SecureStore.deleteItemAsync(KEYS.FAVORITE_IDS),
     // fingerprint persists — device identity
   ])
 }

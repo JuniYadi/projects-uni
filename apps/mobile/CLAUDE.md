@@ -40,7 +40,7 @@ No test infrastructure exists — there are no test files or test runner configu
 ```
 src/app/
   _layout.tsx        <Host> + ThemeProvider + Stack (index, auth, main, error)
-  index.tsx          Auth gate — checks authStore, redirects to /(auth)/login or /(main)/servers
+  index.tsx          Auth gate — checks authStore, redirects to /(auth)/login or /(main)/home
   _error.tsx         Fallback error screen
   (auth)/
     _layout.tsx

@@ -22,6 +22,7 @@ interface ConnectionState {
   error: string | null
   connect: (profile: VpnProfile) => Promise<void>
   disconnect: () => Promise<void>
+  tryAutoConnect: () => Promise<void>
   tick: () => void
   updateStats: (down: number, up: number) => void
   reset: () => void
@@ -62,8 +63,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       await vpnService.initialize()
 
       // 4. Connect, passing whitelisted apps as excluded apps for split tunneling
-      const { whitelistedApps } = useSettingsStore.getState()
-      const excludedApps = whitelistedApps.map((a) => a.packageName)
+      const { whitelistedApps, splitTunnelEnabled } = useSettingsStore.getState()
+      const excludedApps = splitTunnelEnabled ? whitelistedApps.map((a) => a.packageName) : []
       await vpnService.connect({ ...wgConfig, excludedApps })
 
       // 5. Connected
@@ -71,6 +72,9 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 
       // 6. Start heartbeat
       startHeartbeat(profile.id)
+
+      // 7. Remember for auto-connect
+      void useSettingsStore.getState().update('lastProfile', profile)
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Connection failed'
@@ -100,6 +104,13 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       tunnelDns: [],
       error: null,
     })
+  },
+
+  tryAutoConnect: async () => {
+    await useSettingsStore.getState().load()
+    const s = useSettingsStore.getState()
+    if (!s.autoConnect || !s.lastProfile || get().status !== 'disconnected') return
+    await get().connect(s.lastProfile)
   },
 
   tick: async () => {

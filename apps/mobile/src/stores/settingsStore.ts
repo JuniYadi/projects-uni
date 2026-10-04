@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   dnsServer: 'default',
   whitelistedApps: [],
   theme: 'system',
+  autoUpdate: true,
 };
 
 

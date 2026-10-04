@@ -3,6 +3,7 @@ export interface UserLocation {
   lng: number;
   country: string;
   city: string;
+  ip?: string;
 }
 
 interface IpGeoResponse {
@@ -37,6 +38,7 @@ export async function getIpLocation(): Promise<UserLocation | null> {
       lng,
       country: data.geo.country,
       city: data.geo.city,
+      ip: data.geo.ip,
     };
   } catch {
     return null;

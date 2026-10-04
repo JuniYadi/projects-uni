@@ -14,6 +14,7 @@ class UnivpnNativeModule extends NativeModule<{}> {
   async isSupported(): Promise<boolean> {
     return false;
   }
+  async openVpnSettings(): Promise<void> {}
 }
 
 export default registerWebModule(UnivpnNativeModule, 'UnivpnNative');

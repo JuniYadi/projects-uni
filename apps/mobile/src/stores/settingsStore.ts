@@ -10,6 +10,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   preferredProtocol: 'auto',
   dnsServer: 'default',
   whitelistedApps: [],
+  splitTunnelEnabled: true,
+  favoriteServerIds: [],
   theme: 'system',
 };
 

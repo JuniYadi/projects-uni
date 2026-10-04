@@ -1,12 +1,14 @@
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { TabBar, TabBarItem } from '@/components/ui/tab-bar';
+import { useIsTablet } from '@/hooks/use-is-tablet';
 import { Strings } from '@/constants/strings';
 
 // Tabs are final: home / locations / settings. Screens live in (main)/<tab>/.
 export default function MainLayout() {
+  const tablet = useIsTablet();
   return (
-    <Tabs>
-      <TabSlot />
+    <Tabs style={{ flexDirection: tablet ? 'row' : 'column' }}>
+      {tablet ? null : <TabSlot />}
       <TabList asChild>
         <TabBar>
           <TabTrigger name="home" href="/(main)/home" asChild>
@@ -20,6 +22,7 @@ export default function MainLayout() {
           </TabTrigger>
         </TabBar>
       </TabList>
+      {tablet ? <TabSlot /> : null}
     </Tabs>
   );
 }

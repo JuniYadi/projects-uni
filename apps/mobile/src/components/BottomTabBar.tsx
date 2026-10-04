@@ -12,7 +12,7 @@ export function BottomTabBar() {
   const scheme = useColorScheme();
   const c = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
-  const isServers = pathname.startsWith('/(main)/servers') || pathname === '/(main)' || pathname === '/';
+  const isLocations = pathname.startsWith('/(main)/locations') || pathname === '/(main)' || pathname === '/';
   const isSettings = pathname.startsWith('/(main)/settings');
 
   return (
@@ -32,22 +32,22 @@ export function BottomTabBar() {
           paddingHorizontal: 24,
         }}
       >
-        {/* Servers tab */}
+        {/* Locations tab */}
         <Pressable
-          onPress={() => router.replace('/(main)/servers')}
+          onPress={() => router.replace('/(main)/locations')}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}
         >
           <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 20, opacity: isServers ? 1 : 0.5 }}>🛡️</Text>
+            <Text style={{ fontSize: 20, opacity: isLocations ? 1 : 0.5 }}>📍</Text>
           </View>
           <Text
             style={{
               fontSize: 10,
               fontWeight: '600',
-              color: isServers ? '#00C781' : '#8e8e93',
+              color: isLocations ? '#00C781' : '#8e8e93',
             }}
           >
-            Servers
+            Lokasi
           </Text>
         </Pressable>
 

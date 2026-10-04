@@ -33,7 +33,7 @@ export default function LoginScreen() {
     if (!val || !isValidSubId(val)) return;
     try {
       await loginWithSubId(val);
-      router.replace('/(main)/servers');
+      router.replace('/(main)/locations');
     } catch {
       // handled by store
     }

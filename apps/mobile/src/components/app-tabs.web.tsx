@@ -22,8 +22,8 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/(main)/servers" asChild>
-            <TabButton>Home</TabButton>
+          <TabTrigger name="locations" href="/(main)/locations" asChild>
+            <TabButton>Lokasi</TabButton>
           </TabTrigger>
           <TabTrigger name="explore" href="/(main)/settings" asChild>
             <TabButton>Explore</TabButton>

@@ -19,7 +19,7 @@ export default function QrScanScreen() {
 
       try {
         await loginWithQr(result.data);
-        router.replace('/(main)/servers');
+        router.replace('/(main)/locations');
       } catch {
         router.back();
       }

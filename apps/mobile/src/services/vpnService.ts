@@ -60,6 +60,11 @@ class VpnService {
     await WireGuardVpnModule.disconnect()
   }
 
+  /** Open Android system VPN settings so the user can enable Always-on / lockdown (kill switch). */
+  async openVpnSettings(): Promise<void> {
+    await WireGuardVpnModule.openVpnSettings()
+  }
+
   /** Get current connection status from native module. */
   async getStatus(): Promise<VpnConnectionStatus> {
     return WireGuardVpnModule.getStatus()

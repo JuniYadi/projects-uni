@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FleetMap from '@/components/fleet-map';
@@ -12,6 +12,7 @@ import { Sheet } from '@/components/ui/sheet';
 import { Strings } from '@/constants/strings';
 import { Figtree } from '@/constants/theme';
 import { useLocationPicker } from '@/hooks/use-location-picker';
+import { useIsTablet } from '@/hooks/use-is-tablet';
 import { useTheme } from '@/hooks/use-theme';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { useProfileStore } from '@/stores/profileStore';
@@ -19,14 +20,12 @@ import type { VpnProfile } from '@/types/vpn';
 import { DEFAULT_LOCATION_FILTER, activeFilterCount, filterLocations, recommended } from '@/utils/locations';
 
 const L = Strings.locations;
-const TABLET_MIN_WIDTH = 768;
 
 export default function LocationsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const tablet = width >= TABLET_MIN_WIDTH;
+  const tablet = useIsTablet();
 
   const { locations, selectedId, favoriteIds, select, toggleFavorite } = useLocationPicker();
   const loading = useProfileStore((s) => s.loading);

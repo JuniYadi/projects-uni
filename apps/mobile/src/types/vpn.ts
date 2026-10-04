@@ -57,6 +57,12 @@ export interface AppSettings {
   dnsServer: 'default' | 'cloudflare' | 'google' | string;
   /** Apps that should bypass the VPN tunnel (split-tunnel whitelist). */
   whitelistedApps: VpnApp[];
+  /** Apply the whitelist as split tunnel on connect. */
+  splitTunnelEnabled: boolean;
+  /** Favorite server (profile) ids. */
+  favoriteServerIds: string[];
+  /** Last successfully connected profile, used by auto-connect. */
+  lastProfile?: VpnProfile;
   /** Theme override: 'system' follows OS, 'light'/'dark' force the app theme. */
   theme: AppTheme;
   lastKnownLocation?: {

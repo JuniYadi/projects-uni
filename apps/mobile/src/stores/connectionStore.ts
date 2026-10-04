@@ -20,8 +20,14 @@ interface ConnectionState {
   tunnelAddress: string[]
   tunnelDns: string[]
   error: string | null
+  /** Tunnel was lost while connected and the kill switch is on (traffic blocked). */
+  dropped: boolean
   connect: (profile: VpnProfile) => Promise<void>
   disconnect: () => Promise<void>
+  /** Poll the native tunnel; flags a drop if it died while we think we are connected. */
+  checkTunnel: () => Promise<void>
+  /** "Pakai internet tanpa VPN": release the kill switch and go back to idle. */
+  releaseKillSwitch: () => Promise<void>
   tick: () => void
   updateStats: (down: number, up: number) => void
   reset: () => void
@@ -37,9 +43,10 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   tunnelAddress: [],
   tunnelDns: [],
   error: null,
+  dropped: false,
 
   connect: async (profile) => {
-    set({ status: 'connecting', profile, error: null })
+    set({ status: 'connecting', profile, error: null, dropped: false })
 
     // ponytail: only WireGuard supported for now
     if (profile.protocol !== 'wireguard') {
@@ -99,7 +106,35 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       tunnelAddress: [],
       tunnelDns: [],
       error: null,
+      dropped: false,
     })
+  },
+
+  checkTunnel: async () => {
+    if (get().status !== 'connected') return
+    try {
+      if ((await vpnService.getStatus()).isConnected) return
+    } catch {
+      return // can't tell — don't report a drop we can't confirm
+    }
+    if (get().status !== 'connected') return
+    stopHeartbeat()
+    if (!useSettingsStore.getState().killSwitch) {
+      get().reset()
+      return
+    }
+    // keep `profile` so "Sambungkan lagi" knows where to reconnect
+    set({ status: 'disconnected', dropped: true, startTime: null, elapsed: 0, tunnelAddress: [], tunnelDns: [] })
+  },
+
+  releaseKillSwitch: async () => {
+    try {
+      await vpnService.disconnect()
+    } catch {
+      // clean up anyway
+    }
+    get().reset()
+    set({ profile: null })
   },
 
   tick: async () => {
@@ -124,6 +159,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       tunnelAddress: [],
       tunnelDns: [],
       error: null,
+      dropped: false,
     })
   },
 }))

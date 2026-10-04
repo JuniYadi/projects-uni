@@ -1,46 +1,28 @@
 import 'dotenv/config'
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import path from 'node:path'
 import './ipc'
 import { vpnService } from './vpn'
+import { createTray } from './tray'
 
-let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
+let quitting = false
 
-function createTray(): void {
-  // ponytail: 1x1 transparent PNG as placeholder tray icon
-  const transparentPng = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-    'base64'
-  )
-  tray = new Tray(nativeImage.createFromBuffer(transparentPng))
-  tray.setToolTip('UniVPN')
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      {
-        label: 'Show',
-        click: () => {
-          mainWindow?.show()
-        },
-      },
-      { type: 'separator' },
-      {
-        label: 'Quit',
-        click: () => {
-          app.quit()
-        },
-      },
-    ])
-  )
-  tray.on('click', () => {
-    mainWindow?.show()
-  })
+function showWindow(): void {
+  if (!mainWindow) createWindow()
+  mainWindow?.show()
+  mainWindow?.focus()
 }
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    // layar mobile di jendela sempit, tidak bisa dilebarkan
+    width: 400,
+    height: 700,
+    useContentSize: true,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -50,7 +32,14 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow?.show()
+    if (!process.argv.includes('--hidden')) mainWindow?.show()
+  })
+
+  // tutup jendela = sembunyi ke tray; keluar lewat menu tray ("Keluar")
+  mainWindow.on('close', (e) => {
+    if (quitting) return
+    e.preventDefault()
+    mainWindow?.hide()
   })
 
   mainWindow.on('closed', () => {
@@ -69,16 +58,23 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(async () => {
-  await vpnService.initialize()
-  createWindow()
-  createTray()
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', showWindow)
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  app.whenReady().then(async () => {
+    await vpnService.initialize()
+    createWindow()
+    createTray(showWindow)
+
+    app.on('activate', showWindow)
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+  app.on('before-quit', () => {
+    quitting = true
+  })
+
+  // tetap hidup di tray saat jendela ditutup
+  app.on('window-all-closed', () => {})
+}

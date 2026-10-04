@@ -30,8 +30,8 @@ export interface ElectronAPI {
   disconnect: () => Promise<{ ok: true } | { ok: false; error?: string }>
   status: () => Promise<{ status: VpnStatus; stats: VpnStats | null; profileId: string | null }>
 
-  getSettings: () => Promise<{ theme?: 'light' | 'dark' | 'system' }>
-  setSettings: (settings: { theme?: 'light' | 'dark' | 'system' }) => Promise<{ theme?: 'light' | 'dark' | 'system' }>
+  getSettings: () => Promise<{ theme?: 'light' | 'dark' | 'system'; lastProfileId?: string; openAtLogin: boolean }>
+  setSettings: (settings: { theme?: 'light' | 'dark' | 'system'; openAtLogin?: boolean }) => Promise<void>
 }
 
 declare global {

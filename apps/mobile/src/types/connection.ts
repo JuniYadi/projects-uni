@@ -5,7 +5,7 @@ import type { VpnProfile } from '@/types/vpn';
 
 /**
  * The 5 states the Beranda (home) screen renders.
- * Mapping from today's store (`ConnectionStatus` + `error`), to be implemented in the store by PFN-124:
+ * Mapping from the store (`status` + `error` + `dropped`) lives in `utils/connection-ui.ts` (`toUiStatus`, PFN-125):
  *   disconnected         → 'idle'
  *   connecting           → 'connecting'   (also 'disconnecting' shown as 'connecting' until stopped)
  *   connected            → 'connected'

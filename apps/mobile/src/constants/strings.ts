@@ -14,12 +14,14 @@ export const Strings = {
   },
   actions: {
     cancel: 'Batal',
+    disconnect: 'Putuskan',
     retry: 'Coba lagi',
     reconnect: 'Sambungkan lagi',
     useWithoutVpn: 'Pakai internet tanpa VPN',
     apply: 'Terapkan',
     logout: 'Keluar',
   },
+  home: { noLocation: 'Pilih lokasi dulu', changeLocation: 'Ganti lokasi' },
   settings: {
     killSwitch: 'Putus otomatis aman',
     autoConnect: 'Sambung otomatis',

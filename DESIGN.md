@@ -46,15 +46,19 @@ UniVPN menggunakan palet dasar **Slate & Green** (abu-abu kebiruan netral dengan
 
 ## 3. Komponen Server & Lokasi
 
-### A. Bendera Negara (SVG Flags)
-- Setiap lokasi server ditampilkan dengan **bendera vektor SVG melingkar**, bukan sekadar teks inisial kode negara.
+### A. Bendera Negara (Hybrid Architecture: SVG Lokal + CDN Cache)
+- Setiap lokasi server ditampilkan dengan **bendera melingkar**, bukan sekadar teks inisial kode negara.
+- **Strategi Hybrid**:
+  - **Server Utama (ID, SG, HK, JP, US)**: Menggunakan vektor SVG lokal langsung (0 ms loading, 100% offline).
+  - **Server Baru Dinamis dari API**: Otomatis dimuat via `expo-image` dari FlagCDN (`https://flagcdn.com/w80/{code}.png`) dengan **disk cache permanen** di perangkat.
+  - **Fallback Teks**: Jika offline atau kode belum dikenali, otomatis menampilkan inisial kode negara (`NL`, `DE`) tanpa merusak layout.
+  - **Penambahan Permanen**: Jika ada server negara baru yang resmi ditambahkan ke fleet, SVG lokalnya dapat diunduh dan disimpan ke kode lokal.
 - **Ukuran**:
   - Daftar server (Mobile/Tablet/Desktop window): `36×36px` bulat (`border-radius: 50%`).
   - Menu tray / mini pop-up: `28×28px` bulat (`border-radius: 50%`).
 - **Ring Penegas (Border Outline)**:
   - Mode Gelap: `box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15)`
   - Mode Terang: `box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1)` (menjaga batas bendera yang memiliki warna putih di tepinya seperti Indonesia dan Jepang).
-
 ### B. Indikator Kecepatan & Latensi
 Kecepatan tidak hanya berupa kata kualitatif, melainkan dilengkapi **detail latensi riil dalam milidetik (ms)**:
 - **Format**: `<Nama Kota> · <Status Kecepatan> · <Angka> ms`

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import Svg, { Circle, G, Path, Polygon, Rect } from 'react-native-svg';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -81,11 +83,13 @@ function FlagSvg({ code, size }: { code: string; size: number }) {
   }
 }
 
-/** Circular country badge with SVG flag, falls back to country code text. */
+/** Circular country badge with SVG flag, dynamic CDN fallback + disk cache, and text fallback. */
 export function CountryBadge({ code, size = 36 }: { code: string; size?: number }) {
   const theme = useTheme();
+  const [imageFailed, setImageFailed] = useState(false);
   const upper = code ? code.toUpperCase() : '';
   const flag = FlagSvg({ code: upper, size });
+  const cdnUrl = !flag && upper.length === 2 ? `https://flagcdn.com/w80/${upper.toLowerCase()}.png` : null;
 
   return (
     <View
@@ -102,7 +106,23 @@ export function CountryBadge({ code, size = 36 }: { code: string; size?: number 
         flexShrink: 0,
       }}
     >
-      {flag ?? (
+      {flag ? (
+        flag
+      ) : cdnUrl && !imageFailed ? (
+        <>
+          <Text style={{ fontFamily: Figtree.semibold, fontSize: Math.round(size * 0.34), color: theme.textSecondary }}>
+            {upper}
+          </Text>
+          <Image
+            source={{ uri: cdnUrl }}
+            style={{ position: 'absolute', width: size, height: size }}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={150}
+            onError={() => setImageFailed(true)}
+          />
+        </>
+      ) : (
         <Text style={{ fontFamily: Figtree.semibold, fontSize: Math.round(size * 0.34), color: theme.textSecondary }}>
           {upper}
         </Text>

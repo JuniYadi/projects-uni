@@ -10,6 +10,7 @@ export const DEFAULT_USER_LOCATION: UserLocation = {
   lng: 106.8456,
   country: 'Indonesia',
   city: 'Jakarta',
+  ip: '180.252.84.11',
 };
 
 

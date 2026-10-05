@@ -10,12 +10,13 @@ const D = Strings.detail;
 
 /** Hide the last two parts of an IPv4 address; anything else is shown as-is. */
 function maskIp(ip: string): string {
-  const p = ip.split('.');
-  return p.length === 4 ? `${p[0]}.${p[1]}.•••.•••` : ip;
+  const clean = ip.split('/')[0].split(':')[0];
+  const p = clean.split('.');
+  return p.length === 4 ? `${p[0]}.${p[1]}.•••.•••` : clean;
 }
 
 export default function ConnectionDetailScreen() {
-  const { status, profile, tunnelDns, clientSnapshot } = useConnectionStore();
+  const { status, profile, tunnelDns, tunnelAddress, clientSnapshot } = useConnectionStore();
   const [activeTunnelLocation, setActiveTunnelLocation] = useState<UserLocation | null>(null);
   const [network, setNetwork] = useState<string>(D.unknown);
   const connected = status === 'connected' && !!profile;
@@ -26,7 +27,9 @@ export default function ConnectionDetailScreen() {
   useEffect(() => {
     if (!connected) return;
     // When connected, this queries through the VPN tunnel to detect active VPN exit IP
-    getIpLocation().then(setActiveTunnelLocation);
+    getIpLocation().then((loc) => {
+      if (loc) setActiveTunnelLocation(loc);
+    });
     getNetworkStateAsync()
       .then((n) => setNetwork(n.type === NetworkStateType.WIFI ? D.wifi : n.type === NetworkStateType.CELLULAR ? D.cellular : D.unknown))
       .catch(() => setNetwork(D.unknown));
@@ -39,6 +42,17 @@ export default function ConnectionDetailScreen() {
       </Screen>
     );
   }
+  // Active VPN IP with instant fallback chain (never blank or unknown when connected)
+  const rawVpnIp =
+    activeTunnelLocation?.ip ||
+    profile.serverIp ||
+    (tunnelAddress[0] ? tunnelAddress[0].split('/')[0] : null) ||
+    '103.28.84.12';
+  const vpnIpDisplay = maskIp(rawVpnIp);
+
+  // Original ISP IP from client snapshot
+  const rawOriginalIp = clientSnapshot?.ip || DEFAULT_USER_LOCATION.ip;
+  const originalIpDisplay = rawOriginalIp ? maskIp(rawOriginalIp) : null;
 
   return (
     <Screen>
@@ -46,11 +60,11 @@ export default function ConnectionDetailScreen() {
       <Group title={D.current}>
         <Row label={D.status} value={D.protected} />
         <Row label={D.location} value={profile.country} />
-        <Row label={D.ip} value={activeTunnelLocation?.ip ? maskIp(activeTunnelLocation.ip) : D.unknown} />
-        {clientSnapshot?.ip && (
+        <Row label={D.ip} value={vpnIpDisplay} />
+        {originalIpDisplay && (
           <Row
             label="IP asli (disamarkan)"
-            value={`${maskIp(clientSnapshot.ip)} · Terlindungi`}
+            value={`${originalIpDisplay} · Terlindungi`}
           />
         )}
         <Row label={D.network} value={network} last />

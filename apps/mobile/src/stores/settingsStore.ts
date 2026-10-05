@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   whitelistedApps: [],
   theme: 'system',
   autoUpdate: true,
+  buttonStyle: 'cyber',
 };
 
 

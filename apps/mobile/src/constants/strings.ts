@@ -66,6 +66,12 @@ export const Strings = {
       light: { label: 'Terang', hint: '' },
       dark: { label: 'Gelap', hint: '' },
     },
+    buttonStyle: 'Gaya tombol Beranda',
+    buttonStylePick: 'Pilih gaya tombol',
+    buttonStyleOptions: {
+      cyber: { label: 'Cyber Shield', hint: 'Logo UniVPN menyala neon (Disarankan)' },
+      classic: { label: 'Tema Klasik', hint: 'Tombol hijau dengan simbol power on/off' },
+    },
     connectionDetail: 'Lihat detail koneksi',
     checkUpdate: 'Cek pembaruan',
     autoUpdate: 'Pembaruan otomatis',

@@ -49,6 +49,7 @@ export interface FilterState {
 }
 
 export type AppTheme = 'system' | 'light' | 'dark';
+export type HomeButtonStyle = 'cyber' | 'classic';
 
 export interface AppSettings {
   autoConnect: boolean;
@@ -61,6 +62,8 @@ export interface AppSettings {
   theme: AppTheme;
   /** Notify when a new app version is available. */
   autoUpdate: boolean;
+  /** Home button style when connected: 'cyber' (default neon logo) or 'classic' (power icon). */
+  buttonStyle?: HomeButtonStyle;
   lastKnownLocation?: {
     lat: number;
     lng: number;

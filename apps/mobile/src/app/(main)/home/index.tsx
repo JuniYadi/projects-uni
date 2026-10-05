@@ -6,7 +6,7 @@ import { ConnectionStatus } from '@/components/connection-status';
 import { CountryBadge } from '@/components/ui/country-badge';
 import { Icon } from '@/components/ui/icon';
 import { Figtree } from '@/constants/theme';
-import { Strings } from '@/constants/strings';
+import { Strings, latencyCategory, latencyLabel } from '@/constants/strings';
 import { useTheme } from '@/hooks/use-theme';
 import { useConnectionStore } from '@/stores/connectionStore';
 import { useProfileStore } from '@/stores/profileStore';
@@ -132,12 +132,38 @@ export default function HomeScreen() {
               </View>
             )}
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary }}>
-                {Strings.tabs.locations}
-              </Text>
-              <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>
-                {location?.name ?? Strings.home.noLocation}
-              </Text>
+              {location ? (
+                <>
+                  <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>
+                    {location.name}
+                  </Text>
+                  <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>
+                    {location.city && location.city !== location.name ? `${location.city} · ` : ''}
+                    <Text
+                      style={{
+                        color:
+                          latencyCategory(location.ping) === 'fast'
+                            ? theme.accent
+                            : latencyCategory(location.ping) === 'normal'
+                              ? '#F59E0B'
+                              : theme.textSecondary,
+                        fontFamily: Figtree.medium,
+                      }}
+                    >
+                      {latencyLabel(location.ping)}
+                    </Text>
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary }}>
+                    {Strings.tabs.locations}
+                  </Text>
+                  <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>
+                    {Strings.home.noLocation}
+                  </Text>
+                </>
+              )}
             </View>
             <Icon name="chevron-right" size={18} color={theme.textSecondary} />
           </Pressable>

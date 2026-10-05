@@ -1,13 +1,13 @@
 import { Pressable, Text, View } from 'react-native';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { latencyLabel } from '@/constants/strings';
+import { latencyCategory, latencyLabel } from '@/constants/strings';
 import type { VpnProfile } from '@/types/vpn';
 import { CountryBadge } from './country-badge';
 import { Icon } from './icon';
 
 type Props = {
-  profile: Pick<VpnProfile, 'name' | 'countryCode' | 'ping'>;
+  profile: Pick<VpnProfile, 'name' | 'countryCode' | 'ping'> & Partial<Pick<VpnProfile, 'city'>>;
   selected?: boolean;
   favorite?: boolean;
   onPress?: () => void;
@@ -16,9 +16,18 @@ type Props = {
   subtitle?: string;
   onToggleFavorite?: () => void;
 };
-
 export function LocationRow({ profile, selected, favorite, onPress, onLongPress, subtitle, onToggleFavorite }: Props) {
   const theme = useTheme();
+  const category = latencyCategory(profile.ping);
+  const speedColor =
+    category === 'fast'
+      ? theme.accent
+      : category === 'normal'
+        ? '#F59E0B'
+        : theme.textSecondary;
+
+  const cityPrefix = profile.city && profile.city !== profile.name ? `${profile.city} · ` : '';
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -42,7 +51,16 @@ export function LocationRow({ profile, selected, favorite, onPress, onLongPress,
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>{profile.name}</Text>
         <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>
-          {subtitle ?? latencyLabel(profile.ping)}
+          {subtitle ? (
+            subtitle
+          ) : (
+            <>
+              {cityPrefix}
+              <Text style={{ color: speedColor, fontFamily: Figtree.medium }}>
+                {latencyLabel(profile.ping)}
+              </Text>
+            </>
+          )}
         </Text>
       </View>
       {selected && <Icon name="check" color={theme.accent} size={18} />}

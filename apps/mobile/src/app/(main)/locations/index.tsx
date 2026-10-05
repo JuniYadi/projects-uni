@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FleetMap from '@/components/fleet-map';
 import { LocationFilterSheet } from '@/components/locations/location-filter-sheet';
+import { LocationSkeleton } from '@/components/locations/location-skeleton';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { LocationRow } from '@/components/ui/location-row';
@@ -160,7 +161,7 @@ export default function LocationsScreen() {
         }}
       >
         <Text accessibilityRole="header" style={{ fontFamily: Figtree.semibold, fontSize: 18, color: theme.text }}>
-          {L.title}
+          {Strings.tabs.locations}
         </Text>
         <Pressable
           accessibilityRole="button"

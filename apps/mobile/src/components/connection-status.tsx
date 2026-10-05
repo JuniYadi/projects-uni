@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
@@ -42,30 +43,39 @@ export function ConnectionStatus({
   const reduced = useReducedMotion();
   const textMs = useMotionDuration(Motion.text);
   const pop = useSharedValue(1);
-  const ripple = useSharedValue(0);
+  const ripple1 = useSharedValue(0);
+  const ripple2 = useSharedValue(0);
+  const breathe = useSharedValue(0);
   const spin = useSharedValue(0);
   const shake = useSharedValue(0);
   const beat = useSharedValue(0);
-
   useEffect(() => {
-    [pop, ripple, spin, shake, beat].forEach(cancelAnimation);
-    pop.set(1); ripple.set(0); spin.set(0); shake.set(0); beat.set(0);
+    [pop, ripple1, ripple2, breathe, spin, shake, beat].forEach(cancelAnimation);
+    pop.set(1); ripple1.set(0); ripple2.set(0); breathe.set(0); spin.set(0); shake.set(0); beat.set(0);
     if (reduced) return; // jump straight to the end state
     if (status === 'connecting') {
       spin.set(withRepeat(withTiming(1, { duration: 1000, easing: Easing.linear }), -1));
     } else if (status === 'connected') {
-      pop.set(withSequence(withTiming(0.85, { duration: 0 }), withTiming(1.08, { duration: 160 }), withTiming(1, { duration: 140 })));
-      ripple.set(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) })));
+      // Pop bounce
+      pop.set(withSequence(withTiming(0.85, { duration: 50 }), withTiming(1.08, { duration: 160 }), withTiming(1, { duration: 140 })));
+      // Ripple 1
+      ripple1.set(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) })));
+      // Ripple 2 (staggered delay ~350ms)
+      ripple2.set(withDelay(350, withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) }))));
+      // Continuous gentle breathing pulse while connected
+      breathe.set(withRepeat(withSequence(withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.ease) }), withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.ease) })), -1, true));
     } else if (status === 'failed') {
       shake.set(withSequence(...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 70 }))));
     } else if (status === 'dropped') {
       beat.set(withRepeat(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 1400, easing: Easing.out(Easing.ease) })), -1));
     }
-  }, [status, reduced, pop, ripple, spin, shake, beat]);
+  }, [status, reduced, pop, ripple1, ripple2, breathe, spin, shake, beat]);
 
   const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }, { scale: pop.value }] }));
   const spinStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value * 360}deg` }] }));
-  const rippleStyle = useAnimatedStyle(() => ({ opacity: 0.7 * (1 - ripple.value), transform: [{ scale: 1 + 0.9 * ripple.value }] }));
+  const ripple1Style = useAnimatedStyle(() => ({ opacity: 0.8 * (1 - ripple1.value), transform: [{ scale: 1 + 0.9 * ripple1.value }] }));
+  const ripple2Style = useAnimatedStyle(() => ({ opacity: 0.6 * (1 - ripple2.value), transform: [{ scale: 1 + 0.9 * ripple2.value }] }));
+  const breatheStyle = useAnimatedStyle(() => ({ opacity: 0.12 + 0.16 * breathe.value, transform: [{ scale: 1 + 0.08 * breathe.value }] }));
   const beatStyle = useAnimatedStyle(() => ({ opacity: 0.5 * (1 - beat.value), transform: [{ scale: 1 + 0.5 * beat.value }] }));
 
   const bad = status === 'failed' || status === 'dropped';
@@ -88,9 +98,10 @@ export function ConnectionStatus({
         )}
         {on && (
           <>
-            <View style={[glowRing2, { backgroundColor: `${theme.accent}10` }]} />
+            <Animated.View style={[glowRing2, { backgroundColor: `${theme.accent}20` }, breatheStyle]} />
             <View style={[glowRing1, { backgroundColor: `${theme.accent}22` }]} />
-            <Animated.View style={[ring, { borderWidth: 2, borderColor: theme.accent }, rippleStyle]} />
+            <Animated.View style={[ring, { borderWidth: 2, borderColor: theme.accent }, ripple1Style]} />
+            <Animated.View style={[ring, { borderWidth: 2, borderColor: theme.accent }, ripple2Style]} />
           </>
         )}
         {status === 'dropped' && (

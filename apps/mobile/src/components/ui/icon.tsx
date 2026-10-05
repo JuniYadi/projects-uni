@@ -71,8 +71,8 @@ export function Icon({
     case 'shield-check':
       content = (
         <>
-          <Path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" fill={filled ? color : 'none'} {...strokeProps} />
-          <Path d="M9 12l2 2 4-4" fill="none" {...strokeProps} />
+          <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill={filled ? color : 'none'} {...strokeProps} />
+          <Path d="m9 12 2 2 4-4" fill="none" {...strokeProps} />
         </>
       );
       break;

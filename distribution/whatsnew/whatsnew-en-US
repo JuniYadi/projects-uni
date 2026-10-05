@@ -1,6 +1,8 @@
-v0.2.0 is now available!
+v0.3.0 is now available!
 
-- Configured testing and production API domain environments
-- Added environment selection (testing/production) to Android build workflow
-- Dynamic web portal link in settings based on app environment
-- Updated default API and application fallback URLs
+- Redesigned UI v2: Home, Locations, Settings, Account, and Advanced mode
+- New Login screen with animated map and detailed VPN permission screen
+- Neon Cyber Shield button with connection radar indicator
+- Hybrid SVG country flags (local + online cache)
+- Responsive tablet layout support
+- UI improvements and performance optimizations

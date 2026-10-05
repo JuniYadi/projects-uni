@@ -3,6 +3,23 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v0.3.0] - 2026-10-06
+
+### Added
+- **Mobile**: Desain UI v2 final (Beranda, Lokasi, Pengaturan, Akun, Mode lanjutan)
+- **Mobile**: Layar Masuk baru dengan animasi peta flat dan layar Izin VPN detail
+- **Mobile**: Tombol Cyber Shield neon dengan animasi pernapasan dan indikator radar koneksi
+- **Mobile**: Dukungan bendera negara dinamis hybrid (SVG lokal + FlagCDN disk cache)
+- **Mobile**: Navigasi responsif untuk tablet
+
+### Changed
+- **Mobile**: Penyelarasan antarmuka Masuk dan Izin VPN dengan spesifikasi desain Obsidian v2
+- **Mobile**: Detail latensi dalam milidetik (ms) dan kategori kecepatan (Cepat, Normal, Jauh)
+
+### Fixed
+- **Mobile**: Perbaikan posisi teks dan formulir pada layar masuk (berada di bagian bawah)
+- **Mobile**: Menghapus teks judul redundan pada layar login, menampilkan logo shield mandiri
+
 ## [v0.2.0] - 2026-09-22
 
 ### Added

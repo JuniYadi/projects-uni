@@ -1,6 +1,8 @@
-v0.2.0 telah tersedia!
+v0.3.0 telah tersedia!
 
-- Konfigurasi domain API untuk testing dan production
-- Dukungan pilihan environment (testing/production) pada build Android
-- Pembaruan tautan portal web dinamis di pengaturan
-- Peningkatan konfigurasi fallback URL aplikasi
+- Redesain antarmuka UI v2: Beranda, Lokasi, Pengaturan, Akun, dan Mode lanjutan
+- Layar Masuk baru dengan peta animasi dan izin VPN detail
+- Tombol Cyber Shield neon dengan status radar koneksi
+- Bendera negara SVG hybrid (lokal + cache online)
+- Navigasi responsif untuk tablet
+- Optimalisasi performa dan perbaikan bug

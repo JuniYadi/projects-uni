@@ -135,6 +135,21 @@ function CountryFlag({ code, size = 32 }: { code: string; size?: number }) {
       </span>
     )
   }
+  if (upper.length === 2) {
+    return (
+      <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-selected ${ring}`} style={{ width: size, height: size }}>
+        <span className="absolute text-xs font-semibold text-dim">{upper}</span>
+        <img
+          src={`https://flagcdn.com/w80/${upper.toLowerCase()}.png`}
+          alt={upper}
+          className="relative size-full object-cover"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+      </span>
+    )
+  }
 
   return <span className="grid size-8 place-items-center rounded-lg bg-selected text-xs font-semibold">{upper}</span>
 }

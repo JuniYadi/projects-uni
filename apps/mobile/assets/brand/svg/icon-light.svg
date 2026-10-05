@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs>
+<clipPath id="ct"><path d="M-100 -100H400V96.8L-100 146.8Z"/></clipPath><clipPath id="cb"><path d="M-100 154.8L400 104.8V400H-100Z"/></clipPath>
+<clipPath id="right"><path d="M142 -100H400V400H128Z"/></clipPath>
+<mask id="m" maskUnits="userSpaceOnUse" x="-100" y="-100" width="500" height="500"><rect x="-100" y="-100" width="500" height="500" fill="#fff"/>
+<g clip-path="url(#ct)"><path d="M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z" fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"/></g><g clip-path="url(#cb)"><g transform="translate(12.00 -1.20)"><path d="M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z" fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"/></g></g></mask></defs><rect width="256" height="256" rx="56" fill="#F1F5F9"/>
+<g transform="translate(128 128) scale(0.72) translate(-146 -128)">
+<g mask="url(#m)" clip-path="url(#right)"><path d="M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z" fill="none" stroke="#334155" stroke-width="60" stroke-linejoin="round"/></g>
+<g clip-path="url(#ct)"><path fill="#0F172A" fill-rule="evenodd" d="M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z M108 172L117 111A22 22 0 1 1 139 111L148 172Z"/></g>
+<g clip-path="url(#cb)"><g transform="translate(12.00 -1.20)"><path fill="#16A34A" fill-rule="evenodd" d="M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z M108 172L117 111A22 22 0 1 1 139 111L148 172Z"/></g></g>
+</g></svg>

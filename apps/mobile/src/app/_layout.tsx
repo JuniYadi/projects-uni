@@ -1,11 +1,10 @@
 import '../global.css';
 
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Stack } from 'expo-router/stack';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
-import { Host } from '@expo/ui';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold } from '@expo-google-fonts/figtree';
 import { vpnService } from '@/services/vpnService';
@@ -65,7 +64,7 @@ export default function RootLayout() {
   if (!ready || !(fontsLoaded || fontError)) return null;
 
   return (
-    <Host style={{ flex: 1, backgroundColor }}>
+    <View style={{ flex: 1, backgroundColor }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
@@ -74,6 +73,6 @@ export default function RootLayout() {
           <Stack.Screen name="_error" />
         </Stack>
       </ThemeProvider>
-    </Host>
+    </View>
   );
 }

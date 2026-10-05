@@ -25,23 +25,34 @@ export function LocationRow({ profile, selected, favorite, onPress, onLongPress,
       accessibilityState={{ selected }}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        marginVertical: 4,
+        borderRadius: 14,
+        backgroundColor: theme.backgroundElement,
+        borderWidth: selected ? 1.5 : 1,
+        borderColor: selected ? theme.accent : theme.backgroundSelected,
+      }}
     >
       <CountryBadge code={profile.countryCode} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>{profile.name}</Text>
-        <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary }}>
+        <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>
           {subtitle ?? latencyLabel(profile.ping)}
         </Text>
       </View>
-      {selected && <Icon name="check" color={theme.accent} size={20} />}
+      {selected && <Icon name="check" color={theme.accent} size={18} />}
       {onToggleFavorite && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Favorit"
-          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           onPress={onToggleFavorite}
-          style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}
         >
           <Icon name="star" size={20} color={favorite ? theme.accent : theme.textSecondary} filled={favorite} />
         </Pressable>

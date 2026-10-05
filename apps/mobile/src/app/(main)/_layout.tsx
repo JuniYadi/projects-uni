@@ -7,8 +7,8 @@ import { Strings } from '@/constants/strings';
 export default function MainLayout() {
   const tablet = useIsTablet();
   return (
-    <Tabs style={{ flexDirection: tablet ? 'row' : 'column' }}>
-      {tablet ? null : <TabSlot />}
+    <Tabs style={{ flex: 1, flexDirection: tablet ? 'row' : 'column' }}>
+      {tablet ? null : <TabSlot style={{ flex: 1 }} />}
       <TabList asChild>
         <TabBar>
           <TabTrigger name="home" href="/(main)/home" asChild>
@@ -22,7 +22,7 @@ export default function MainLayout() {
           </TabTrigger>
         </TabBar>
       </TabList>
-      {tablet ? <TabSlot /> : null}
+      {tablet ? <TabSlot style={{ flex: 1 }} /> : null}
     </Tabs>
   );
 }

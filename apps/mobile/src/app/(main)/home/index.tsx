@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ConnectionStatus } from '@/components/connection-status';
 import { CountryBadge } from '@/components/ui/country-badge';
+import { Icon } from '@/components/ui/icon';
 import { Figtree } from '@/constants/theme';
 import { Strings } from '@/constants/strings';
 import { useTheme } from '@/hooks/use-theme';
@@ -53,45 +54,94 @@ export default function HomeScreen() {
       style={{
         flex: 1,
         backgroundColor: theme.background,
-        alignItems: 'center',
-        justifyContent: 'center',
         paddingTop: insets.top,
-        paddingBottom: 16,
       }}
     >
-      {/* maxWidth keeps tablet / wide windows readable; size shrinks on small phones */}
-      <View style={{ width: '100%', maxWidth: 480, alignItems: 'center', gap: 24 }}>
-        <ConnectionStatus
-          status={status}
-          size={height < 640 ? 96 : 128}
-          disabled={status === 'idle' && !location}
-          onPress={onPress}
-          onCancel={disconnect}
-          onRetry={connect}
-          onReconnect={connect}
-          onDisconnect={disconnect}
-          onUseWithoutVpn={killSwitch ? releaseKillSwitch : undefined}
-        />
+      {/* Top Header */}
+      <View
+        style={{
+          height: 52,
+          paddingHorizontal: 20,
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={{ fontFamily: Figtree.semibold, fontSize: 18, color: theme.text }}>
+          {Strings.app.name}
+        </Text>
+      </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={Strings.home.changeLocation}
-          onPress={() => router.push('/(main)/locations')}
-          style={{
-            minHeight: 56,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-            paddingHorizontal: 16,
-            borderRadius: 16,
-            backgroundColor: theme.backgroundElement,
-          }}
-        >
-          {location && <CountryBadge code={location.countryCode} />}
-          <Text style={{ fontFamily: Figtree.medium, fontSize: 15, color: theme.text }}>
-            {location?.name ?? Strings.home.noLocation}
-          </Text>
-        </Pressable>
+      {/* Main Content Area */}
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+          paddingBottom: 20,
+        }}
+      >
+        {/* Center: Connect button + status text */}
+        <View style={{ flex: 1, justifyContent: 'center', width: '100%', maxWidth: 440 }}>
+          <ConnectionStatus
+            status={status}
+            size={height < 640 ? 104 : 128}
+            disabled={status === 'idle' && !location}
+            onPress={onPress}
+            onCancel={disconnect}
+            onRetry={connect}
+            onReconnect={connect}
+            onDisconnect={disconnect}
+            onUseWithoutVpn={killSwitch ? releaseKillSwitch : undefined}
+          />
+        </View>
+
+        {/* Bottom Slot: Location card in idle or connected */}
+        {(status === 'idle' || status === 'connected') && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={Strings.home.changeLocation}
+            onPress={() => router.push('/(main)/locations')}
+            style={{
+              width: '100%',
+              maxWidth: 440,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderRadius: 16,
+              backgroundColor: theme.backgroundElement,
+              borderWidth: 1,
+              borderColor: theme.backgroundSelected,
+            }}
+          >
+            {location ? (
+              <CountryBadge code={location.countryCode} />
+            ) : (
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: theme.backgroundSelected,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon name="locations" size={18} color={theme.textSecondary} />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary }}>
+                {Strings.tabs.locations}
+              </Text>
+              <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: theme.text }}>
+                {location?.name ?? Strings.home.noLocation}
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={18} color={theme.textSecondary} />
+          </Pressable>
+        )}
       </View>
     </View>
   );

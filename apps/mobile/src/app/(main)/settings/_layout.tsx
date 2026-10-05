@@ -1,7 +1,7 @@
 
 import { Stack } from 'expo-router/stack';
 import { Strings } from '@/constants/strings';
-import { Colors } from '@/constants/theme';
+import { Colors, Figtree } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function SettingsLayout() {
@@ -19,7 +19,7 @@ export default function SettingsLayout() {
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor },
         headerStyle: { backgroundColor },
-        headerTitleStyle: { color: textColor },
+        headerTitleStyle: { color: textColor, fontFamily: Figtree.semibold, fontSize: 18 },
         headerTintColor: accentColor,
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor },

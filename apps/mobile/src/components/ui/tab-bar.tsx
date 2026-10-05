@@ -27,6 +27,8 @@ export function TabBar({ children }: { children: ReactNode }) {
           : {
               flexDirection: 'row',
               backgroundColor: theme.backgroundElement,
+              borderTopWidth: 1,
+              borderTopColor: theme.backgroundSelected,
               paddingBottom: Math.max(insets.bottom, 8),
               paddingTop: 8,
             }

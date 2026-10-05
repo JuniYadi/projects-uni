@@ -4,9 +4,8 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FleetMap from '@/components/fleet-map';
 import { LocationFilterSheet } from '@/components/locations/location-filter-sheet';
-import { LocationSkeleton } from '@/components/locations/location-skeleton';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { LocationRow } from '@/components/ui/location-row';
 import { Sheet } from '@/components/ui/sheet';
 import { Strings } from '@/constants/strings';
@@ -82,7 +81,17 @@ export default function LocationsScreen() {
   );
 
   const heading = (text: string) => (
-    <Text style={{ fontFamily: Figtree.semibold, fontSize: 12, letterSpacing: 1, color: theme.textSecondary, marginTop: 12 }}>
+    <Text
+      style={{
+        fontFamily: Figtree.semibold,
+        fontSize: 12,
+        letterSpacing: 0.5,
+        color: theme.textSecondary,
+        marginTop: 14,
+        marginBottom: 4,
+        paddingHorizontal: 2,
+      }}
+    >
       {text.toUpperCase()}
     </Text>
   );
@@ -110,7 +119,7 @@ export default function LocationsScreen() {
     });
   } else {
     body = (
-      <Card style={{ paddingVertical: 4 }}>
+      <View style={{ gap: 2 }}>
         {showRec && (
           <>
             {heading(L.recommended)}
@@ -123,70 +132,83 @@ export default function LocationsScreen() {
             {rest.map(row)}
           </>
         )}
-      </Card>
+      </View>
     );
   }
 
   const list = (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 8 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {pinging && (
-        <Text accessibilityLiveRegion="polite" style={{ fontFamily: Figtree.medium, fontSize: 13, color: theme.accent }}>
-          {L.measuring}
-        </Text>
-      )}
       {body}
     </ScrollView>
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: insets.top }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 12 }}>
-        <Text accessibilityRole="header" style={{ fontFamily: Figtree.semibold, fontSize: 28, color: theme.text }}>
-          {Strings.tabs.locations}
+      {/* Top Header */}
+      <View
+        style={{
+          height: 52,
+          paddingHorizontal: 20,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Text accessibilityRole="header" style={{ fontFamily: Figtree.semibold, fontSize: 18, color: theme.text }}>
+          {L.title}
         </Text>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <TextInput
-            value={filter.query}
-            onChangeText={(query) => setFilter({ ...filter, query })}
-            placeholder={L.search}
-            placeholderTextColor={theme.textSecondary}
-            accessibilityLabel={L.search}
-            autoCorrect={false}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={filterCount ? `${L.filter}, ${filterCount}` : L.filter}
+          onPress={() => setFilterOpen(true)}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 18,
+            backgroundColor: filterCount > 0 ? `${theme.accent}22` : theme.backgroundElement,
+            borderWidth: 1,
+            borderColor: filterCount > 0 ? theme.accent : theme.backgroundSelected,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Icon name="search" size={15} color={filterCount > 0 ? theme.accent : theme.textSecondary} />
+          <Text
             style={{
-              flex: 1,
-              minHeight: 48,
-              borderRadius: 14,
-              paddingHorizontal: 16,
-              fontFamily: Figtree.regular,
-              fontSize: 15,
-              color: theme.text,
-              backgroundColor: theme.backgroundElement,
-            }}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={filterCount ? `${L.filter}, ${filterCount}` : L.filter}
-            onPress={() => setFilterOpen(true)}
-            style={{
-              minHeight: 48,
-              paddingHorizontal: 16,
-              borderRadius: 14,
-              justifyContent: 'center',
-              backgroundColor: filterCount ? theme.accentLight : theme.backgroundElement,
+              fontFamily: Figtree.medium,
+              fontSize: 12,
+              color: filterCount > 0 ? theme.accent : theme.textSecondary,
             }}
           >
-            <Text style={{ fontFamily: Figtree.medium, fontSize: 14, color: filterCount ? theme.accentDark : theme.text }}>
-              {filterCount ? `${L.filter} · ${filterCount}` : L.filter}
-            </Text>
-          </Pressable>
-        </View>
+            {filterCount > 0 ? `${L.filter} (${filterCount})` : L.filter}
+          </Text>
+        </Pressable>
       </View>
 
+      {/* Measuring Status */}
+      {pinging && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingBottom: 6 }}>
+          <View
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              borderWidth: 2,
+              borderColor: `${theme.accent}44`,
+              borderTopColor: theme.accent,
+            }}
+          />
+          <Text accessibilityLiveRegion="polite" style={{ fontFamily: Figtree.medium, fontSize: 13, color: theme.accent }}>
+            {L.measuring}
+          </Text>
+        </View>
+      )}
       {tablet ? (
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View style={{ flex: 1 }}>{list}</View>

@@ -1,32 +1,163 @@
-import Svg, { Path } from 'react-native-svg';
+import type { ReactNode } from 'react';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-// Line icons (24px grid, stroke only). Add new names here.
-const PATHS = {
-  home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
-  locations: 'M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11zM12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
-  settings:
-    'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z',
-  shield: 'M12 3l8 3v6c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V6l8-3z',
-  star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z',
-  check: 'M5 12.5l4.5 4.5L19 7.5',
-} as const;
+export type IconName =
+  | 'home'
+  | 'locations'
+  | 'settings'
+  | 'shield'
+  | 'shield-check'
+  | 'power'
+  | 'alert'
+  | 'star'
+  | 'check'
+  | 'chevron-right'
+  | 'chevron-left'
+  | 'close'
+  | 'plus'
+  | 'key'
+  | 'qr'
+  | 'external-link'
+  | 'search'
+  | 'refresh';
 
-export type IconName = keyof typeof PATHS;
+interface IconProps {
+  name: IconName;
+  color: string;
+  size?: number;
+  filled?: boolean;
+  strokeWidth?: number;
+}
 
 export function Icon({
   name,
   color,
   size = 24,
   filled = false,
-}: {
-  name: IconName;
-  color: string;
-  size?: number;
-  filled?: boolean;
-}) {
+  strokeWidth = 1.8,
+}: IconProps) {
+  const strokeProps = {
+    stroke: color,
+    strokeWidth,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+
+  let content: ReactNode = null;
+  switch (name) {
+    case 'home':
+      content = <Path d="M4 11l8-7 8 7v9H4z" fill={filled ? color : 'none'} {...strokeProps} />;
+      break;
+    case 'locations':
+      content = (
+        <>
+          <Circle cx="12" cy="12" r="9" fill={filled ? color : 'none'} {...strokeProps} />
+          <Path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'settings':
+      content = (
+        <>
+          <Circle cx="12" cy="12" r="3" fill={filled ? color : 'none'} {...strokeProps} />
+          <Path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'shield':
+      content = <Path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" fill={filled ? color : 'none'} {...strokeProps} />;
+      break;
+    case 'shield-check':
+      content = (
+        <>
+          <Path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" fill={filled ? color : 'none'} {...strokeProps} />
+          <Path d="M9 12l2 2 4-4" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'power':
+      content = (
+        <>
+          <Path d="M12 3v8" fill="none" {...strokeProps} />
+          <Path d="M6.3 6.8a8 8 0 1 0 11.4 0" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'alert':
+      content = (
+        <>
+          <Path d="M12 4l9 16H3z" fill={filled ? color : 'none'} {...strokeProps} />
+          <Path d="M12 10v4M12 17.5v.01" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'star':
+      content = (
+        <Path
+          d="M12 3.5l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.9l6-.9z"
+          fill={filled ? color : 'none'}
+          {...strokeProps}
+        />
+      );
+      break;
+    case 'check':
+      content = <Path d="M5 12l5 5 9-10" fill="none" {...strokeProps} />;
+      break;
+    case 'chevron-right':
+      content = <Path d="M9 6l6 6-6 6" fill="none" {...strokeProps} />;
+      break;
+    case 'chevron-left':
+      content = <Path d="M15 6l-6 6 6 6" fill="none" {...strokeProps} />;
+      break;
+    case 'close':
+      content = <Path d="M6 6l12 12M18 6L6 18" fill="none" {...strokeProps} />;
+      break;
+    case 'plus':
+      content = <Path d="M12 5v14M5 12h14" fill="none" {...strokeProps} />;
+      break;
+    case 'key':
+      content = <Path d="M14 10a4 4 0 1 1 3 3.9L9 22H6v-3l2-2h2v-2l3-3" fill={filled ? color : 'none'} {...strokeProps} />;
+      break;
+    case 'qr':
+      content = (
+        <Path
+          d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8"
+          fill="none"
+          {...strokeProps}
+        />
+      );
+      break;
+    case 'external-link':
+      content = (
+        <Path
+          d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"
+          fill="none"
+          {...strokeProps}
+        />
+      );
+      break;
+    case 'search':
+      content = (
+        <>
+          <Circle cx="11" cy="11" r="7" fill="none" {...strokeProps} />
+          <Path d="M21 21l-5-5" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'refresh':
+      content = (
+        <Path
+          d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+          fill="none"
+          {...strokeProps}
+        />
+      );
+      break;
+  }
+
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
-      <Path d={PATHS[name]} stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {content}
     </Svg>
   );
 }

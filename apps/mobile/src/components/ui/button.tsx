@@ -31,6 +31,8 @@ export function Button({ label, variant = 'primary', disabled, ...rest }: Props)
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: primary ? theme.accent : theme.backgroundElement,
+          borderWidth: primary ? 0 : 1,
+          borderColor: theme.backgroundSelected,
         }}
         {...rest}
       >
@@ -38,8 +40,7 @@ export function Button({ label, variant = 'primary', disabled, ...rest }: Props)
           style={{
             fontFamily: Figtree.semibold,
             fontSize: 15,
-            // dark text on the green fill keeps ≥4.5:1 in both themes
-            color: primary ? '#0F172A' : theme.text,
+            color: primary ? '#052E16' : theme.text,
           }}
         >
           {label}

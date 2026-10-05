@@ -72,12 +72,34 @@ export function ConnectionStatus({
   const on = status === 'connected';
   const text = Strings.connection[status];
   const ring = { position: 'absolute', width: size, height: size, borderRadius: size / 2 } as const;
+  const glowRing1 = { position: 'absolute', width: size + 24, height: size + 24, borderRadius: (size + 24) / 2 } as const;
+  const glowRing2 = { position: 'absolute', width: size + 52, height: size + 52, borderRadius: (size + 52) / 2 } as const;
 
   return (
-    <View style={{ alignItems: 'center', gap: 20 }}>
-      <View style={{ width: size * 1.9, height: size * 1.9, alignItems: 'center', justifyContent: 'center' }}>
-        {status === 'dropped' && <Animated.View style={[ring, { backgroundColor: theme.error }, beatStyle]} />}
-        {on && <Animated.View style={[ring, { borderWidth: 2, borderColor: theme.accent }, rippleStyle]} />}
+    <View style={{ width: '100%', alignItems: 'center' }}>
+      {/* Circular button container */}
+      <View style={{ width: size + 64, height: size + 64, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Outer static & animated glow rings matching design */}
+        {status === 'idle' && (
+          <View style={[glowRing1, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' }]} />
+        )}
+        {status === 'connecting' && (
+          <View style={[glowRing1, { backgroundColor: `${theme.accent}22` }]} />
+        )}
+        {on && (
+          <>
+            <View style={[glowRing2, { backgroundColor: `${theme.accent}10` }]} />
+            <View style={[glowRing1, { backgroundColor: `${theme.accent}22` }]} />
+            <Animated.View style={[ring, { borderWidth: 2, borderColor: theme.accent }, rippleStyle]} />
+          </>
+        )}
+        {status === 'dropped' && (
+          <Animated.View style={[ring, { backgroundColor: theme.error }, beatStyle]} />
+        )}
+        {status === 'failed' && (
+          <View style={[glowRing1, { backgroundColor: `${theme.error}22` }]} />
+        )}
+
         <Animated.View style={buttonStyle}>
           <Pressable
             accessibilityRole="button"
@@ -93,44 +115,89 @@ export function ConnectionStatus({
               justifyContent: 'center',
               backgroundColor: on ? theme.accent : theme.backgroundElement,
               borderWidth: 1,
-              borderColor: bad ? theme.error : theme.backgroundSelected,
+              borderColor: bad ? theme.error : on ? theme.accent : theme.backgroundSelected,
               opacity: disabled ? 0.5 : 1,
+              shadowColor: on ? theme.accent : '#000',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: on ? 0.35 : 0.08,
+              shadowRadius: 16,
+              elevation: on ? 8 : 2,
             }}
           >
             {status === 'connecting' && (
               <Animated.View
                 style={[
-                  { position: 'absolute', width: size * 0.7, height: size * 0.7, borderRadius: size, borderWidth: 4, borderColor: `${theme.accent}44`, borderTopColor: theme.accent },
+                  {
+                    position: 'absolute',
+                    width: size * 0.72,
+                    height: size * 0.72,
+                    borderRadius: size,
+                    borderWidth: 3.5,
+                    borderColor: `${theme.accent}33`,
+                    borderTopColor: theme.accent,
+                  },
                   spinStyle,
                 ]}
               />
             )}
-            <Icon name="shield" size={size * 0.38} color={on ? '#0F172A' : bad ? theme.error : theme.textSecondary} />
+            {bad ? (
+              <Icon name="alert" size={Math.round(size * 0.38)} color={theme.error} strokeWidth={2} />
+            ) : (
+              <Icon
+                name="power"
+                size={Math.round(size * 0.38)}
+                color={on ? '#052E16' : status === 'connecting' ? theme.accent : theme.powerIconIdle}
+                strokeWidth={2.2}
+              />
+            )}
           </Pressable>
         </Animated.View>
       </View>
 
-      {/* key → remount → fade-in on every status change */}
-      <Animated.View key={status} entering={FadeIn.duration(textMs)} style={{ alignItems: 'center', gap: 4, paddingHorizontal: 24 }}>
-        <Text accessibilityRole="header" style={{ fontFamily: Figtree.semibold, fontSize: 22, color: theme.text, textAlign: 'center' }}>
+      {/* Status Title & Hint */}
+      <Animated.View key={status} entering={FadeIn.duration(textMs)} style={{ alignItems: 'center', gap: 6, marginTop: 28, paddingHorizontal: 20 }}>
+        <Text
+          accessibilityRole="header"
+          style={{
+            fontFamily: Figtree.semibold,
+            fontSize: 20,
+            color: bad ? theme.error : theme.text,
+            textAlign: 'center',
+          }}
+        >
           {text.title}
         </Text>
-        <Text style={{ fontFamily: Figtree.regular, fontSize: 14, color: theme.textSecondary, textAlign: 'center' }}>
+        <Text
+          style={{
+            fontFamily: Figtree.regular,
+            fontSize: 14,
+            color: theme.textSecondary,
+            textAlign: 'center',
+          }}
+        >
           {text.hint}
         </Text>
       </Animated.View>
 
-      <View style={{ alignSelf: 'stretch', paddingHorizontal: 32, gap: 8, minHeight: 104 }}>
-        {status === 'connecting' && <Button variant="secondary" label={Strings.actions.cancel} onPress={onCancel} />}
-        {status === 'connected' && <Button variant="secondary" label={Strings.actions.disconnect} onPress={onDisconnect} />}
-        {status === 'failed' && <Button label={Strings.actions.retry} onPress={onRetry} />}
-        {status === 'dropped' && (
-          <>
-            <Button label={Strings.actions.reconnect} onPress={onReconnect} />
-            {onUseWithoutVpn && <Button variant="secondary" label={Strings.actions.useWithoutVpn} onPress={onUseWithoutVpn} />}
-          </>
-        )}
-      </View>
+      {/* Actions (only for connecting, failed, dropped) */}
+      {(status === 'connecting' || bad) && (
+        <View style={{ alignSelf: 'stretch', paddingHorizontal: 20, marginTop: 28, gap: 10 }}>
+          {status === 'connecting' && <Button variant="secondary" label={Strings.actions.cancel} onPress={onCancel} />}
+          {status === 'failed' && <Button label={Strings.actions.retry} onPress={onRetry} />}
+          {status === 'dropped' && (
+            <>
+              <Button label={Strings.actions.reconnect} onPress={onReconnect} />
+              {onUseWithoutVpn && (
+                <Pressable onPress={onUseWithoutVpn} style={{ paddingVertical: 8 }}>
+                  <Text style={{ fontFamily: Figtree.medium, fontSize: 13, color: theme.textSecondary, textAlign: 'center' }}>
+                    {Strings.actions.useWithoutVpn}
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+        </View>
+      )}
     </View>
   );
 }

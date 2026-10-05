@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { Icon } from './icon';
 
 /** Scrolling screen body with the shared padding + background. */
 export function Screen({ children }: { children: ReactNode }) {
@@ -29,7 +30,7 @@ export function Group({ title, children }: { title?: string; children: ReactNode
           {title.toUpperCase()}
         </Text>
       )}
-      <View style={{ backgroundColor: theme.backgroundElement, borderRadius: 16, overflow: 'hidden' }}>{children}</View>
+      <View style={{ backgroundColor: theme.backgroundElement, borderRadius: 16, borderWidth: 1, borderColor: theme.backgroundSelected, overflow: 'hidden' }}>{children}</View>
     </View>
   );
 }
@@ -87,7 +88,7 @@ export function Row({
         </Text>
       ) : null}
       {right}
-      {onPress && !right ? <Text style={{ fontSize: 20, color: theme.textSecondary }}>›</Text> : null}
+      {onPress && !right ? <Icon name="chevron-right" size={18} color={theme.textSecondary} /> : null}
     </View>
   );
   if (!onPress) return body;

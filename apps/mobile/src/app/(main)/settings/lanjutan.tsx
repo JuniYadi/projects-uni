@@ -14,7 +14,7 @@ import { Strings } from '@/constants/strings';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores/settingsStore';
-import type { AppTheme } from '@/types/vpn';
+import type { AppTheme, HomeButtonStyle } from '@/types/vpn';
 import { isNewerVersion } from '@/utils/version';
 
 const A = Strings.advanced;
@@ -73,14 +73,15 @@ function OptionSheet({
 
 export default function AdvancedScreen() {
   const router = useRouter();
-  const { dnsServer, theme, autoUpdate, update } = useSettingsStore();
-  const [sheet, setSheet] = useState<'dns' | 'theme' | null>(null);
+  const { dnsServer, theme, autoUpdate, buttonStyle, update } = useSettingsStore();
+  const [sheet, setSheet] = useState<'dns' | 'theme' | 'buttonStyle' | null>(null);
   const [latest, setLatest] = useState<string | null | undefined>(undefined); // undefined = no dialog
 
   const version = Application.nativeApplicationVersion ?? '1.0.0';
   const build = Application.nativeBuildVersion;
   const dnsOptions = toOptions(A.dnsOptions);
   const themeOptions = toOptions(A.themeOptions);
+  const buttonStyleOptions = toOptions(A.buttonStyleOptions);
   const label = (opts: Option[], v: string) => opts.find((o) => o.value === v)?.label ?? v;
   const hasUpdate = !!latest && isNewerVersion(latest, version);
 
@@ -90,6 +91,11 @@ export default function AdvancedScreen() {
       <Group>
         <Row label={A.dns} value={label(dnsOptions, dnsServer)} onPress={() => setSheet('dns')} />
         <Row label={A.theme} value={label(themeOptions, theme)} onPress={() => setSheet('theme')} />
+        <Row
+          label={A.buttonStyle}
+          value={label(buttonStyleOptions, buttonStyle ?? 'cyber')}
+          onPress={() => setSheet('buttonStyle')}
+        />
         <Row label={A.connectionDetail} onPress={() => router.push('/(main)/settings/detail-koneksi')} last />
       </Group>
       <Group>
@@ -122,6 +128,15 @@ export default function AdvancedScreen() {
           options={themeOptions}
           selected={theme}
           onSelect={(v) => update('theme', v as AppTheme)}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'buttonStyle' && (
+        <OptionSheet
+          title={A.buttonStylePick}
+          options={buttonStyleOptions}
+          selected={buttonStyle ?? 'cyber'}
+          onSelect={(v) => update('buttonStyle', v as HomeButtonStyle)}
           onClose={() => setSheet(null)}
         />
       )}

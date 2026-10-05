@@ -13,13 +13,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Icon } from '@/components/ui/icon';
 import { Figtree } from '@/constants/theme';
 import { Motion, useMotionDuration } from '@/constants/motion';
 import { Strings } from '@/constants/strings';
 import { useTheme } from '@/hooks/use-theme';
 import type { ConnectionUiStatus } from '@/types/connection';
-
+import type { HomeButtonStyle } from '@/types/vpn';
 type Props = {
   status: ConnectionUiStatus;
   /** Diameter of the big round button (smaller on small phones). */
@@ -33,11 +34,14 @@ type Props = {
   onUseWithoutVpn?: () => void;
   /** Disable connecting (no location yet). */
   disabled?: boolean;
+  buttonStyle?: HomeButtonStyle;
+  /** Whether to render actions inside this component (false when rendered in bottom slot). Default true. */
+  renderActions?: boolean;
 };
-
 /** Big round button + one status sentence + the actions of each of the 5 states. */
 export function ConnectionStatus({
   status, size, onPress, onCancel, onRetry, onReconnect, onDisconnect, onUseWithoutVpn, disabled,
+  buttonStyle = 'cyber', renderActions = true,
 }: Props) {
   const theme = useTheme();
   const reduced = useReducedMotion();
@@ -71,7 +75,7 @@ export function ConnectionStatus({
     }
   }, [status, reduced, pop, ripple1, ripple2, breathe, spin, shake, beat]);
 
-  const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }, { scale: pop.value }] }));
+  const buttonAnimStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }, { scale: pop.value }] }));
   const spinStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value * 360}deg` }] }));
   const ripple1Style = useAnimatedStyle(() => ({ opacity: 0.85 * (1 - ripple1.value), transform: [{ scale: 1 + 0.65 * ripple1.value }] }));
   const ripple2Style = useAnimatedStyle(() => ({ opacity: 0.85 * (1 - ripple2.value), transform: [{ scale: 1 + 0.65 * ripple2.value }] }));
@@ -80,6 +84,7 @@ export function ConnectionStatus({
 
   const bad = status === 'failed' || status === 'dropped';
   const on = status === 'connected';
+  const isCyber = buttonStyle === 'cyber';
   const text = Strings.connection[status];
   const ring = { position: 'absolute', width: size, height: size, borderRadius: size / 2 } as const;
   const glowRing1 = { position: 'absolute', width: size + 24, height: size + 24, borderRadius: (size + 24) / 2 } as const;
@@ -111,7 +116,7 @@ export function ConnectionStatus({
           <View style={[glowRing1, { backgroundColor: `${theme.error}22` }]} />
         )}
 
-        <Animated.View style={buttonStyle}>
+        <Animated.View style={buttonAnimStyle}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={text.title}
@@ -124,8 +129,8 @@ export function ConnectionStatus({
               borderRadius: size / 2,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: on ? theme.accent : theme.backgroundElement,
-              borderWidth: 1,
+              backgroundColor: on && !isCyber ? theme.accent : theme.backgroundElement,
+              borderWidth: on && isCyber ? 2 : 1,
               borderColor: bad ? theme.error : on ? theme.accent : theme.backgroundSelected,
               opacity: disabled ? 0.5 : 1,
               shadowColor: on ? theme.accent : '#000',
@@ -153,6 +158,12 @@ export function ConnectionStatus({
             )}
             {bad ? (
               <Icon name="alert" size={Math.round(size * 0.38)} color={theme.error} strokeWidth={2} />
+            ) : isCyber ? (
+              <BrandLogo
+                size={Math.round(size * 0.54)}
+                variant={on ? 'neon' : 'idle'}
+                isDark={theme.isDark}
+              />
             ) : (
               <Icon
                 name="power"
@@ -190,8 +201,8 @@ export function ConnectionStatus({
         </Text>
       </Animated.View>
 
-      {/* Actions (only for connecting, failed, dropped) */}
-      {(status === 'connecting' || bad) && (
+      {/* Actions (only if renderActions is true and for connecting, failed, dropped) */}
+      {renderActions && (status === 'connecting' || bad) && (
         <View style={{ alignSelf: 'stretch', paddingHorizontal: 20, marginTop: 28, gap: 10 }}>
           {status === 'connecting' && <Button variant="secondary" label={Strings.actions.cancel} onPress={onCancel} />}
           {status === 'failed' && <Button label={Strings.actions.retry} onPress={onRetry} />}

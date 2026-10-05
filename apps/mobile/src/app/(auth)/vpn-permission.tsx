@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Strings } from '@/constants/strings';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,7 +22,7 @@ export default function VpnPermissionScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', padding: 24, gap: 16 }}>
       <View style={{ alignItems: 'center' }}>
-        <Icon name="shield" color={theme.accent} size={72} />
+        <BrandLogo size={72} variant="neon" isDark={theme.isDark} />
       </View>
       <Text style={{ fontFamily: Figtree.semibold, fontSize: 22, color: theme.text, textAlign: 'center' }}>
         {Strings.vpnPermission.title}

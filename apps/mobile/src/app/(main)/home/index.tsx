@@ -3,6 +3,7 @@ import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { ConnectionStatus } from '@/components/connection-status';
 import { CountryBadge } from '@/components/ui/country-badge';
 import { Icon } from '@/components/ui/icon';
@@ -21,8 +22,17 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const { status: connStatus, error, dropped, profile, connect: connectTo, disconnect, checkTunnel, releaseKillSwitch } =
-    useConnectionStore();
+  const {
+    status: connStatus,
+    error,
+    dropped,
+    profile,
+    connect: connectTo,
+    disconnect,
+    checkTunnel,
+    releaseKillSwitch,
+    snapshotClientLocation,
+  } = useConnectionStore();
   const { profiles, filteredProfiles, selectedProfileId, loadProfiles } = useProfileStore();
   const killSwitch = useSettingsStore((s) => s.killSwitch);
   const buttonStyle = useSettingsStore((s) => s.buttonStyle ?? 'cyber');
@@ -31,6 +41,13 @@ export default function HomeScreen() {
   useEffect(() => {
     if (profiles.length === 0) loadProfiles();
   }, [profiles.length, loadProfiles]);
+  // Snapshot client's original ISP location & IP while disconnected
+  useEffect(() => {
+    if (connStatus === 'disconnected') {
+      snapshotClientLocation();
+    }
+  }, [connStatus, snapshotClientLocation]);
+
 
   // Detect a lost tunnel while connected.
   useEffect(() => {
@@ -63,9 +80,12 @@ export default function HomeScreen() {
         style={{
           height: 52,
           paddingHorizontal: 20,
-          justifyContent: 'center',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
         }}
       >
+        <BrandLogo size={22} variant="neon" isDark={theme.isDark} />
         <Text style={{ fontFamily: Figtree.semibold, fontSize: 18, color: theme.text }}>
           {Strings.app.name}
         </Text>
@@ -90,6 +110,7 @@ export default function HomeScreen() {
             renderActions={false}
             disabled={status === 'idle' && !location}
             onPress={onPress}
+            onViewDetail={() => router.push('/(main)/settings/detail-koneksi')}
           />
         </View>
 

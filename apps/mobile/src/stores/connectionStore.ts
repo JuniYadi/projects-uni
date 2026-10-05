@@ -8,6 +8,7 @@ import { vpnService } from '@/services/vpnService'
 import { parseWireGuardConfig } from '@/utils/config-parser'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { startHeartbeat, stopHeartbeat } from '@/services/heartbeatService'
+import { getIpLocation, type UserLocation, DEFAULT_USER_LOCATION } from '@/services/geoLocationService'
 
 
 interface ConnectionState {
@@ -22,6 +23,9 @@ interface ConnectionState {
   error: string | null
   /** Tunnel was lost while connected and the kill switch is on (traffic blocked). */
   dropped: boolean
+  /** Snapshot of client's real location & ISP IP before VPN tunnel connects. */
+  clientSnapshot: UserLocation | null
+  snapshotClientLocation: () => Promise<UserLocation | null>
   connect: (profile: VpnProfile) => Promise<void>
   disconnect: () => Promise<void>
   /** Poll the native tunnel; flags a drop if it died while we think we are connected. */
@@ -44,9 +48,44 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   tunnelDns: [],
   error: null,
   dropped: false,
+  clientSnapshot: null,
 
+  snapshotClientLocation: async () => {
+    if (get().status === 'disconnected') {
+      try {
+        const fresh = await getIpLocation()
+        if (fresh) {
+          set({ clientSnapshot: fresh })
+          useSettingsStore.getState().update('lastKnownLocation', fresh)
+          return fresh
+        }
+      } catch {
+        // ignore error
+      }
+    }
+    if (get().clientSnapshot) return get().clientSnapshot
+    const saved = useSettingsStore.getState().lastKnownLocation
+    if (saved) {
+      const loc: UserLocation = {
+        lat: saved.lat,
+        lng: saved.lng,
+        country: saved.country,
+        city: saved.city,
+        ip: saved.ip,
+      }
+      set({ clientSnapshot: loc })
+      return loc
+    }
+    set({ clientSnapshot: DEFAULT_USER_LOCATION })
+    return DEFAULT_USER_LOCATION
+  },
   connect: async (profile) => {
     set({ status: 'connecting', profile, error: null, dropped: false })
+    // Ensure client's real IP and location are snapshotted before tunnel is active
+    if (!get().clientSnapshot) {
+      await get().snapshotClientLocation().catch(() => {})
+    }
+
 
     // ponytail: only WireGuard supported for now
     if (profile.protocol !== 'wireguard') {

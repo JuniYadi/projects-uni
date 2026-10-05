@@ -21,8 +21,17 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const { status: connStatus, error, dropped, profile, connect: connectTo, disconnect, checkTunnel, releaseKillSwitch } =
-    useConnectionStore();
+  const {
+    status: connStatus,
+    error,
+    dropped,
+    profile,
+    connect: connectTo,
+    disconnect,
+    checkTunnel,
+    releaseKillSwitch,
+    snapshotClientLocation,
+  } = useConnectionStore();
   const { profiles, filteredProfiles, selectedProfileId, loadProfiles } = useProfileStore();
   const killSwitch = useSettingsStore((s) => s.killSwitch);
   const buttonStyle = useSettingsStore((s) => s.buttonStyle ?? 'cyber');
@@ -31,6 +40,13 @@ export default function HomeScreen() {
   useEffect(() => {
     if (profiles.length === 0) loadProfiles();
   }, [profiles.length, loadProfiles]);
+  // Snapshot client's original ISP location & IP while disconnected
+  useEffect(() => {
+    if (connStatus === 'disconnected') {
+      snapshotClientLocation();
+    }
+  }, [connStatus, snapshotClientLocation]);
+
 
   // Detect a lost tunnel while connected.
   useEffect(() => {
@@ -90,6 +106,7 @@ export default function HomeScreen() {
             renderActions={false}
             disabled={status === 'idle' && !location}
             onPress={onPress}
+            onViewDetail={() => router.push('/(main)/settings/detail-koneksi')}
           />
         </View>
 

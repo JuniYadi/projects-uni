@@ -69,6 +69,7 @@ export interface AppSettings {
     lng: number;
     country: string;
     city: string;
+    ip?: string;
   };
 }
 

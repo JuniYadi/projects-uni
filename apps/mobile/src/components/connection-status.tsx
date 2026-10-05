@@ -37,11 +37,13 @@ type Props = {
   buttonStyle?: HomeButtonStyle;
   /** Whether to render actions inside this component (false when rendered in bottom slot). Default true. */
   renderActions?: boolean;
+  /** Direct shortcut to Connection Detail screen when connected. */
+  onViewDetail?: () => void;
 };
 /** Big round button + one status sentence + the actions of each of the 5 states. */
 export function ConnectionStatus({
   status, size, onPress, onCancel, onRetry, onReconnect, onDisconnect, onUseWithoutVpn, disabled,
-  buttonStyle = 'cyber', renderActions = true,
+  buttonStyle = 'cyber', renderActions = true, onViewDetail,
 }: Props) {
   const theme = useTheme();
   const reduced = useReducedMotion();
@@ -199,6 +201,38 @@ export function ConnectionStatus({
         >
           {text.hint}
         </Text>
+        {status === 'connected' && onViewDetail && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={Strings.detail.title}
+            onPress={onViewDetail}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              marginTop: 6,
+              paddingVertical: 5,
+              paddingHorizontal: 12,
+              borderRadius: 20,
+              backgroundColor: theme.isDark ? 'rgba(34, 197, 94, 0.12)' : 'rgba(22, 163, 74, 0.1)',
+              borderWidth: 1,
+              borderColor: theme.isDark ? 'rgba(34, 197, 94, 0.25)' : 'rgba(22, 163, 74, 0.2)',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Icon name="info" size={13} color={theme.accent} />
+            <Text
+              style={{
+                fontFamily: Figtree.medium,
+                fontSize: 12,
+                color: theme.accent,
+              }}
+            >
+              {Strings.detail.title}
+            </Text>
+            <Icon name="chevron-right" size={12} color={theme.accent} />
+          </Pressable>
+        )}
       </Animated.View>
 
       {/* Actions (only if renderActions is true and for connecting, failed, dropped) */}

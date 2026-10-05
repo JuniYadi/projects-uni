@@ -5,6 +5,13 @@ export interface UserLocation {
   city: string;
   ip?: string;
 }
+export const DEFAULT_USER_LOCATION: UserLocation = {
+  lat: -6.2088,
+  lng: 106.8456,
+  country: 'Indonesia',
+  city: 'Jakarta',
+};
+
 
 interface IpGeoResponse {
   success: boolean;

@@ -3,7 +3,7 @@ import { getNetworkStateAsync, NetworkStateType } from 'expo-network';
 import FleetMap from '@/components/fleet-map';
 import { Group, Note, Row, Screen } from '@/components/ui/list-row';
 import { Strings } from '@/constants/strings';
-import { getIpLocation, type UserLocation } from '@/services/geoLocationService';
+import { getIpLocation, type UserLocation, DEFAULT_USER_LOCATION } from '@/services/geoLocationService';
 import { useConnectionStore } from '@/stores/connectionStore';
 
 const D = Strings.detail;
@@ -15,14 +15,18 @@ function maskIp(ip: string): string {
 }
 
 export default function ConnectionDetailScreen() {
-  const { status, profile, tunnelDns } = useConnectionStore();
-  const [me, setMe] = useState<UserLocation | null>(null);
+  const { status, profile, tunnelDns, clientSnapshot } = useConnectionStore();
+  const [activeTunnelLocation, setActiveTunnelLocation] = useState<UserLocation | null>(null);
   const [network, setNetwork] = useState<string>(D.unknown);
   const connected = status === 'connected' && !!profile;
 
+  // Origin coordinate for map: User's real location before connecting (clientSnapshot)
+  const originLocation = clientSnapshot ?? DEFAULT_USER_LOCATION;
+
   useEffect(() => {
     if (!connected) return;
-    getIpLocation().then(setMe);
+    // When connected, this queries through the VPN tunnel to detect active VPN exit IP
+    getIpLocation().then(setActiveTunnelLocation);
     getNetworkStateAsync()
       .then((n) => setNetwork(n.type === NetworkStateType.WIFI ? D.wifi : n.type === NetworkStateType.CELLULAR ? D.cellular : D.unknown))
       .catch(() => setNetwork(D.unknown));
@@ -38,11 +42,17 @@ export default function ConnectionDetailScreen() {
 
   return (
     <Screen>
-      <FleetMap profiles={[profile]} activeProfileId={profile.id} userLocation={me} />
+      <FleetMap profiles={[profile]} activeProfileId={profile.id} userLocation={originLocation} />
       <Group title={D.current}>
         <Row label={D.status} value={D.protected} />
         <Row label={D.location} value={profile.country} />
-        <Row label={D.ip} value={me?.ip ? maskIp(me.ip) : D.unknown} />
+        <Row label={D.ip} value={activeTunnelLocation?.ip ? maskIp(activeTunnelLocation.ip) : D.unknown} />
+        {clientSnapshot?.ip && (
+          <Row
+            label="IP asli (disamarkan)"
+            value={`${maskIp(clientSnapshot.ip)} · Terlindungi`}
+          />
+        )}
         <Row label={D.network} value={network} last />
       </Group>
       <Group title={D.server}>

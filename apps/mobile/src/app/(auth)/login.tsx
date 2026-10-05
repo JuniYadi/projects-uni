@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { ScrollView, Text, TextInput, Pressable, Platform } from 'react-native';
+import { View, ScrollView, Text, TextInput, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { WelcomeMap } from '@/components/WelcomeMap';
 import { authErrorText, Strings } from '@/constants/strings';
 import { Figtree } from '@/constants/theme';
@@ -46,7 +47,10 @@ export default function LoginScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <WelcomeMap onDone={onMapDone} />
-      <Text style={{ fontFamily: Figtree.semibold, fontSize: 28, color: theme.text, textAlign: 'center' }}>
+      <View style={{ alignItems: 'center', marginTop: 4, marginBottom: 2 }}>
+        <BrandLogo size={52} variant="neon" isDark={theme.isDark} />
+      </View>
+      <Text style={{ fontFamily: Figtree.semibold, fontSize: 26, color: theme.text, textAlign: 'center' }}>
         {Strings.app.name}
       </Text>
       <Text style={{ fontFamily: Figtree.regular, fontSize: 15, color: theme.textSecondary, textAlign: 'center' }}>

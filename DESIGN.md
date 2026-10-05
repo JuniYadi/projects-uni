@@ -132,3 +132,16 @@ Font resmi: **Figtree** (cadangan: Inter, system-ui, sans-serif).
    - Animasi goyangan horizontal (*shake*) singkat (`~350ms`) dengan aksen warna merah.
 5. **Terputus Tiba-tiba (Dropped)**:
    - Denyut pulsa merah berulang (*heartbeat beat*) memperingatkan bahwa internet diamankan oleh Putus Otomatis Aman (*kill switch*).
+
+### Gaya Tampilan Tombol Beranda (Button Style Modes)
+Tombol pemicu koneksi di layar Beranda mendukung 2 mode gaya tampilan yang dapat dipilih pengguna:
+1. **Cyber Shield (Bawaan / Default)**:
+   - **Karakter**: Modern, futuristik, dan mempertegas identitas merek UniVPN.
+   - **Visual saat Tersambung**: Tombol berupa surface kartu (`#192134` gelap / `#FFFFFF` terang), border hijau (`#22C55E` / `#16A34A`), logo UniVPN di tengah menyala neon (putih + hijau neon + ghost shadow), dipadukan dengan riak radar kontinu.
+   - **Visual saat Idle**: Tombol netral dengan logo UniVPN monokrom redup (`#94A3B8` / `#64748B`).
+2. **Tema Klasik (Opsi Pengguna)**:
+   - **Karakter**: Familiar, sederhana, dan menyerupai tombol daya VPN konvensional.
+   - **Visual saat Tersambung**: Tombol berubah menjadi gradasi hijau solid penuh (`#34D874` $\rightarrow$ `#16A34A`) dengan simbol power on/off (`⏻`) di tengah + riak radar kontinu.
+3. **Penempatan Pengaturan**:
+   - `Pengaturan → Mode Lanjutan → Gaya Tombol Beranda` (dialog bottom sheet).
+   - Sesuai prinsip *Simple Default, Advanced Opt-in*, layar Beranda tetap bersih tanpa tombol switch yang mengganggu.

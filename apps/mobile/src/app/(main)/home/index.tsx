@@ -3,6 +3,7 @@ import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { ConnectionStatus } from '@/components/connection-status';
 import { CountryBadge } from '@/components/ui/country-badge';
 import { Icon } from '@/components/ui/icon';
@@ -79,9 +80,12 @@ export default function HomeScreen() {
         style={{
           height: 52,
           paddingHorizontal: 20,
-          justifyContent: 'center',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
         }}
       >
+        <BrandLogo size={22} variant="neon" isDark={theme.isDark} />
         <Text style={{ fontFamily: Figtree.semibold, fontSize: 18, color: theme.text }}>
           {Strings.app.name}
         </Text>

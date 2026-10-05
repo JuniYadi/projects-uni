@@ -197,10 +197,17 @@ export function authErrorText(code: string): string {
   }
 }
 
-/** ping (ms) → plain-language speed label. Thresholds are a design call; tune here only. */
+/** ping (ms) → plain-language speed label with ms detail. Thresholds are a design call; tune here only. */
 export function latencyLabel(ms: number | null): string {
   if (ms === null) return Strings.latency.far;
-  if (ms < 100) return Strings.latency.fast;
-  if (ms < 250) return Strings.latency.normal;
-  return Strings.latency.far;
+  if (ms < 100) return `${Strings.latency.fast} · ${Math.round(ms)} ms`;
+  if (ms < 250) return `${Strings.latency.normal} · ${Math.round(ms)} ms`;
+  return `${Strings.latency.far} · ${Math.round(ms)} ms`;
+}
+
+export function latencyCategory(ms: number | null): 'fast' | 'normal' | 'far' {
+  if (ms === null) return 'far';
+  if (ms < 100) return 'fast';
+  if (ms < 250) return 'normal';
+  return 'far';
 }

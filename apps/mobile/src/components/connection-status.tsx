@@ -58,12 +58,12 @@ export function ConnectionStatus({
     } else if (status === 'connected') {
       // Pop bounce
       pop.set(withSequence(withTiming(0.85, { duration: 50 }), withTiming(1.08, { duration: 160 }), withTiming(1, { duration: 140 })));
-      // Ripple 1
-      ripple1.set(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) })));
-      // Ripple 2 (staggered delay ~350ms)
-      ripple2.set(withDelay(350, withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900, easing: Easing.out(Easing.ease) }))));
-      // Continuous gentle breathing pulse while connected
-      breathe.set(withRepeat(withSequence(withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.ease) }), withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.ease) })), -1, true));
+      // Continuous Ripple 1 (2.4s cycle)
+      ripple1.set(withRepeat(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 2400, easing: Easing.bezier(0.1, 0.4, 0.3, 1) })), -1));
+      // Continuous Ripple 2 (staggered delay 1200ms)
+      ripple2.set(withDelay(1200, withRepeat(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 2400, easing: Easing.bezier(0.1, 0.4, 0.3, 1) })), -1)));
+      // Continuous gentle breathing pulse while connected (3s cycle)
+      breathe.set(withRepeat(withSequence(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }), withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) })), -1, true));
     } else if (status === 'failed') {
       shake.set(withSequence(...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 70 }))));
     } else if (status === 'dropped') {
@@ -73,9 +73,9 @@ export function ConnectionStatus({
 
   const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }, { scale: pop.value }] }));
   const spinStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value * 360}deg` }] }));
-  const ripple1Style = useAnimatedStyle(() => ({ opacity: 0.8 * (1 - ripple1.value), transform: [{ scale: 1 + 0.9 * ripple1.value }] }));
-  const ripple2Style = useAnimatedStyle(() => ({ opacity: 0.6 * (1 - ripple2.value), transform: [{ scale: 1 + 0.9 * ripple2.value }] }));
-  const breatheStyle = useAnimatedStyle(() => ({ opacity: 0.12 + 0.16 * breathe.value, transform: [{ scale: 1 + 0.08 * breathe.value }] }));
+  const ripple1Style = useAnimatedStyle(() => ({ opacity: 0.85 * (1 - ripple1.value), transform: [{ scale: 1 + 0.65 * ripple1.value }] }));
+  const ripple2Style = useAnimatedStyle(() => ({ opacity: 0.85 * (1 - ripple2.value), transform: [{ scale: 1 + 0.65 * ripple2.value }] }));
+  const breatheStyle = useAnimatedStyle(() => ({ opacity: 0.16 + 0.18 * breathe.value, transform: [{ scale: 1 + 0.12 * breathe.value }] }));
   const beatStyle = useAnimatedStyle(() => ({ opacity: 0.5 * (1 - beat.value), transform: [{ scale: 1 + 0.5 * beat.value }] }));
 
   const bad = status === 'failed' || status === 'dropped';

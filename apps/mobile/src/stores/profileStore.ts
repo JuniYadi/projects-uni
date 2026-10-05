@@ -9,10 +9,10 @@ import * as storage from '@/services/storageService';
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
 
 const MOCK_PROFILES: VpnProfile[] = [
-  { id: 'id-1', name: 'Indonesia', country: 'Indonesia', countryCode: 'ID', city: 'Indonesia', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 18, encryption: 'AES-256-GCM', serverAddress: 'id-1.vpn.example.com', serverIp: '203.0.113.28', latitude: -6.2088, longitude: 106.8456 },
+  { id: 'id-1', name: 'Indonesia', country: 'Indonesia', countryCode: 'ID', city: 'Jakarta', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 18, encryption: 'AES-256-GCM', serverAddress: 'id-1.vpn.example.com', serverIp: '203.0.113.28', latitude: -6.2088, longitude: 106.8456 },
   { id: 'sg-1', name: 'Singapore', country: 'Singapore', countryCode: 'SG', city: 'Singapore', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 32, encryption: 'AES-256-GCM', serverAddress: 'sg-1.vpn.example.com', serverIp: '203.0.113.42', latitude: 1.3521, longitude: 103.8198 },
   { id: 'hk-1', name: 'Hong Kong', country: 'Hong Kong', countryCode: 'HK', city: 'Hong Kong', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 74, encryption: 'AES-256-GCM', serverAddress: 'hk-1.vpn.example.com', serverIp: '203.0.113.84', latitude: 22.3193, longitude: 114.1694 },
-  { id: 'jp-1', name: 'Japan', country: 'Japan', countryCode: 'JP', city: 'Japan', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 120, encryption: 'AES-256-GCM', serverAddress: 'jp-1.vpn.example.com', serverIp: '203.0.113.130', latitude: 35.6762, longitude: 139.6503 },
+  { id: 'jp-1', name: 'Japan', country: 'Japan', countryCode: 'JP', city: 'Tokyo', region: 'Asia', protocol: 'wireguard', port: 51820, load: 40, ping: 120, encryption: 'AES-256-GCM', serverAddress: 'jp-1.vpn.example.com', serverIp: '203.0.113.130', latitude: 35.6762, longitude: 139.6503 },
   { id: 'us-la', name: 'Los Angeles', country: 'United States', countryCode: 'US', city: 'Los Angeles', region: 'Amerika', protocol: 'wireguard', port: 51820, load: 40, ping: 210, encryption: 'AES-256-GCM', serverAddress: 'us-la.vpn.example.com', serverIp: '203.0.113.20', latitude: 34.0522, longitude: -118.2437 },
   { id: 'us-dal', name: 'Dallas', country: 'United States', countryCode: 'US', city: 'Dallas', region: 'Amerika', protocol: 'wireguard', port: 51820, load: 40, ping: 260, encryption: 'AES-256-GCM', serverAddress: 'us-dal.vpn.example.com', serverIp: '203.0.113.70', latitude: 32.7767, longitude: -96.797 },
 ];

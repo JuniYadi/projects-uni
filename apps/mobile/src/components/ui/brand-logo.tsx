@@ -1,4 +1,4 @@
-import Svg, { ClipPath, Defs, G, Mask, Path, Rect } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, Path } from 'react-native-svg';
 
 type Props = {
   size?: number;
@@ -38,7 +38,6 @@ export function BrandLogo({ size = 64, variant = 'neon', isDark = true }: Props)
   const ctId = `${idPrefix}_ct`;
   const cbId = `${idPrefix}_cb`;
   const rightId = `${idPrefix}_right`;
-  const mId = `${idPrefix}_m`;
 
   const pinPath =
     'M128 240C128 240 44 166 44 104A84 84 0 0 1 212 104C212 166 128 240 128 240Z';
@@ -57,39 +56,17 @@ export function BrandLogo({ size = 64, variant = 'neon', isDark = true }: Props)
         <ClipPath id={rightId}>
           <Path d="M142 -100H400V400H128Z" />
         </ClipPath>
-        <Mask id={mId} maskUnits="userSpaceOnUse" x="-100" y="-100" width="500" height="500">
-          <Rect x="-100" y="-100" width="500" height="500" fill="#FFFFFF" />
-          <G clipPath={`url(#${ctId})`}>
-            <Path
-              d={pinPath}
-              fill="#000000"
-              stroke="#000000"
-              strokeWidth={16}
-              strokeLinejoin="round"
-            />
-          </G>
-          <G clipPath={`url(#${cbId})`}>
-            <G transform="translate(12.00, -1.20)">
-              <Path
-                d={pinPath}
-                fill="#000000"
-                stroke="#000000"
-                strokeWidth={16}
-                strokeLinejoin="round"
-              />
-            </G>
-          </G>
-        </Mask>
       </Defs>
 
       <G transform="translate(128, 128) scale(0.84) translate(-146, -128)">
-        <G mask={`url(#${mId})`} clipPath={`url(#${rightId})`}>
+        <G clipPath={`url(#${rightId})`}>
           <Path
             d={pinPath}
             fill="none"
             stroke={ghostColor}
-            strokeWidth={60}
+            strokeWidth={32}
             strokeLinejoin="round"
+            opacity={0.4}
           />
         </G>
         <G clipPath={`url(#${ctId})`}>

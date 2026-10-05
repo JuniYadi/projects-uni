@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { MapGrid } from '@/components/WelcomeMap';
-import { Icon } from '@/components/ui/icon';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Strings } from '@/constants/strings';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -27,7 +27,7 @@ export default function AuthGate() {
       <View style={{ position: 'absolute', left: 0, right: 0 }}>
         <MapGrid height={320} />
       </View>
-      <Icon name="shield" color={theme.accent} size={64} filled />
+      <BrandLogo size={68} variant="neon" isDark={theme.isDark} />
       <Text style={{ fontFamily: Figtree.semibold, fontSize: 28, color: theme.text, marginTop: 12 }}>
         {Strings.app.name}
       </Text>

@@ -1,24 +1,33 @@
 name: Build Desktop
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target Environment'
+        description: 'Target Environment (internal=dev API, production=prod API)'
         required: true
         default: 'production'
         type: choice
         options:
           - production
-          - testing
+          - internal
   pull_request:
     paths:
       - 'apps/desktop/**'
       - 'packages/**'
       - '.github/workflows/build-desktop.yml'
+
 jobs:
   build-windows:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'release' && contains(github.event.release.tag_name, '-desktop'))
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,15 +40,25 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Set API Environment
+      - name: Set API Environment & Version
         shell: bash
         run: |
-          if [ "${{ github.event.inputs.environment }}" = "testing" ]; then
-            echo "Building for TESTING environment (pfnapp.my.id)"
+          TAG="${{ github.event.release.tag_name || github.event.inputs.environment }}"
+          echo "Processing Tag / Environment: $TAG"
+
+          if [[ "$TAG" == *"-internal"* || "$TAG" == "internal" ]]; then
+            echo "Building for INTERNAL environment (pfnapp.my.id)"
             echo "UNIVPN_API_BASE_URL=https://pfnapp.my.id/api/vpn/mobile" >> $GITHUB_ENV
           else
             echo "Building for PRODUCTION environment (pfnapp.id)"
             echo "UNIVPN_API_BASE_URL=https://pfnapp.id/api/vpn/mobile" >> $GITHUB_ENV
+          fi
+
+          # Sync package version from tag (e.g. v0.3.0-desktop -> 0.3.0)
+          if [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "Setting desktop package version to $VERSION"
+            npm pkg set version="$VERSION" --prefix apps/desktop
           fi
 
       - name: Compile wg-helper
@@ -62,3 +81,10 @@ jobs:
           name: univpn-desktop-windows
           path: apps/desktop/dist/*.exe
           if-no-files-found: error
+      - name: Publish to GitHub Release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" apps/desktop/dist/*.exe --clobber

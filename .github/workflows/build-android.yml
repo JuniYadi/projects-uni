@@ -15,12 +15,15 @@ on:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && !contains(github.event.release.tag_name, '-desktop'))
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - name: Set API Environment
         shell: bash
         run: |
@@ -99,16 +102,13 @@ jobs:
           cd android && ./gradlew assembleRelease bundleRelease --stacktrace
         working-directory: apps/mobile
 
-      # - uses: actions/upload-artifact@v7
-      #   with:
-      #     name: app-release-apk-${{ github.event.release.tag_name }}
-      #     path: apps/mobile/android/app/build/outputs/apk/release/*.apk
-
-      # - uses: actions/upload-artifact@v7
-      #   with:
-      #     name: app-release-aab-${{ github.event.release.tag_name }}
-      #     path: apps/mobile/android/app/build/outputs/bundle/release/*.aab
-
+      - name: Upload APK to GitHub Release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" apps/mobile/android/app/build/outputs/apk/release/*.apk --clobber || true
       - name: Upload to Google Play
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
         uses: r0adkll/upload-google-play@v1

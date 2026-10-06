@@ -1,8 +1,7 @@
-v0.3.0 telah tersedia!
+v0.4.0 telah tersedia!
 
-- Redesain antarmuka UI v2: Beranda, Lokasi, Pengaturan, Akun, dan Mode lanjutan
-- Layar Masuk baru dengan peta animasi dan izin VPN detail
-- Tombol Cyber Shield neon dengan status radar koneksi
-- Bendera negara SVG hybrid (lokal + cache online)
-- Navigasi responsif untuk tablet
-- Optimalisasi performa dan perbaikan bug
+- Kepatuhan penuh kebijakan Google Play: model akun client-only tanpa link pembelian eksternal
+- Pembaruan layar Masuk: form ID Langganan dan pemindaian QR yang lebih bersih
+- Penyegaran layar Langganan Berakhir: aksi cepat ganti akun yang aman
+- Peningkatan alur pembaruan aplikasi langsung terhubung ke Google Play Store
+- Optimalisasi performa dan perbaikan antarmuka

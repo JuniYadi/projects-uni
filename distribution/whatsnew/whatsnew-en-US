@@ -1,8 +1,7 @@
-v0.3.0 is now available!
+v0.4.0 is now available!
 
-- Redesigned UI v2: Home, Locations, Settings, Account, and Advanced mode
-- New Login screen with animated map and detailed VPN permission screen
-- Neon Cyber Shield button with connection radar indicator
-- Hybrid SVG country flags (local + online cache)
-- Responsive tablet layout support
-- UI improvements and performance optimizations
+- Full Google Play policy compliance: client-only account model without external store links
+- Refined Login screen: clean Subscription ID input and QR scanner
+- Improved Expired Subscription screen: seamless and secure switch-account action
+- App update prompt directly links to Google Play Store
+- UI polish and performance optimizations

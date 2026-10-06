@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { APP_URL } from '@univpn/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Group, Row, Screen } from '@/components/ui/list-row';
@@ -45,8 +43,7 @@ export default function AccountScreen() {
           <Text style={{ fontFamily: Figtree.regular, fontSize: 14, color: theme.textSecondary }}>
             {Strings.account.expiredMessage}
           </Text>
-          <Button label={Strings.account.renew} onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/portal`)} />
-          <Button label={Strings.account.switchAccount} variant="secondary" onPress={() => setConfirm(true)} />
+          <Button label={Strings.account.switchAccount} onPress={() => setConfirm(true)} />
         </View>
       )}
       <Group>

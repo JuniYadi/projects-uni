@@ -3,6 +3,20 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v0.4.0-mobile] - 2026-10-07
+
+### Added
+- **Mobile**: Kepatuhan penuh kebijakan Google Play (Anti-Steering & Payments) dengan transisi ke model akun client-only (existing subscription)
+
+### Changed
+- **Mobile**: Penyegaran layar Masuk tanpa tautan pembelian web eksternal
+- **Mobile**: Penyederhanaan alur layar Langganan Berakhir dengan opsi langsung Ganti Akun yang aman
+- **Mobile**: Dialog pembaruan versi baru pada Mode Lanjutan langsung mengarahkan ke halaman Google Play Store
+- **Design**: Pembaruan mock desain (`univpn-v2-final.html`) dan dokumen spesifikasi untuk model client-only
+
+### Fixed
+- **Mobile**: Menghapus tombol dan teks steering eksternal pada akun dan pengaturan lanjutan untuk memastikan kepatuhan review Google Play
+
 ## [v0.3.0-desktop] - 2026-10-07
 
 ### Added

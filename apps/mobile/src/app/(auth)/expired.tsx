@@ -1,6 +1,5 @@
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Strings } from '@/constants/strings';
@@ -26,11 +25,6 @@ export default function ExpiredScreen() {
         {Strings.expired.body}
       </Text>
       <Button
-        label={Strings.expired.renew}
-        onPress={() => WebBrowser.openBrowserAsync(process.env.EXPO_PUBLIC_APP_URL || '')}
-      />
-      <Button
-        variant="secondary"
         label={Strings.expired.switchAccount}
         onPress={() => {
           clearError();

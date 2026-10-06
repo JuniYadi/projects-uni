@@ -4,9 +4,21 @@ import { join } from 'node:path'
 
 const SETTINGS_FILE = 'settings.json'
 
-interface Settings {
+export interface DesktopSettings {
   theme?: 'light' | 'dark' | 'system'
   lastProfileId?: string
+  killSwitch?: boolean
+  autoConnect?: boolean
+  buttonStyle?: 'cyber' | 'classic'
+  favorites?: string[]
+}
+
+const DEFAULT_SETTINGS: DesktopSettings = {
+  theme: 'system',
+  killSwitch: true,
+  autoConnect: false,
+  buttonStyle: 'cyber',
+  favorites: [],
 }
 
 function settingsPath(): string {
@@ -15,15 +27,15 @@ function settingsPath(): string {
   return join(dir, SETTINGS_FILE)
 }
 
-export function getSettings(): Settings {
+export function getSettings(): DesktopSettings {
   try {
     const raw = readFileSync(settingsPath(), 'utf8')
-    return JSON.parse(raw) as Settings
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
   } catch {
-    return {}
+    return { ...DEFAULT_SETTINGS }
   }
 }
 
-export function setSettings(settings: Settings): void {
+export function setSettings(settings: Partial<DesktopSettings>): void {
   writeFileSync(settingsPath(), JSON.stringify({ ...getSettings(), ...settings }), 'utf8')
 }

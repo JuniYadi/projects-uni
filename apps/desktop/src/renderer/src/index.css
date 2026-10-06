@@ -7,6 +7,7 @@
   --bg: #f1f5f9;
   --card: #ffffff;
   --selected: #e2e8f0;
+  --line: rgba(15, 23, 42, 0.08);
   --fg: #0f172a;
   --dim: #64748b;
   --accent: #16a34a;
@@ -17,8 +18,8 @@
   --bg: #0f172a;
   --card: #192134;
   --selected: #263148;
+  --line: rgba(255, 255, 255, 0.08);
   --fg: #f8fafc;
-  --dim: #94a3b8;
   --accent: #22c55e;
   --accent-soft: #14352a;
   --error: #f87171;
@@ -28,8 +29,8 @@
   --color-bg: var(--bg);
   --color-card: var(--card);
   --color-selected: var(--selected);
+  --color-line: var(--line);
   --color-fg: var(--fg);
-  --color-dim: var(--dim);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-error: var(--error);
@@ -45,16 +46,143 @@ body {
 input {
   user-select: text;
 }
-
+/* Animasi Desain Final v2 */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 .spin {
-  animation: spin 1.2s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
+@keyframes conn-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  75% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@keyframes btn-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 12px rgba(34, 197, 94, 0.18), 0 0 0 26px rgba(34, 197, 94, 0.08), 0 12px 40px rgba(34, 197, 94, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 18px rgba(34, 197, 94, 0.28), 0 0 0 34px rgba(34, 197, 94, 0.14), 0 16px 48px rgba(34, 197, 94, 0.55);
+  }
+}
+
+.btn-connected {
+  position: relative;
+  animation: btn-breathe 3s ease-in-out infinite;
+}
+.btn-connected::before,
+.btn-connected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2.5px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  animation: conn-ripple 3s cubic-bezier(0.1, 0.4, 0.3, 1) infinite;
+}
+.btn-connected::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes shake {
+  0%, 8% { transform: none; }
+  10% { transform: translateX(-8px); }
+  14% { transform: translateX(8px); }
+  18% { transform: translateX(-5px); }
+  22% { transform: translateX(5px); }
+  26%, 100% { transform: none; }
+}
+.shake {
+  animation: shake 4s infinite;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.6s ease-out forwards;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.srv {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop 0.4s both;
+}
+
+@keyframes pl {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pl 2s ease-out infinite;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.form-fade {
+  animation: fade 0.6s 2.2s both;
+}
+
+/* Scrollbar bersih */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--dim);
+  opacity: 0.3;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
+}
 /* reduced-motion: animasi lompat ke keadaan akhir */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
-  setSettings: (settings: { theme?: 'light' | 'dark' | 'system'; openAtLogin?: boolean }) =>
+  setSettings: (settings: Record<string, unknown>) =>
     ipcRenderer.invoke('settings:set', settings),
 })
 

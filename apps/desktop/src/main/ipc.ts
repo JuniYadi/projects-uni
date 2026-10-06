@@ -4,7 +4,7 @@ import type { VpnStats, VpnStatus } from '@univpn/vpn-platform'
 import { api } from './api'
 import { desktopStorage } from './storage'
 import { vpnService } from './vpn'
-import { getSettings, setSettings } from './settings'
+import { getSettings, setSettings, type DesktopSettings } from './settings'
 
 ipcMain.handle('auth:login', async (_event, subscriptionId: string) => {
   try {
@@ -83,7 +83,7 @@ ipcMain.handle('settings:get', async () => ({
 
 ipcMain.handle(
   'settings:set',
-  async (_event, { openAtLogin, ...settings }: { theme?: 'light' | 'dark' | 'system'; openAtLogin?: boolean }) => {
+  async (_event, { openAtLogin, ...settings }: Partial<DesktopSettings> & { openAtLogin?: boolean }) => {
     setSettings(settings)
     // '--hidden' → index.ts starts to tray without showing the window
     if (openAtLogin !== undefined) app.setLoginItemSettings({ openAtLogin, args: ['--hidden'] })

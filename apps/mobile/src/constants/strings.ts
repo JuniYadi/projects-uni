@@ -31,7 +31,6 @@ export const Strings = {
     pickApps: 'Pilih aplikasi',
     pickAppsHint: 'Hanya aplikasi tertentu yang pakai VPN',
     advanced: 'Mode lanjutan',
-    manageWeb: 'Kelola akun di situs web',
   },
   apps: {
     intro: 'Aplikasi di bawah ini tidak lewat VPN. Cocok untuk aplikasi bank atau yang menolak VPN.',
@@ -149,7 +148,7 @@ export const Strings = {
     logoutTitle: 'Keluar dari akun?',
     logoutMessage: 'Kamu perlu ID Langganan atau QR untuk masuk lagi.',
     expiredTitle: 'Langganan berakhir',
-    expiredMessage: 'Perpanjang untuk kembali terlindungi. Datamu tetap aman di akunmu.',
+    expiredMessage: 'Masa aktif langganan akun ini telah habis. Silakan ganti akun untuk kembali terlindungi.',
     renew: 'Perpanjang langganan',
     switchAccount: 'Ganti akun',
   },
@@ -163,7 +162,6 @@ export const Strings = {
     connecting: 'Memeriksa…',
     continue: 'Masuk',
     scanQr: 'Pindai kode QR',
-    getOne: 'Belum punya ID? Beli di website kami',
     idNotFound: 'ID tidak ditemukan. Periksa lagi, ya.',
     network: 'Tidak ada internet. Periksa sambunganmu, lalu coba lagi.',
     generic: 'Belum berhasil masuk. Coba lagi sebentar lagi, ya.',
@@ -190,7 +188,7 @@ export const Strings = {
   },
   expired: {
     title: 'Langgananmu sudah berakhir',
-    body: 'Perpanjang langganan untuk memakai UniVPN lagi, atau masuk dengan akun lain.',
+    body: 'Masa aktif langganan akun ini telah habis. Masuk dengan akun lain untuk memakai UniVPN kembali.',
     renew: 'Perpanjang',
     switchAccount: 'Ganti akun',
   },

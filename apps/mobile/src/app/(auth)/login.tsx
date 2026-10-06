@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -213,16 +212,6 @@ export default function LoginScreen() {
               </Pressable>
             )}
 
-            {/* Belum punya ID? link */}
-            <Pressable
-              accessibilityRole="link"
-              onPress={() => WebBrowser.openBrowserAsync(process.env.EXPO_PUBLIC_APP_URL || '')}
-              style={{ marginTop: 8, minHeight: 40, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Text style={{ fontFamily: Figtree.regular, fontSize: 13, color: theme.textSecondary }}>
-                {Strings.auth.getOne}
-              </Text>
-            </Pressable>
           </Animated.View>
         )}
       </ScrollView>

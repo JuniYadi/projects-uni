@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Application from 'expo-application';
-import * as WebBrowser from 'expo-web-browser';
-import { APP_URL } from '@univpn/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
@@ -105,12 +103,7 @@ export default function AdvancedScreen() {
           hint={A.autoUpdateHint}
           right={<Switch label={A.autoUpdate} value={autoUpdate} onValueChange={(v) => update('autoUpdate', v)} />}
         />
-        <Row label={A.version} value={build ? `${version} (build ${build})` : version} />
-        <Row
-          label={Strings.settings.manageWeb}
-          onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/portal`)}
-          last
-        />
+        <Row label={A.version} value={build ? `${version} (build ${build})` : version} last />
       </Group>
 
       {sheet === 'dns' && (
@@ -148,7 +141,7 @@ export default function AdvancedScreen() {
       >
         {hasUpdate ? (
           <>
-            <Button label={A.update} onPress={() => WebBrowser.openBrowserAsync(`${APP_URL}/portal`)} />
+            <Button label={A.update} onPress={() => Linking.openURL('https://play.google.com/store/apps/details?id=com.pfnapp.univpn')} />
             <Button label={A.later} variant="secondary" onPress={() => setLatest(undefined)} />
           </>
         ) : (

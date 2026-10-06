@@ -3,6 +3,18 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v0.3.0-desktop] - 2026-10-07
+
+### Added
+- **Desktop**: Desain UI v2 final selaras penuh dengan spesifikasi dan mobile (Beranda, Lokasi, Pengaturan, Mode lanjutan)
+- **Desktop**: Layar Masuk baru dengan animasi peta flat (WelcomeMap) dan form ID Langganan
+- **Desktop**: Tombol koneksi bulat 128px bawaan Cyber Shield (Logo Neon) dengan opsi Tema Klasik (Power Icon)
+- **Desktop**: Efek animasi koneksi pernapasan (breathing) dan riak ganda (dual ripple) saat terhubung
+- **Desktop**: Pemilih lokasi dengan pencarian cepat, latensi milidetik (ms), dan pin bintang server favorit
+- **Desktop**: Pengaturan lengkap toggle: Putus otomatis aman (kill switch), Sambung otomatis (auto-connect), dan Buka saat komputer menyala (launch at login)
+- **Desktop**: Layar Mode lanjutan untuk pemilihan tema, gaya tombol, dan detail koneksi WireGuard
+- **CI**: Dukungan otomatisasi build rilis produksi dan internal untuk platform desktop (.exe) dan mobile
+
 ## [v0.3.0] - 2026-10-06
 
 ### Added

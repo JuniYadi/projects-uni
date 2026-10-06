@@ -25,3 +25,4 @@ docs/*
 .tmp/
 out/
 goals/
+resources/wg-helper.exe

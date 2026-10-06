@@ -14,6 +14,18 @@ export interface ProfileInfo {
   protocol: 'OPENVPN' | 'WIREGUARD'
   region: string
   country?: string
+  pingMs?: number
+  city?: string
+}
+
+export interface DesktopSettingsState {
+  theme?: 'light' | 'dark' | 'system'
+  lastProfileId?: string
+  openAtLogin: boolean
+  killSwitch: boolean
+  autoConnect: boolean
+  buttonStyle: 'cyber' | 'classic'
+  favorites: string[]
 }
 
 export interface ElectronAPI {
@@ -30,8 +42,8 @@ export interface ElectronAPI {
   disconnect: () => Promise<{ ok: true } | { ok: false; error?: string }>
   status: () => Promise<{ status: VpnStatus; stats: VpnStats | null; profileId: string | null }>
 
-  getSettings: () => Promise<{ theme?: 'light' | 'dark' | 'system'; lastProfileId?: string; openAtLogin: boolean }>
-  setSettings: (settings: { theme?: 'light' | 'dark' | 'system'; openAtLogin?: boolean }) => Promise<void>
+  getSettings: () => Promise<DesktopSettingsState>
+  setSettings: (settings: Partial<DesktopSettingsState>) => Promise<void>
 }
 
 declare global {

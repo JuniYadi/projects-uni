@@ -22,6 +22,7 @@ extraResources:
       - '**/*'
 win:
   target:
+    - nsis
     - portable
   artifactName: 'UniVPN-${version}-${arch}.${ext}'
 nsis:

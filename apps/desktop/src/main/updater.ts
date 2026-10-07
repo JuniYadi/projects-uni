@@ -1,5 +1,9 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
+import { spawn } from 'node:child_process'
+import { existsSync, readdirSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import path from 'node:path'
 import { vpnService } from './vpn'
 
 export interface UpdateInfoState {
@@ -151,7 +155,6 @@ export function registerUpdateIpc(): void {
       return { ok: false, error: (err as Error).message }
     }
   })
-
   ipcMain.handle('update:install', async () => {
     try {
       // 🛡️ CRITICAL VPN SAFETY: Disconnect WireGuard gracefully before restarting
@@ -161,9 +164,58 @@ export function registerUpdateIpc(): void {
         console.warn('VPN cleanup before update encountered warning:', e)
       }
 
-      clearInterval(updateTimer!)
+      if (updateTimer) {
+        clearInterval(updateTimer)
+        updateTimer = null
+      }
 
-      // Restart and install
+      // macOS Ad-hoc signing fallback:
+      // Without an Apple Developer ID certificate, Squirrel.Mac (ShipIt) silently fails
+      // validation and refuses to replace the running /Applications bundle.
+      if (process.platform === 'darwin') {
+        const pendingDir = path.join(homedir(), 'Library/Caches/desktop-updater/pending')
+        if (existsSync(pendingDir)) {
+          const zips = readdirSync(pendingDir).filter((f) => f.endsWith('.zip'))
+          if (zips.length > 0) {
+            const targetZip = path.join(pendingDir, zips[0]!)
+            const appBundle = '/Applications/UniVPN.app'
+            const scriptPath = path.join(app.getPath('temp'), 'univpn-apply-update.sh')
+
+            // Create self-contained script that waits for current app to exit,
+            // extracts updated bundle, clears quarantine flags, and relaunches.
+            const script = `#!/bin/bash
+PID=${process.pid}
+while kill -0 $PID 2>/dev/null; do
+  sleep 0.2
+done
+
+TMP_DIR=$(mktemp -d /tmp/univpn-extract-XXXXXX)
+ditto -xk "${targetZip}" "$TMP_DIR"
+if [ -d "$TMP_DIR/UniVPN.app" ]; then
+  rm -rf "${appBundle}"
+  cp -R "$TMP_DIR/UniVPN.app" "${appBundle}"
+  xattr -cr "${appBundle}" 2>/dev/null || true
+  rm -rf "$TMP_DIR"
+  open -a "${appBundle}"
+else
+  rm -rf "$TMP_DIR"
+fi
+rm -f "${scriptPath}"
+exit 0
+`
+            writeFileSync(scriptPath, script, { mode: 0o755 })
+            const child = spawn('/bin/bash', [scriptPath], {
+              detached: true,
+              stdio: 'ignore',
+            })
+            child.unref()
+            app.quit()
+            return { ok: true }
+          }
+        }
+      }
+
+      // Standard electron-updater installation (Windows NSIS / signed macOS)
       autoUpdater.quitAndInstall()
       return { ok: true }
     } catch (err) {

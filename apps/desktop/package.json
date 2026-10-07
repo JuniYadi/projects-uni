@@ -14,6 +14,7 @@
     "dist:win": "bun run compile:helper && electron-vite build && electron-builder --win",
     "dist:mac": "bun run compile:helper:mac && electron-vite build && electron-builder --mac --arm64 --x64",
     "verify": "bun run scripts/verify.ts",
+    "gen:icons": "bun run scripts/gen-icons.ts",
     "compile:helper": "bun build --compile --target=bun-windows-x64 ../../packages/vpn-platform/src/wg-helper.ts --outfile resources/wg-helper.exe",
     "compile:helper:mac": "bun run scripts/compile-mac-helper.ts"
   },

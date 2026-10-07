@@ -467,10 +467,15 @@ export async function connectTunnel(configText: string): Promise<string> {
     wireguardProcess: wgProc,
   }
 
-  // 6. Verify WireGuard handshake before reporting connected
+  // 6. Verify WireGuard handshake before reporting connected (allow up to 10s for high-latency paths)
   let handshakeCompleted = false
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     await sleep(250)
+    // Check if process crashed unexpectedly while waiting
+    if (wgProc.exitCode !== null) {
+      break
+    }
+
     try {
       const { stdout } = await exec(bins.wg, ['show', ifaceName, 'latest-handshakes'])
       const lines = stdout.trim().split('\n')
@@ -491,13 +496,15 @@ export async function connectTunnel(configText: string): Promise<string> {
   }
 
   if (!handshakeCompleted) {
+    const crashedPrematurely = wgProc.exitCode !== null
+    const code = wgProc.exitCode
     await cleanUpTunnelState(tunnel)
-    if (wgProc.exitCode !== null) {
-      throw new Error(`wireguard-go exited prematurely (code ${wgProc.exitCode}): ${wgStderr.trim()}`)
-    }
-    throw new Error('Handshake timeout: Server WireGuard tidak merespons (5 detik)')
-  }
 
+    if (crashedPrematurely) {
+      throw new Error(`wireguard-go crashed unexpectedly (code ${code}): ${wgStderr.trim() || 'No error log'}`)
+    }
+    throw new Error('Handshake timeout: Server WireGuard tidak merespons (10 detik). Cek koneksi atau coba server lain.')
+  }
   activeTunnel = tunnel
   return ifaceName
 }

@@ -245,6 +245,29 @@ for (const state of ['idle', 'connecting', 'connected', 'failed']) {
   assert(pngSize(`mac-${state}Template@2x.png`) === 36, `tray mac ${state} @2x 36px`)
 }
 
+// ─── 5. Ikon desktop aplikasi: Windows (.ico), macOS (.icns), Linux/Web (.png) ─
+
+const buildResDir = join(import.meta.dir, '../build-resources')
+const resDir = join(import.meta.dir, '../resources')
+const pubDir = join(import.meta.dir, '../src/renderer/public')
+
+const checkPngSize = (filepath: string) => {
+  if (!existsSync(filepath)) return -1
+  const b = readFileSync(filepath)
+  return b.subarray(1, 4).toString() === 'PNG' ? b.readUInt32BE(16) : -1
+}
+
+assert(existsSync(join(buildResDir, 'icon.icns')), 'build-resources/icon.icns ada untuk macOS packaging')
+assert(existsSync(join(buildResDir, 'icon.ico')), 'build-resources/icon.ico ada untuk Windows packaging')
+assert(checkPngSize(join(buildResDir, 'icon.png')) === 1024, 'build-resources/icon.png ada dan 1024px')
+
+assert(existsSync(join(resDir, 'icon.icns')), 'resources/icon.icns ada')
+assert(existsSync(join(resDir, 'icon.ico')), 'resources/icon.ico ada')
+assert(checkPngSize(join(resDir, 'icon.png')) === 512, 'resources/icon.png ada dan 512px untuk runtime')
+
+assert(checkPngSize(join(pubDir, 'icon.png')) === 128, 'src/renderer/public/icon.png ada dan 128px')
+assert(existsSync(join(pubDir, 'favicon.ico')), 'src/renderer/public/favicon.ico ada')
+
 // ─── Summary ─────────────────────────────────────────────────
 
 console.log(`\n${passed} passed, ${failed} failed`)

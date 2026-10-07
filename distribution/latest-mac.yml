@@ -2,9 +2,9 @@
 # UniVPN macOS Release Manifest (electron-updater & Website metadata)
 # URL: https://github.com/juniyadi/projects-uni/releases/latest/download/latest-mac.yml
 # ==============================================================================
-version: "0.4.1"
-releaseDate: "2026-10-07T06:32:56.955Z"
-path: "UniVPN-0.4.1-mac.zip"
+version: "0.4.2"
+releaseDate: "2026-10-07T09:49:12.143Z"
+path: "UniVPN-0.4.2-mac.zip"
 sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 minSupportedVersion: "0.0.0"
@@ -12,9 +12,9 @@ mandatory: false
 sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis). Harap perbarui UniVPN untuk melanjutkan koneksi."
 
 files:
-  - url: "UniVPN-0.4.1-mac.zip"
+  - url: "UniVPN-0.4.2-mac.zip"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 74200000
-  - url: "UniVPN-0.4.1-arm64.dmg"
+  - url: "UniVPN-0.4.2-arm64.dmg"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 78900000

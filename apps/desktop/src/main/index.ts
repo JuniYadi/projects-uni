@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { app, BrowserWindow, shell } from 'electron'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import './ipc'
 import { vpnService } from './vpn'
@@ -9,6 +10,22 @@ import { setupAutoUpdater, registerUpdateIpc } from './updater'
 let mainWindow: BrowserWindow | null = null
 let quitting = false
 
+function getAppIconPath(): string | undefined {
+  const iconName = process.platform === 'win32' ? 'icon.ico' : 'icon.png'
+  const primary = app.isPackaged
+    ? path.join(process.resourcesPath, 'resources', iconName)
+    : path.join(app.getAppPath(), 'resources', iconName)
+  if (existsSync(primary)) return primary
+
+  const pngFallback = primary.replace(/\.ico$/, '.png')
+  if (existsSync(pngFallback)) return pngFallback
+
+  const devFallback = path.join(__dirname, '../../resources/icon.png')
+  if (existsSync(devFallback)) return devFallback
+
+  return undefined
+}
+
 function showWindow(): void {
   if (!mainWindow) createWindow()
   mainWindow?.show()
@@ -16,6 +33,7 @@ function showWindow(): void {
 }
 
 function createWindow(): void {
+  const appIcon = getAppIconPath()
   mainWindow = new BrowserWindow({
     // layar mobile di jendela sempit, tidak bisa dilebarkan
     width: 400,
@@ -26,6 +44,7 @@ function createWindow(): void {
     fullscreenable: false,
     show: false,
     autoHideMenuBar: true,
+    ...(appIcon ? { icon: appIcon } : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.mjs'),
       sandbox: false,
@@ -65,6 +84,14 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', showWindow)
 
   app.whenReady().then(async () => {
+    const appIcon = getAppIconPath()
+    if (process.platform === 'darwin' && app.dock && appIcon) {
+      try {
+        app.dock.setIcon(appIcon)
+      } catch (e) {
+        console.warn('Gagal mengatur ikon dock macOS:', e)
+      }
+    }
     registerUpdateIpc()
     await vpnService.initialize()
     createWindow()

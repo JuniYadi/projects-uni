@@ -25,20 +25,11 @@ jobs:
             platform: windows
             compile_cmd: bun run compile:helper
             dist_flags: --win
-            artifact_name: univpn-desktop-windows
-            artifact_path: |
-              apps/desktop/dist/*.exe
-              apps/desktop/dist/SHA256SUMS-windows.txt
             release_files: 'apps/desktop/dist/*.exe apps/desktop/dist/SHA256SUMS-windows.txt apps/desktop/dist/latest.yml'
           - os: macos-latest
             platform: macos
             compile_cmd: bun run compile:helper:mac
             dist_flags: --mac --arm64 --x64
-            artifact_name: univpn-desktop-macos
-            artifact_path: |
-              apps/desktop/dist/*.dmg
-              apps/desktop/dist/*.zip
-              apps/desktop/dist/SHA256SUMS-macos.txt
             release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/SHA256SUMS-macos.txt apps/desktop/dist/latest-mac.yml'
     runs-on: ${{ matrix.os }}
     permissions:
@@ -113,13 +104,6 @@ jobs:
             echo "Generated SHA256SUMS-${{ matrix.platform }}.txt:"
             cat "SHA256SUMS-${{ matrix.platform }}.txt"
           fi
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.artifact_path }}
-          if-no-files-found: warn
 
       - name: Publish to GitHub Release
         if: github.event_name == 'release'

@@ -1,6 +1,6 @@
 import { createApiClient, type AuthStorage } from '@univpn/api'
 import { createVpnCore, applyEndpointPreference, type VpnCore } from '@univpn/vpn-core'
-import { createNoopDriver, createDarwinDriver, createPlatformDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
+import { createNoopDriver, createDarwinDriver, createWindowsDriver, resolveWindowsResources, createPlatformDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
 import { parseWireGuardConfig } from '../../../packages/vpn-platform/src/mac-helper'
 import type { VpnApiClient } from '@univpn/api'
 
@@ -156,6 +156,25 @@ assert(rewrittenFallback.includes('Endpoint = sg01.vpn.pfnapp.com:51820'), 'appl
 const noop = createNoopDriver()
 assert(typeof noop.connect === 'function', 'noop driver tersedia untuk non-Windows')
 
+const winDriver = createWindowsDriver()
+assert(typeof winDriver.connect === 'function', 'createWindowsDriver menyediakan fungsi connect')
+assert(typeof winDriver.initialize === 'function', 'createWindowsDriver menyediakan fungsi initialize')
+
+const winRes = resolveWindowsResources()
+assert(Boolean(winRes.helperPath), 'resolveWindowsResources menemukan helper path')
+assert(existsSync(winRes.tunnelDllPath), `resolveWindowsResources menemukan tunnel.dll (${winRes.tunnelDllPath})`)
+assert(existsSync(winRes.wireguardDllPath), `resolveWindowsResources menemukan wireguard.dll (${winRes.wireguardDllPath})`)
+
+// Simulasi packaged app dengan resourcesPath yang mengarah ke desktop
+const originalResourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath
+try {
+  ;(process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = join(import.meta.dir, '../resources')
+  const packagedWinRes = resolveWindowsResources()
+  assert(existsSync(packagedWinRes.tunnelDllPath), 'packaged app simulator menemukan tunnel.dll')
+  assert(existsSync(packagedWinRes.wireguardDllPath), 'packaged app simulator menemukan wireguard.dll')
+} finally {
+  ;(process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = originalResourcesPath
+}
 const darwinDriver = createDarwinDriver()
 assert(typeof darwinDriver.connect === 'function', 'createDarwinDriver menyediakan fungsi connect')
 assert(typeof darwinDriver.initialize === 'function', 'createDarwinDriver menyediakan fungsi initialize')

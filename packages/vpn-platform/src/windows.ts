@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { mkdtempSync, writeFileSync, existsSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { VpnPlatformDriver, VpnStats, VpnStatus } from './types'
@@ -14,20 +14,106 @@ export interface WindowsDriverOptions {
   adapterName?: string
 }
 
-const resourcesDir =
-  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath ??
-  import.meta.dirname
+function resolveFirstExisting(paths: (string | null | undefined)[]): string | undefined {
+  for (const p of paths) {
+    if (p && existsSync(p)) return p
+  }
+  return undefined
+}
+
+export function resolveWindowsResources(options: WindowsDriverOptions = {}) {
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath
+
+  const candidateDirs = [
+    process.env.UNIVPN_RESOURCES_DIR,
+    resourcesPath ? path.join(resourcesPath, 'win') : null,
+    resourcesPath ? path.join(resourcesPath, 'resources', 'win') : null,
+    resourcesPath ? path.join(resourcesPath, 'resources') : null,
+    resourcesPath ?? null,
+    path.resolve(process.cwd(), 'apps/desktop/resources/win'),
+    path.resolve(process.cwd(), 'resources/win'),
+    path.resolve(process.cwd(), 'apps/desktop/resources'),
+    path.resolve(process.cwd(), 'resources'),
+    path.resolve(import.meta.dirname, '../../../apps/desktop/resources/win'),
+    path.resolve(import.meta.dirname, '../../apps/desktop/resources/win'),
+    path.resolve(import.meta.dirname, '../resources/win'),
+    path.resolve(import.meta.dirname, '../../../apps/desktop/resources'),
+    path.resolve(import.meta.dirname, '../../apps/desktop/resources'),
+    path.resolve(import.meta.dirname, '../resources'),
+    import.meta.dirname,
+  ].filter((d): d is string => Boolean(d && existsSync(d)))
+
+  // 1. Resolve helper executable or TypeScript fallback for dev
+  const helperExe = resolveFirstExisting([
+    options.helperPath && options.helperPath.endsWith('.exe') ? options.helperPath : null,
+    ...candidateDirs.map((d) => path.join(d, 'wg-helper.exe')),
+    ...candidateDirs.map((d) => path.join(d, 'win', 'wg-helper.exe')),
+  ])
+
+  const helperScript = resolveFirstExisting([
+    options.helperPath && options.helperPath.endsWith('.ts') ? options.helperPath : null,
+    path.join(import.meta.dirname, 'wg-helper.ts'),
+    path.resolve(process.cwd(), 'packages/vpn-platform/src/wg-helper.ts'),
+    path.resolve(process.cwd(), 'apps/desktop/resources/wg-helper.ts'),
+    ...candidateDirs.map((d) => path.join(d, 'wg-helper.ts')),
+  ])
+
+  const helperPath = options.helperPath ?? helperExe ?? helperScript ?? (
+    resourcesPath ? path.join(resourcesPath, 'win', 'wg-helper.exe') : path.join(import.meta.dirname, 'wg-helper.ts')
+  )
+
+  const helperDir = path.dirname(helperPath)
+
+  // 2. Resolve tunnel.dll
+  const tunnelDllPath = options.tunnelDllPath ?? resolveFirstExisting([
+    path.join(helperDir, 'tunnel.dll'),
+    ...candidateDirs.map((d) => path.join(d, 'tunnel.dll')),
+    ...candidateDirs.map((d) => path.join(d, 'win', 'tunnel.dll')),
+  ]) ?? (
+    resourcesPath ? path.join(resourcesPath, 'win', 'tunnel.dll') : path.join(import.meta.dirname, 'tunnel.dll')
+  )
+
+  // 3. Resolve wireguard.dll
+  const wireguardDllPath = options.wireguardDllPath ?? resolveFirstExisting([
+    path.join(helperDir, 'wireguard.dll'),
+    ...candidateDirs.map((d) => path.join(d, 'wireguard.dll')),
+    ...candidateDirs.map((d) => path.join(d, 'win', 'wireguard.dll')),
+  ]) ?? (
+    resourcesPath ? path.join(resourcesPath, 'win', 'wireguard.dll') : path.join(import.meta.dirname, 'wireguard.dll')
+  )
+
+  // 4. Co-locate wireguard.dll & tunnel.dll in helper directory if helper is .exe
+  // wireguard-windows tunnel service strictly loads wireguard.dll using LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
+  // which only searches the directory of the running process executable (wg-helper.exe).
+  if (helperPath.endsWith('.exe')) {
+    if (existsSync(wireguardDllPath)) {
+      const targetWg = path.join(helperDir, 'wireguard.dll')
+      if (!existsSync(targetWg)) {
+        try {
+          copyFileSync(wireguardDllPath, targetWg)
+        } catch {
+          // best-effort copy
+        }
+      }
+    }
+    if (existsSync(tunnelDllPath)) {
+      const targetTunnel = path.join(helperDir, 'tunnel.dll')
+      if (!existsSync(targetTunnel)) {
+        try {
+          copyFileSync(tunnelDllPath, targetTunnel)
+        } catch {
+          // best-effort copy
+        }
+      }
+    }
+  }
+
+  return { helperPath, tunnelDllPath, wireguardDllPath }
+}
 
 export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlatformDriver {
-  // ponytail: prefer .exe (compiled), fallback to .ts for dev
-  const helperPath = options.helperPath ?? (() => {
-    const exe = path.join(resourcesDir, 'wg-helper.exe')
-    return existsSync(exe) ? exe : path.join(resourcesDir, 'wg-helper.ts')
-  })()
+  const { helperPath, tunnelDllPath, wireguardDllPath } = resolveWindowsResources(options)
   const adapterName = options.adapterName ?? 'UniVPN'
-  const tunnelDllPath = options.tunnelDllPath ?? path.join(resourcesDir, 'win', 'tunnel.dll')
-  const wireguardDllPath = options.wireguardDllPath ?? path.join(resourcesDir, 'win', 'wireguard.dll')
-
   let connectProcess: ReturnType<typeof spawn> | null = null
   let status: VpnStatus = 'disconnected'
   let tempDir: string | null = null
@@ -36,10 +122,15 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
     const isScript = helperPath.endsWith('.ts')
     const cmd = isScript ? 'bun' : helperPath
     const finalArgs = isScript ? ['run', helperPath, ...args] : args
+    const helperDir = path.dirname(helperPath)
+    const tunnelDir = path.dirname(tunnelDllPath)
+    const wgDir = path.dirname(wireguardDllPath)
 
     return spawn(cmd, finalArgs, {
+      cwd: helperDir,
       env: {
         ...process.env,
+        PATH: `${tunnelDir};${wgDir};${helperDir};${process.env.PATH || ''}`,
         UNIVPN_TUNNEL_DLL: tunnelDllPath,
         UNIVPN_WIREGUARD_DLL: wireguardDllPath,
         UNIVPN_ADAPTER_NAME: adapterName,
@@ -69,9 +160,14 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
 
   return {
     initialize: async () => {
-      // ponytail: DLL presence validated on first connect
       if (!existsSync(helperPath) && !helperPath.endsWith('.ts')) {
-        throw new Error(`Helper not found: ${helperPath}`)
+        throw new Error(`WireGuard helper tidak ditemukan: ${helperPath}`)
+      }
+      if (!existsSync(tunnelDllPath)) {
+        throw new Error(`WireGuard tunnel DLL tidak ditemukan di: ${tunnelDllPath}`)
+      }
+      if (!existsSync(wireguardDllPath)) {
+        throw new Error(`WireGuard NT driver DLL tidak ditemukan di: ${wireguardDllPath}`)
       }
     },
 

@@ -27,4 +27,7 @@ docs/*
 out/
 goals/
 **/resources/wg-helper.exe
+**/resources/win/wg-helper.exe
+**/resources/tunnel.dll
+**/resources/wireguard.dll
 **/resources/mac/univpn-helper

@@ -3,7 +3,7 @@
 # Used by Website Landing Page & UI Clients to inspect version availability.
 # ==============================================================================
 schemaVersion: 1
-updatedAt: "2026-10-07T03:11:54.055Z"
+updatedAt: "2026-10-07T05:25:32.453Z"
 
 policy:
   maxMinorLag: 5
@@ -14,25 +14,25 @@ policy:
 
 platforms:
   windows:
-    version: "0.3.2"
+    version: "0.4.0"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-win.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-Setup-0.3.2-x64.exe"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-Setup-0.4.0-x64.exe"
     installerType: "nsis"
     architecture: ["x64"]
-    releaseDate: "2026-10-07T03:11:54.055Z"
+    releaseDate: "2026-10-07T05:25:32.453Z"
 
   macos:
-    version: "0.3.2"
+    version: "0.4.0"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-mac.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.3.2-arm64.dmg"
-    zipUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.3.2-mac.zip"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.4.0-arm64.dmg"
+    zipUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.4.0-mac.zip"
     installerType: "dmg"
     architecture: ["arm64", "x64"]
-    releaseDate: "2026-10-07T03:11:54.055Z"
+    releaseDate: "2026-10-07T05:25:32.453Z"
 
   android:
     version: "0.4.1"
@@ -44,4 +44,4 @@ platforms:
     playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
     directApkUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-v0.4.1.apk"
     packageId: "com.univpn.mobile"
-    releaseDate: "2026-10-07T03:11:54.055Z"
+    releaseDate: "2026-10-07T05:25:32.453Z"

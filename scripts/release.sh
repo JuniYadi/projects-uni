@@ -224,6 +224,12 @@ if marker in content:
 "
 fi
 
+# 4. Update multiplatform manifests in distribution/
+if [ -f "scripts/generate-manifests.ts" ]; then
+  echo "Mengupdate manifes rilis di distribution/..."
+  bun run scripts/generate-manifests.ts
+fi
+
 # ==============================================================================
 # COMMIT, PUSH & BUAT GITHUB RELEASE
 # ==============================================================================

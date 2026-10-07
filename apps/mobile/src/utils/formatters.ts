@@ -1,6 +1,8 @@
+import { resolveCountryCode } from '@univpn/shared';
+
 // ponytail: country codes → flag emoji via Regional Indicator Symbols
 export function countryFlag(code: string): string {
-  const cc = ({ HONGKONG: 'HK', 'HONG KONG': 'HK' } as Record<string, string>)[code.trim().toUpperCase()] ?? code.trim().toUpperCase();
+  const cc = resolveCountryCode(code);
   if (cc.length !== 2) return '🏳️';
   const base = 0x1F1E6;
   const a = cc.charCodeAt(0) - 65;

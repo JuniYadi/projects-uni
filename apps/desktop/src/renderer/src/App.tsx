@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { resolveCountryCode } from '@univpn/shared'
 import { Strings } from '../../../../mobile/src/constants/strings'
 import type { ProfileInfo, VpnStatus, DesktopSettingsState } from './electron'
 import { BrandLogo } from './components/BrandLogo'
@@ -29,14 +30,7 @@ function applyTheme(next: Theme) {
 }
 
 function getCountryCode(p: ProfileInfo): string {
-  if (p.country && p.country.length === 2) return p.country.toUpperCase()
-  const name = `${p.country ?? ''} ${p.region} ${p.serverName}`.toUpperCase()
-  if (name.includes('INDONESIA') || name.includes('JAKARTA')) return 'ID'
-  if (name.includes('SINGAPORE')) return 'SG'
-  if (name.includes('HONG KONG')) return 'HK'
-  if (name.includes('JAPAN') || name.includes('TOKYO')) return 'JP'
-  if (name.includes('UNITED STATES') || name.includes('AMERIKA') || name.includes('DALLAS') || name.includes('LOS ANGELES')) return 'US'
-  return (p.country ?? p.region).slice(0, 2).toUpperCase()
+  return resolveCountryCode(p)
 }
 
 function getLatencyMs(p: ProfileInfo): number {

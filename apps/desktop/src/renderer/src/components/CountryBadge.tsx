@@ -1,10 +1,14 @@
+import { useState } from 'react'
+import { resolveCountryCode } from '@univpn/shared'
+
 const HK_PETAL_WHITE =
   'M449.964 299.913c-105.263-44.486-58.602-181.581 42.07-174.69-20.366 10.467-23.318 29.997-11.687 48.09 13.024 20.256-1.2 52.848-18.806 60.767-28.935 13.025-34.728 47.75-11.577 65.833z'
 const HK_PETAL_RED =
   'M444.272 200.92l-5.92 9.294-2.144-10.815-10.679-2.759 9.625-5.39-.671-10.999 8.085 7.49 10.256-4.043-4.61 10.01 7.001 8.505zm6.288 97.839c-12.731-6.534-22.996-20.155-27.468-36.431-5.115-18.67-2.173-38.743 8.083-55.038l-2.208-1.394c-10.64 16.929-13.693 37.743-8.386 57.12 4.728 17.221 15.214 31.097 28.787 38.064z'
 
 export function CountryBadge({ code, size = 36 }: { code: string; size?: number }) {
-  const c = code.toUpperCase()
+  const [imageFailed, setImageFailed] = useState(false)
+  const c = resolveCountryCode(code)
 
   let flag: React.ReactNode = null
   switch (c) {
@@ -80,19 +84,36 @@ export function CountryBadge({ code, size = 36 }: { code: string; size?: number 
       )
       break
     default:
-      flag = (
-        <span className="flex size-full items-center justify-center bg-card text-xs font-semibold uppercase text-dim">
-          {c.slice(0, 2)}
-        </span>
-      )
+      flag = null
+      break
   }
+
+  const cdnUrl = !flag && c.length === 2 ? `https://flagcdn.com/w80/${c.toLowerCase()}.png` : null
 
   return (
     <span
       style={{ width: size, height: size }}
       className="relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] light:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]"
     >
-      {flag}
+      {flag ? (
+        flag
+      ) : cdnUrl && !imageFailed ? (
+        <>
+          <span className="flex size-full items-center justify-center bg-card text-xs font-semibold uppercase text-dim">
+            {c.slice(0, 2)}
+          </span>
+          <img
+            src={cdnUrl}
+            alt={c}
+            className="absolute size-full object-cover"
+            onError={() => setImageFailed(true)}
+          />
+        </>
+      ) : (
+        <span className="flex size-full items-center justify-center bg-card text-xs font-semibold uppercase text-dim">
+          {c.slice(0, 2)}
+        </span>
+      )}
     </span>
   )
 }

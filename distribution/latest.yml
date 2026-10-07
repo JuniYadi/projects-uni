@@ -3,7 +3,7 @@
 # Used by Website Landing Page & UI Clients to inspect version availability.
 # ==============================================================================
 schemaVersion: 1
-updatedAt: "2026-10-07T10:34:11.939Z"
+updatedAt: "2026-10-07T10:45:52.577Z"
 
 policy:
   maxMinorLag: 5
@@ -21,7 +21,7 @@ platforms:
     downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.3-desktop/UniVPN-Setup-0.4.3-x64.exe"
     installerType: "nsis"
     architecture: ["x64"]
-    releaseDate: "2026-10-07T10:34:11.939Z"
+    releaseDate: "2026-10-07T10:45:52.577Z"
 
   macos:
     version: "0.4.3"
@@ -32,17 +32,16 @@ platforms:
     zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.3-desktop/UniVPN-0.4.3-mac.zip"
     installerType: "dmg"
     architecture: ["arm64", "x64"]
-    releaseDate: "2026-10-07T10:34:11.939Z"
+    releaseDate: "2026-10-07T10:45:52.577Z"
 
   android:
-    version: "0.4.1"
-    versionCode: 401
+    version: "0.4.0"
+    versionCode: 400
     minSupportedVersion: "0.0.0"
-    minSupportedVersionCode: 381
+    minSupportedVersionCode: 380
     mandatory: false
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-android.yml"
     playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
-    directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.1-mobile/app-release.apk"
-    fallbackApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.1-mobile-internal/app-release.apk"
+    directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.0-mobile/app-release.apk"
     packageId: "com.univpn.mobile"
-    releaseDate: "2026-10-07T10:34:11.939Z"
+    releaseDate: "2026-10-07T10:45:52.577Z"

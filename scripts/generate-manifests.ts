@@ -60,11 +60,13 @@ export function generateManifests(options?: {
   )
 
   const dVersion = options?.desktopVersion || desktopPkg.version || '0.3.1'
-  const aVersion = options?.androidVersion || mobileAppJson.expo?.version || '0.3.1'
+  // RULE: Versi internal (v*-internal) KHUSUS staff testing (API internal / staging)
+  // dan DILARANG KERAS masuk ke manifes publik (latest.yml, latest-android.yml, dsb).
+  // Manifes publik HANYA untuk versi rilis produksi publik (v*-mobile / v*-desktop).
+  const aVersion = options?.androidVersion || '0.4.0'
   const aVersionCode =
     options?.androidVersionCode ||
-    mobileAppJson.expo?.android?.versionCode ||
-    31
+    400
   const isMandatory = options?.mandatory ?? false
 
   const minDesktop = calculateMinSupportedVersion(dVersion)
@@ -119,7 +121,6 @@ platforms:
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-android.yml"
     playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
     directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
-    fallbackApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile-internal/app-release.apk"
     packageId: "com.univpn.mobile"
     releaseDate: "${now}"
 `
@@ -190,7 +191,6 @@ distribution:
     url: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
   directDownload:
     apkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
-    fallbackApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile-internal/app-release.apk"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 42150000
 `

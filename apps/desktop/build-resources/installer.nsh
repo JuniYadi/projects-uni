@@ -10,9 +10,11 @@
   nsExec::Exec 'sc.exe delete UniVPNService'
   
   ; Ensure ProgramData config folder exists for tunnel configuration
-  CreateDirectory "$COMMONAPPDATA\UniVPN"
+  SetShellVarContext all
+  CreateDirectory "$APPDATA\UniVPN"
   ; Grant all users write permissions to the config directory so the unprivileged GUI can update the config
-  nsExec::Exec 'icacls.exe "$COMMONAPPDATA\UniVPN" /grant *S-1-5-32-545:(OI)(CI)M /T'
+  nsExec::Exec 'icacls.exe "$APPDATA\UniVPN" /grant *S-1-5-32-545:(OI)(CI)M /T'
+  SetShellVarContext current
 
   ; Create Windows Service pointing to wg-helper.exe
   ; SERVICE_WIN32_OWN_PROCESS, start= demand (started on demand by GUI)
@@ -44,6 +46,8 @@
   DetailPrint "Removing UniVPN Windows Tunnel Service..."
   nsExec::Exec 'sc.exe stop UniVPNService'
   nsExec::Exec 'sc.exe delete UniVPNService'
-  RMDir /r "$COMMONAPPDATA\UniVPN"
+  SetShellVarContext all
+  RMDir /r "$APPDATA\UniVPN"
+  SetShellVarContext current
   DetailPrint "UniVPN Windows Tunnel Service removed."
 !macroend

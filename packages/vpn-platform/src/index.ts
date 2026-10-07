@@ -1,10 +1,10 @@
 import { createDarwinDriver } from './darwin'
 import { createNoopDriver } from './noop'
-import { createWindowsDriver } from './windows'
+import { createWindowsDriver, resolveWindowsResources } from './windows'
 import type { VpnPlatformDriver, VpnStats, VpnStatus } from './types'
 
 export type { VpnPlatformDriver, VpnStats, VpnStatus }
-export { createWindowsDriver, createDarwinDriver, createNoopDriver }
+export { createWindowsDriver, resolveWindowsResources, createDarwinDriver, createNoopDriver }
 
 export function createPlatformDriver(): VpnPlatformDriver {
   if (process.platform === 'win32') {

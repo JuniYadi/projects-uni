@@ -11,6 +11,7 @@ export interface ProfileInfo {
   id: string
   serverName: string
   hostname: string
+  serverIp?: string | null
   protocol: 'OPENVPN' | 'WIREGUARD'
   region: string
   country?: string

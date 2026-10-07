@@ -2,6 +2,14 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.4.2-desktop] - 2026-10-07
+
+### Fixed
+- **macOS**: Memperbaiki instalasi LaunchDaemon `univpn-helper` agar tidak meminta password administrator berulang-ulang setiap kali koneksi (cukup satu kali autentikasi).
+- **macOS**: Menyalin binary pasangan `wireguard-go` dan `wg` ke `/Library/PrivilegedHelperTools/` agar daemon dapat berjalan tanpa dependensi luar.
+- **WireGuard**: Memperbaiki format perintah rute host macOS (menghapus argumen `-gateway` yang tidak valid pada BSD `route`) yang sebelumnya menyebabkan route looping dan *handshake timeout*.
+- **WireGuard**: Menambahkan verifikasi handshake pasca pembentukan terowongan sebelum menyatakan status terhubung, dengan auto-rollback rute jika server tidak merespons.
+- **Desktop**: Memperbaiki penanganan pesan error IPC pada antarmuka pengguna agar menampilkan alasan kegagalan yang akurat alih-alih pesan hardcoded.
 
 ## [v0.4.1-desktop] - 2026-10-07
 

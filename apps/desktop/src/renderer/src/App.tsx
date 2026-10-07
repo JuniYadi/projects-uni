@@ -75,13 +75,13 @@ export default function App() {
   const [profiles, setProfiles] = useState<ProfileInfo[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [status, setStatus] = useState<VpnStatus>('disconnected')
-  const [connectError, setConnectError] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [showLogModal, setShowLogModal] = useState(false)
 
   // Update System State
   const [updateState, setUpdateState] = useState<UpdateInfoState>({
-    currentVersion: '0.4.1',
+    currentVersion: '0.4.2',
     status: 'idle',
   })
   const [checkingUpdate, setCheckingUpdate] = useState(false)
@@ -227,17 +227,17 @@ export default function App() {
       return
     }
     if (!selectedId) return
-    setConnectError(false)
+    setConnectError(null)
     setStatus('connecting')
     const res = await window.electronAPI.connect(selectedId)
     if (!res.ok) {
-      setConnectError(true)
+      setConnectError(res.error || 'Koneksi gagal')
       setStatus('disconnected')
     }
   }
 
   const disconnect = async () => {
-    setConnectError(false)
+    setConnectError(null)
     await window.electronAPI.disconnect()
   }
 
@@ -339,7 +339,7 @@ export default function App() {
   }
 
   // Status mapping
-  const isFailed = connectError || status === 'error'
+  const isFailed = Boolean(connectError) || status === 'error'
   const isConnected = status === 'connected'
   const isConnecting = status === 'connecting' || status === 'disconnecting'
 
@@ -982,7 +982,7 @@ export default function App() {
                 ) : null}
               </div>
               {connectError ? (
-                <div className="text-error font-medium">[{new Date().toLocaleTimeString('id-ID')}] [ERROR] Gagal: WireGuard handshake timeout (10 dtk)</div>
+                <div className="text-error font-medium">[{new Date().toLocaleTimeString('id-ID')}] [ERROR] Gagal: {connectError}</div>
               ) : (
                 <div className="text-[#22C55E]">[{new Date().toLocaleTimeString('id-ID')}] [OK] Status Terowongan: {status}</div>
               )}
@@ -993,7 +993,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  const txt = `UniVPN Desktop Log\nServer: ${selected?.serverName ?? 'N/A'} (${activeHost || 'N/A'})\nStatus: ${status}\nError: ${connectError ? 'Handshake timeout' : 'None'}`
+                  const txt = `UniVPN Desktop Log\nServer: ${selected?.serverName ?? 'N/A'} (${activeHost || 'N/A'})\nStatus: ${status}\nError: ${connectError ?? 'None'}`
                   void navigator.clipboard.writeText(txt)
                   alert('Log disalin ke clipboard!')
                 }}

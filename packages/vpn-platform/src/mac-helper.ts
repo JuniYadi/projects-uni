@@ -37,20 +37,29 @@ function resolveBinaries() {
   const envWgGo = process.env.UNIVPN_WIREGUARD_GO_PATH
   const envWg = process.env.UNIVPN_WG_PATH
 
-  const resourcesDir =
-    (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath ??
-    path.resolve(import.meta.dirname, '../../../apps/desktop/resources')
+  const execDir = path.dirname(process.execPath)
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath
 
   const candidateWgGo = [
     envWgGo,
-    path.join(resourcesDir, 'mac', 'wireguard-go'),
+    path.join(execDir, 'wireguard-go'),
+    '/Library/PrivilegedHelperTools/wireguard-go',
+    resourcesPath ? path.join(resourcesPath, 'resources', 'mac', 'wireguard-go') : null,
+    resourcesPath ? path.join(resourcesPath, 'mac', 'wireguard-go') : null,
+    path.resolve(process.cwd(), 'apps/desktop/resources/mac/wireguard-go'),
+    path.resolve(process.cwd(), 'resources/mac/wireguard-go'),
     '/usr/local/bin/wireguard-go',
     '/opt/homebrew/bin/wireguard-go',
   ].filter((p): p is string => Boolean(p && fs.existsSync(p)))
 
   const candidateWg = [
     envWg,
-    path.join(resourcesDir, 'mac', 'wg'),
+    path.join(execDir, 'wg'),
+    '/Library/PrivilegedHelperTools/wg',
+    resourcesPath ? path.join(resourcesPath, 'resources', 'mac', 'wg') : null,
+    resourcesPath ? path.join(resourcesPath, 'mac', 'wg') : null,
+    path.resolve(process.cwd(), 'apps/desktop/resources/mac/wg'),
+    path.resolve(process.cwd(), 'resources/mac/wg'),
     '/usr/local/bin/wg',
     '/opt/homebrew/bin/wg',
   ].filter((p): p is string => Boolean(p && fs.existsSync(p)))
@@ -239,156 +248,15 @@ async function resolveHost(hostWithPort: string): Promise<string> {
   return lookup.address
 }
 
-export async function connectTunnel(configText: string): Promise<string> {
-  if (activeTunnel) {
-    await disconnectTunnel()
-  }
-
-  const bins = resolveBinaries()
-  const parsed = parseWireGuardConfig(configText)
-
-  if (parsed.addresses.length === 0) {
-    throw new Error('No Address found in [Interface] configuration')
-  }
-
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'univpn-mac-'))
-  const tunNameFile = path.join(tempDir, 'tun-name')
-  const cleanConfFile = path.join(tempDir, 'wg.conf')
-  fs.writeFileSync(cleanConfFile, parsed.cleanConfig, { mode: 0o600 })
-
-  // 1. Spawn wireguard-go
-  const wgProc = spawn(bins.wireguardGo, ['-f', 'utun'], {
-    env: {
-      ...process.env,
-      WG_TUN_NAME_FILE: tunNameFile,
-      LOG_LEVEL: 'info',
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  })
-
-  // Wait for tun-name file
-  let ifaceName = ''
-  for (let i = 0; i < 30; i++) {
-    await sleep(100)
-    if (fs.existsSync(tunNameFile)) {
-      const content = fs.readFileSync(tunNameFile, 'utf8').trim()
-      if (content) {
-        ifaceName = content
-        break
-      }
-    }
-  }
-
-  if (!ifaceName) {
-    wgProc.kill()
-    fs.rmSync(tempDir, { recursive: true, force: true })
-    throw new Error('Timed out waiting for wireguard-go to create utun interface')
-  }
-
-  // Wait for UAPI socket
-  const uapiSocket = `/var/run/wireguard/${ifaceName}.sock`
-  for (let i = 0; i < 20; i++) {
-    if (fs.existsSync(uapiSocket)) break
-    await sleep(100)
-  }
-
-  // 2. Configure utun interface with ifconfig
-  for (const addr of parsed.addresses) {
-    const [ip] = addr.split('/')
-    if (!ip) continue
-
-    if (ip.includes(':')) {
-      // IPv6
-      const prefix = addr.split('/')[1] ?? '128'
-      await exec('ifconfig', [ifaceName, 'inet6', ip, 'prefixlen', prefix])
-    } else {
-      // IPv4 point-to-point interface
-      await exec('ifconfig', [ifaceName, 'inet', ip, ip, 'netmask', '255.255.255.255'])
-    }
-  }
-
-  await exec('ifconfig', [ifaceName, 'mtu', String(parsed.mtu)])
-  await exec('ifconfig', [ifaceName, 'up'])
-
-  // 3. Set WireGuard config via wg tool
-  await exec(bins.wg, ['setconf', ifaceName, cleanConfFile])
-
-  // 4. Set Routing
-  const routesAdded: string[] = []
-  let endpointIp: string | null = null
-  let defaultGateway: string | null = null
-  let primaryDevice: string | null = null
-
-  try {
-    const gw = await getDefaultGatewayAndInterface()
-    defaultGateway = gw.gateway
-    primaryDevice = gw.device
-
-    if (parsed.endpoint) {
-      endpointIp = await resolveHost(parsed.endpoint)
-      // Direct host route for WireGuard server endpoint via physical gateway
-      await exec('route', ['-q', '-n', 'add', '-host', endpointIp, '-gateway', defaultGateway])
-      routesAdded.push(`host:${endpointIp}`)
-    }
-
-    const hasDefaultRoute = parsed.allowedIps.some((cidr) => cidr === '0.0.0.0/0')
-    if (hasDefaultRoute) {
-      // 0/1 and 128/1 standard VPN route trick
-      await exec('route', ['-q', '-n', 'add', '-inet', '0.0.0.0/1', '-interface', ifaceName])
-      await exec('route', ['-q', '-n', 'add', '-inet', '128.0.0.0/1', '-interface', ifaceName])
-      routesAdded.push('0.0.0.0/1')
-      routesAdded.push('128.0.0.0/1')
-    } else {
-      for (const cidr of parsed.allowedIps) {
-        await exec('route', ['-q', '-n', 'add', '-inet', cidr, '-interface', ifaceName])
-        routesAdded.push(cidr)
-      }
-    }
-  } catch (err) {
-    console.error('Warning configuring routes:', err)
-  }
-
-  // 5. Configure DNS
-  let serviceName: string | null = null
-  let savedDns: string[] = []
-
-  if (parsed.dnsServers.length > 0 && primaryDevice) {
-    try {
-      serviceName = await getNetworkServiceName(primaryDevice)
-      savedDns = await getDnsServers(serviceName)
-      await setDnsServers(serviceName, parsed.dnsServers)
-    } catch (err) {
-      console.error('Warning configuring DNS:', err)
-    }
-  }
-
-  activeTunnel = {
-    interfaceName: ifaceName,
-    endpointIp,
-    defaultGateway,
-    primaryDevice,
-    serviceName,
-    savedDns,
-    routesAdded,
-    tempDir,
-    wireguardProcess: wgProc,
-  }
-
-  return ifaceName
-}
-
-export async function disconnectTunnel(): Promise<void> {
-  if (!activeTunnel) return
-
+async function cleanUpTunnelState(tunnel: TunnelState): Promise<void> {
   const {
     interfaceName,
-    endpointIp,
     serviceName,
     savedDns,
     routesAdded,
     tempDir,
     wireguardProcess,
-  } = activeTunnel
+  } = tunnel
 
   // 1. Remove routes
   for (const route of routesAdded) {
@@ -434,7 +302,209 @@ export async function disconnectTunnel(): Promise<void> {
   } catch {
     // cleanup best effort
   }
+}
 
+export async function connectTunnel(configText: string): Promise<string> {
+  if (activeTunnel) {
+    await disconnectTunnel()
+  }
+
+  const bins = resolveBinaries()
+  const parsed = parseWireGuardConfig(configText)
+
+  if (parsed.addresses.length === 0) {
+    throw new Error('No Address found in [Interface] configuration')
+  }
+
+  if (!fs.existsSync('/var/run/wireguard')) {
+    try {
+      fs.mkdirSync('/var/run/wireguard', { recursive: true, mode: 0o755 })
+    } catch {}
+  }
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'univpn-mac-'))
+  const tunNameFile = path.join(tempDir, 'tun-name')
+  const cleanConfFile = path.join(tempDir, 'wg.conf')
+  fs.writeFileSync(cleanConfFile, parsed.cleanConfig, { mode: 0o600 })
+
+  // 1. Spawn wireguard-go
+  let wgStderr = ''
+  const wgProc = spawn(bins.wireguardGo, ['-f', 'utun'], {
+    env: {
+      ...process.env,
+      WG_TUN_NAME_FILE: tunNameFile,
+      LOG_LEVEL: 'info',
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+
+  wgProc.stderr?.on('data', (d) => {
+    wgStderr += d.toString()
+  })
+
+  // Wait for tun-name file
+  let ifaceName = ''
+  for (let i = 0; i < 30; i++) {
+    await sleep(100)
+    if (fs.existsSync(tunNameFile)) {
+      const content = fs.readFileSync(tunNameFile, 'utf8').trim()
+      if (content) {
+        ifaceName = content
+        break
+      }
+    }
+  }
+
+  if (!ifaceName) {
+    wgProc.kill()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    throw new Error(`Timed out waiting for wireguard-go to create utun interface: ${wgStderr.trim() || 'process failed to initialize'}`)
+  }
+
+  // Wait for UAPI socket
+  const uapiSocket = `/var/run/wireguard/${ifaceName}.sock`
+  for (let i = 0; i < 20; i++) {
+    if (fs.existsSync(uapiSocket)) break
+    await sleep(100)
+  }
+
+  // 2. Configure utun interface with ifconfig
+  for (const addr of parsed.addresses) {
+    const [ip] = addr.split('/')
+    if (!ip) continue
+
+    if (ip.includes(':')) {
+      // IPv6
+      const prefix = addr.split('/')[1] ?? '128'
+      await exec('ifconfig', [ifaceName, 'inet6', ip, 'prefixlen', prefix])
+    } else {
+      // IPv4 point-to-point interface
+      await exec('ifconfig', [ifaceName, 'inet', ip, ip, 'netmask', '255.255.255.255'])
+    }
+  }
+
+  await exec('ifconfig', [ifaceName, 'mtu', String(parsed.mtu)])
+  await exec('ifconfig', [ifaceName, 'up'])
+
+  // 3. Set WireGuard config via wg tool
+  await exec(bins.wg, ['setconf', ifaceName, cleanConfFile])
+
+  // 4. Set Routing
+  const routesAdded: string[] = []
+  let endpointIp: string | null = null
+  let defaultGateway: string | null = null
+  let primaryDevice: string | null = null
+
+  try {
+    const gw = await getDefaultGatewayAndInterface()
+    defaultGateway = gw.gateway
+    primaryDevice = gw.device
+
+    if (parsed.endpoint) {
+      endpointIp = await resolveHost(parsed.endpoint)
+      // Remove any existing host route to avoid "File exists" error
+      try {
+        await exec('route', ['-q', '-n', 'delete', '-host', endpointIp])
+      } catch {}
+
+      // Direct host route for WireGuard server endpoint via physical gateway
+      // Note: macOS BSD route takes gateway as positional arg, NOT '-gateway' flag
+      await exec('route', ['-q', '-n', 'add', '-host', endpointIp, defaultGateway])
+      routesAdded.push(`host:${endpointIp}`)
+    }
+
+    const hasDefaultRoute = parsed.allowedIps.some((cidr) => cidr === '0.0.0.0/0')
+    if (hasDefaultRoute) {
+      // 0/1 and 128/1 standard VPN route trick
+      try {
+        await exec('route', ['-q', '-n', 'delete', '-inet', '0.0.0.0/1'])
+      } catch {}
+      try {
+        await exec('route', ['-q', '-n', 'delete', '-inet', '128.0.0.0/1'])
+      } catch {}
+
+      await exec('route', ['-q', '-n', 'add', '-inet', '0.0.0.0/1', '-interface', ifaceName])
+      await exec('route', ['-q', '-n', 'add', '-inet', '128.0.0.0/1', '-interface', ifaceName])
+      routesAdded.push('0.0.0.0/1')
+      routesAdded.push('128.0.0.0/1')
+    } else {
+      for (const cidr of parsed.allowedIps) {
+        try {
+          await exec('route', ['-q', '-n', 'delete', '-inet', cidr])
+        } catch {}
+        await exec('route', ['-q', '-n', 'add', '-inet', cidr, '-interface', ifaceName])
+        routesAdded.push(cidr)
+      }
+    }
+  } catch (err) {
+    console.error('Error configuring routes:', err)
+    throw new Error(`Failed to configure routing: ${(err as Error).message}`)
+  }
+
+  // 5. Configure DNS
+  let serviceName: string | null = null
+  let savedDns: string[] = []
+
+  if (parsed.dnsServers.length > 0 && primaryDevice) {
+    try {
+      serviceName = await getNetworkServiceName(primaryDevice)
+      savedDns = await getDnsServers(serviceName)
+      await setDnsServers(serviceName, parsed.dnsServers)
+    } catch (err) {
+      console.error('Warning configuring DNS:', err)
+    }
+  }
+
+  const tunnel: TunnelState = {
+    interfaceName: ifaceName,
+    endpointIp,
+    defaultGateway,
+    primaryDevice,
+    serviceName,
+    savedDns,
+    routesAdded,
+    tempDir,
+    wireguardProcess: wgProc,
+  }
+
+  // 6. Verify WireGuard handshake before reporting connected
+  let handshakeCompleted = false
+  for (let i = 0; i < 20; i++) {
+    await sleep(250)
+    try {
+      const { stdout } = await exec(bins.wg, ['show', ifaceName, 'latest-handshakes'])
+      const lines = stdout.trim().split('\n')
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/)
+        if (parts.length >= 2) {
+          const timestamp = Number.parseInt(parts[1]!, 10) || 0
+          if (timestamp > 0) {
+            handshakeCompleted = true
+            break
+          }
+        }
+      }
+      if (handshakeCompleted) break
+    } catch {
+      // ignore transient query errors
+    }
+  }
+
+  if (!handshakeCompleted) {
+    await cleanUpTunnelState(tunnel)
+    if (wgProc.exitCode !== null) {
+      throw new Error(`wireguard-go exited prematurely (code ${wgProc.exitCode}): ${wgStderr.trim()}`)
+    }
+    throw new Error('Handshake timeout: Server WireGuard tidak merespons (5 detik)')
+  }
+
+  activeTunnel = tunnel
+  return ifaceName
+}
+
+export async function disconnectTunnel(): Promise<void> {
+  if (!activeTunnel) return
+  await cleanUpTunnelState(activeTunnel)
   activeTunnel = null
 }
 
@@ -452,7 +522,13 @@ export async function getTunnelStats(): Promise<{ bytesSent: number; bytesReceiv
   try {
     const { stdout } = await exec(bins.wg, ['show', activeTunnel.interfaceName, 'transfer'])
     const parts = stdout.trim().split(/\s+/)
-    if (parts.length >= 2) {
+    if (parts.length >= 3) {
+      return {
+        bytesReceived: Number.parseInt(parts[1]!, 10) || 0,
+        bytesSent: Number.parseInt(parts[2]!, 10) || 0,
+      }
+    }
+    if (parts.length === 2) {
       return {
         bytesReceived: Number.parseInt(parts[0]!, 10) || 0,
         bytesSent: Number.parseInt(parts[1]!, 10) || 0,

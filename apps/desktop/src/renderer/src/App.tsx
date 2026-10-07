@@ -81,7 +81,7 @@ export default function App() {
 
   // Update System State
   const [updateState, setUpdateState] = useState<UpdateInfoState>({
-    currentVersion: '0.4.3',
+    currentVersion: '0.4.4',
     status: 'idle',
   })
   const [checkingUpdate, setCheckingUpdate] = useState(false)

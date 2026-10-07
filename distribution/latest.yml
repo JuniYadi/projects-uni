@@ -3,7 +3,7 @@
 # Used by Website Landing Page & UI Clients to inspect version availability.
 # ==============================================================================
 schemaVersion: 1
-updatedAt: "2026-10-07T10:45:52.577Z"
+updatedAt: "2026-10-07T14:04:27.343Z"
 
 policy:
   maxMinorLag: 5
@@ -14,25 +14,25 @@ policy:
 
 platforms:
   windows:
-    version: "0.4.3"
+    version: "0.4.4"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-win.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.3-desktop/UniVPN-Setup-0.4.3-x64.exe"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.4-desktop/UniVPN-Setup-0.4.4-x64.exe"
     installerType: "nsis"
     architecture: ["x64"]
-    releaseDate: "2026-10-07T10:45:52.577Z"
+    releaseDate: "2026-10-07T14:04:27.343Z"
 
   macos:
-    version: "0.4.3"
+    version: "0.4.4"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-mac.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.3-desktop/UniVPN-0.4.3-arm64.dmg"
-    zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.3-desktop/UniVPN-0.4.3-mac.zip"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.4-desktop/UniVPN-0.4.4-arm64.dmg"
+    zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.4-desktop/UniVPN-0.4.4-mac.zip"
     installerType: "dmg"
     architecture: ["arm64", "x64"]
-    releaseDate: "2026-10-07T10:45:52.577Z"
+    releaseDate: "2026-10-07T14:04:27.343Z"
 
   android:
     version: "0.4.0"
@@ -44,4 +44,4 @@ platforms:
     playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
     directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.0-mobile/app-release.apk"
     packageId: "com.univpn.mobile"
-    releaseDate: "2026-10-07T10:45:52.577Z"
+    releaseDate: "2026-10-07T14:04:27.343Z"

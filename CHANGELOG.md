@@ -2,6 +2,16 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.4.4-desktop] - 2026-10-07
+
+### Added
+- **Windows**: Arsitektur background service `UniVPNService` (`LocalSystem`) yang didaftarkan secara otomatis melalui script installer NSIS, memungkinkan manajemen koneksi VPN tanpa pop-up UAC berulang untuk pengguna standar.
+- **Desktop**: Dialog pembaruan yang diselaraskan dengan mockup desain: judul kondisional "Pembaruan Siap Dipasang", catatan pembaruan yang dapat digulir (*scrollable release notes*), serta tombol aksi "Nanti Saja" dan "Mulai Ulang Sekarang".
+
+### Fixed
+- **Windows**: Memperbaiki error pemuatan library WireGuard `LoadLibraryExW code 126` dengan dynamic probe multi-path (`System32`, direktori executable, bundle resources, dan instalasi sistem `wireguard.exe`).
+- **Distribution**: Memisahkan URL unduhan per-platform di `latest.yml` ke tag rilis spesifik (`v*-desktop` dan `v*-mobile`) untuk mencegah kesalahan pengalihan unduhan APK Android.
+
 ## [v0.4.3-desktop] - 2026-10-07
 
 ### Added

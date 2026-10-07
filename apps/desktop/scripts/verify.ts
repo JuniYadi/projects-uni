@@ -1,5 +1,5 @@
 import { createApiClient, type AuthStorage } from '@univpn/api'
-import { createVpnCore, type VpnCore } from '@univpn/vpn-core'
+import { createVpnCore, applyEndpointPreference, type VpnCore } from '@univpn/vpn-core'
 import { createNoopDriver, createDarwinDriver, createPlatformDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
 import { parseWireGuardConfig } from '../../../packages/vpn-platform/src/mac-helper'
 import type { VpnApiClient } from '@univpn/api'
@@ -74,12 +74,14 @@ globalThis.fetch = originalFetch
 
 // ─── 2. VpnCore state machine ────────────────────────────────
 
+let lastConnectedConfig = ''
 function createFakeDriver(): VpnPlatformDriver {
   let connected = false
   return {
     initialize: async () => {},
-    connect: async () => {
+    connect: async (cfg: string) => {
       connected = true
+      lastConnectedConfig = cfg
     },
     disconnect: async () => {
       connected = false
@@ -93,9 +95,21 @@ function createFakeDriver(): VpnPlatformDriver {
 }
 
 const fakeApi = {
-  getProfiles: async () => ({ profiles: [] }),
+  getProfiles: async () => ({
+    profiles: [
+      {
+        id: 'profile-1',
+        serverName: 'SG-01',
+        hostname: 'sg01.vpn.pfnapp.com',
+        serverIp: '51.79.188.39',
+        protocol: 'WIREGUARD',
+        region: 'Asia',
+        provisioningStatus: 'ACTIVE',
+      },
+    ],
+  }),
   getProfileConfig: async (profileId: string) => ({
-    config: '[Interface]\nPrivateKey = test\nAddress = 10.0.0.2\n[Peer]\nPublicKey = peer\nAllowedIPs = 0.0.0.0/0\nEndpoint = 1.2.3.4:51820',
+    config: '[Interface]\nPrivateKey = test\nAddress = 10.0.0.2\n[Peer]\nPublicKey = peer\nAllowedIPs = 0.0.0.0/0\nEndpoint = sg01.vpn.pfnapp.com:51820',
     format: 'wireguard' as const,
     profileId,
   }),
@@ -112,6 +126,30 @@ const stats = await core.stats()
 assert(stats !== null && stats.bytesReceived === 200, 'stats tersedia saat connected')
 await core.disconnect()
 assert((await core.status()) === 'disconnected', 'setelah disconnect status disconnected')
+assert(lastConnectedConfig.includes('Endpoint = 51.79.188.39:51820'), 'connect memprioritaskan IP server daripada domain')
+
+const confWithDomain = '[Interface]\nPrivateKey = a\n[Peer]\nPublicKey = b\nEndpoint = sg01.vpn.pfnapp.com:51820'
+const rewrittenWithIp = applyEndpointPreference(confWithDomain, {
+  id: '1',
+  serverName: 'SG',
+  hostname: 'sg01.vpn.pfnapp.com',
+  serverIp: '103.28.84.12',
+  protocol: 'WIREGUARD',
+  region: 'Asia',
+  provisioningStatus: 'ACTIVE',
+})
+assert(rewrittenWithIp.includes('Endpoint = 103.28.84.12:51820'), 'applyEndpointPreference mengubah hostname ke IP')
+
+const rewrittenFallback = applyEndpointPreference(confWithDomain, {
+  id: '1',
+  serverName: 'SG',
+  hostname: 'sg01.vpn.pfnapp.com',
+  serverIp: null,
+  protocol: 'WIREGUARD',
+  region: 'Asia',
+  provisioningStatus: 'ACTIVE',
+})
+assert(rewrittenFallback.includes('Endpoint = sg01.vpn.pfnapp.com:51820'), 'applyEndpointPreference fallback ke hostname jika serverIp null')
 
 // ─── 3. Platform driver factory ──────────────────────────────
 

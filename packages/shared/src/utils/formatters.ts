@@ -190,3 +190,54 @@ export function formatDuration(seconds: number): string {
   if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
   return `${m}:${String(s).padStart(2, "0")}`
 }
+
+/**
+ * Check if a string is a valid IPv4 or IPv6 address (without port or CIDR).
+ */
+export function isIpAddress(ip: string | null | undefined): boolean {
+  if (!ip) return false
+  const trimmed = ip.trim().replace(/^\[|\]$/g, '')
+  if (!trimmed) return false
+
+  // IPv4: 4 octets 0-255
+  const parts = trimmed.split('.')
+  if (parts.length === 4) {
+    return parts.every((p) => {
+      if (!/^\d{1,3}$/.test(p)) return false
+      const n = Number(p)
+      return n >= 0 && n <= 255 && String(n) === p
+    })
+  }
+
+  // IPv6: valid hex segments separated by colons
+  if (trimmed.includes(':') && /^[0-9a-fA-F:]+$/.test(trimmed)) {
+    const colons = (trimmed.match(/:/g) || []).length
+    return colons >= 2 && colons <= 7
+  }
+
+  return false
+}
+
+/**
+ * Choose endpoint host preferring IP address first, falling back to hostname/domain.
+ */
+export function resolveEndpointHost(options: {
+  serverIp?: string | null
+  hostname?: string | null
+  currentHost?: string | null
+}): string {
+  const { serverIp, hostname, currentHost } = options
+  if (isIpAddress(serverIp)) {
+    return serverIp!.trim()
+  }
+  if (isIpAddress(currentHost)) {
+    return currentHost!.trim()
+  }
+  if (hostname && hostname.trim()) {
+    return hostname.trim()
+  }
+  if (currentHost && currentHost.trim()) {
+    return currentHost.trim()
+  }
+  return (serverIp || '').trim()
+}

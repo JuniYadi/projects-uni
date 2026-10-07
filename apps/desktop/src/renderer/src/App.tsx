@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { resolveCountryCode } from '@univpn/shared'
+import { resolveCountryCode, resolveEndpointHost, isIpAddress } from '@univpn/shared'
 import { Strings } from '../../../../mobile/src/constants/strings'
 import type { ProfileInfo, VpnStatus, DesktopSettingsState, UpdateInfoState } from './electron'
 import { BrandLogo } from './components/BrandLogo'
@@ -250,6 +250,14 @@ export default function App() {
   }
 
   const selected = useMemo(() => profiles.find((p) => p.id === selectedId) ?? profiles[0] ?? null, [profiles, selectedId])
+  const activeHost = useMemo(
+    () =>
+      resolveEndpointHost({
+        serverIp: selected?.serverIp,
+        hostname: selected?.hostname,
+      }),
+    [selected]
+  )
 
   const sortedProfiles = useMemo(() => {
     const list = profiles.filter((p) =>
@@ -967,7 +975,12 @@ export default function App() {
             {/* Terminal Body */}
             <div className="flex-1 overflow-y-auto bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-dim">
               <div>[{new Date().toLocaleTimeString('id-ID')}] [INFO] WireGuard Client Core v1.0.20</div>
-              <div>[{new Date().toLocaleTimeString('id-ID')}] [INFO] Server: {selected?.serverName ?? 'Belum ada'} ({selected?.hostname ?? 'N/A'})</div>
+              <div>
+                [{new Date().toLocaleTimeString('id-ID')}] [INFO] Server: {selected?.serverName ?? 'Belum ada'} ({activeHost || 'N/A'})
+                {selected?.hostname && isIpAddress(selected?.serverIp) && selected.serverIp !== selected.hostname ? (
+                  <span className="text-dim"> (domain: {selected.hostname})</span>
+                ) : null}
+              </div>
               {connectError ? (
                 <div className="text-error font-medium">[{new Date().toLocaleTimeString('id-ID')}] [ERROR] Gagal: WireGuard handshake timeout (10 dtk)</div>
               ) : (
@@ -980,7 +993,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  const txt = `UniVPN Desktop Log\nServer: ${selected?.serverName ?? 'N/A'} (${selected?.hostname ?? 'N/A'})\nStatus: ${status}\nError: ${connectError ? 'Handshake timeout' : 'None'}`
+                  const txt = `UniVPN Desktop Log\nServer: ${selected?.serverName ?? 'N/A'} (${activeHost || 'N/A'})\nStatus: ${status}\nError: ${connectError ? 'Handshake timeout' : 'None'}`
                   void navigator.clipboard.writeText(txt)
                   alert('Log disalin ke clipboard!')
                 }}

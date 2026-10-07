@@ -1,7 +1,7 @@
 // Connection store — real WireGuard integration
 // Manages VPN lifecycle: fetch config → parse → connect → heartbeat → disconnect
 
-import { create } from 'zustand'
+import { resolveEndpointHost } from '@univpn/shared'
 import type { VpnProfile, ConnectionStatus } from '@/types/vpn'
 import { api } from '@/services/api'
 import { vpnService } from '@/services/vpnService'
@@ -82,11 +82,15 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   },
   connect: async (profile) => {
     set({ status: 'connecting', profile, error: null, dropped: false })
+    const initialHost = resolveEndpointHost({
+      serverIp: profile.serverIp,
+      hostname: profile.serverAddress,
+    })
     void diagnosticLogService.recordLog({
       level: 'INFO',
       stage: 'CONFIG',
       serverName: profile.name,
-      serverHost: profile.serverAddress || profile.serverIp || 'unknown',
+      serverHost: initialHost || profile.serverAddress || profile.serverIp || 'unknown',
       summary: 'Memulai koneksi terowongan WireGuard',
     })
     // Ensure client's real IP and location are snapshotted before tunnel is active
@@ -123,18 +127,27 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       // 3. Initialize VPN module
       await vpnService.initialize()
 
+      // Prefer IP first, fallback to hostname/domain
+      let endpointHost = resolveEndpointHost({
+        serverIp: profile.serverIp,
+        hostname: profile.serverAddress,
+        currentHost: wgConfig.serverAddress,
+      })
+      if (endpointHost.includes(':') && !endpointHost.startsWith('[')) {
+        endpointHost = `[${endpointHost}]`
+      }
+
       // 4. Connect, passing whitelisted apps as excluded apps for split tunneling
       const { whitelistedApps } = useSettingsStore.getState()
       const excludedApps = whitelistedApps.map((a) => a.packageName)
-      await vpnService.connect({ ...wgConfig, excludedApps })
-
+      await vpnService.connect({ ...wgConfig, serverAddress: endpointHost, excludedApps })
       // 5. Connected
       set({ status: 'connected', startTime: Date.now(), elapsed: 0, tunnelAddress, tunnelDns: wgConfig.dns ?? [] })
       void diagnosticLogService.recordLog({
         level: 'SUCCESS',
         stage: 'TUNNEL_UP',
         serverName: profile.name,
-        serverHost: profile.serverAddress || profile.serverIp || 'unknown',
+        serverHost: endpointHost || profile.serverAddress || profile.serverIp || 'unknown',
         summary: 'Terowongan WireGuard aktif & terhubung',
         details: `IP Terowongan: ${tunnelAddress.join(', ') || '10.64.0.1'} · DNS: ${(wgConfig.dns ?? []).join(', ') || 'Default'}`,
       })
@@ -149,7 +162,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         level: 'ERROR',
         stage: 'HANDSHAKE',
         serverName: profile.name,
-        serverHost: profile.serverAddress || profile.serverIp || 'unknown',
+        serverHost: initialHost || profile.serverAddress || profile.serverIp || 'unknown',
         summary: 'Gagal terhubung ke server',
         details: msg,
       })

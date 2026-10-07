@@ -1,11 +1,39 @@
 import type { VpnApiClient } from '@univpn/api'
 import type { VpnPlatformDriver, VpnStats, VpnStatus } from '@univpn/vpn-platform'
+import { resolveEndpointHost, type ProfileInfo } from '@univpn/shared'
 
 export type { VpnStatus, VpnStats }
 
 export interface VpnCoreOptions {
   api: VpnApiClient
   driver: VpnPlatformDriver
+}
+
+export function applyEndpointPreference(config: string, profile?: ProfileInfo | null): string {
+  if (!profile) return config
+
+  const endpointMatch = config.match(/^([ \t]*Endpoint[ \t]*=[ \t]*)([^:\s\r\n]+|\[[0-9a-fA-F:]+\])(:\d+)([ \t]*\r?$)/m)
+  if (!endpointMatch) return config
+
+  const prefix = endpointMatch[1]!
+  const currentHost = endpointMatch[2]!
+  const portSuffix = endpointMatch[3]!
+  const lineEnd = endpointMatch[4]!
+
+  let chosenHost = resolveEndpointHost({
+    serverIp: profile.serverIp,
+    hostname: profile.hostname,
+    currentHost,
+  })
+
+  if (chosenHost.includes(':') && !chosenHost.startsWith('[')) {
+    chosenHost = `[${chosenHost}]`
+  }
+
+  return config.replace(
+    /^([ \t]*Endpoint[ \t]*=[ \t]*)([^:\s\r\n]+|\[[0-9a-fA-F:]+\])(:\d+)([ \t]*\r?$)/m,
+    `${prefix}${chosenHost}${portSuffix}${lineEnd}`
+  )
 }
 
 export class VpnCore {
@@ -15,6 +43,7 @@ export class VpnCore {
   private profileId: string | null = null
   private _stats: VpnStats | null = null
   private timer: ReturnType<typeof setInterval> | null = null
+  private cachedProfiles: ProfileInfo[] = []
 
   constructor(options: VpnCoreOptions) {
     this.api = options.api
@@ -26,7 +55,11 @@ export class VpnCore {
   }
 
   async getProfiles() {
-    return this.api.getProfiles()
+    const res = await this.api.getProfiles()
+    if (res?.profiles) {
+      this.cachedProfiles = res.profiles
+    }
+    return res
   }
 
   async connect(profileId: string): Promise<void> {
@@ -36,7 +69,19 @@ export class VpnCore {
     this._status = 'connecting'
     try {
       const { config } = await this.api.getProfileConfig(profileId)
-      await this.driver.connect(config)
+
+      let profile = this.cachedProfiles.find((p) => p.id === profileId)
+      if (!profile) {
+        try {
+          const res = await this.getProfiles()
+          profile = res?.profiles?.find((p) => p.id === profileId)
+        } catch {
+          // best-effort lookup
+        }
+      }
+
+      const finalConfig = applyEndpointPreference(config, profile)
+      await this.driver.connect(finalConfig)
       this.profileId = profileId
       this._status = await this.driver.status()
       this.startPolling()

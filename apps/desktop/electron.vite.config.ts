@@ -2,7 +2,7 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const workspaceDeps = ['@univpn/api', '@univpn/shared', '@univpn/vpn-core', '@univpn/vpn-platform']
+const workspaceDeps = ['@univpn/api', '@univpn/shared', '@univpn/vpn-core', '@univpn/vpn-platform', 'electron-updater']
 
 const apiBaseUrl =
   process.env.UNIVPN_API_BASE_URL ??

@@ -3,6 +3,14 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v0.4.1-desktop] - 2026-10-07
+
+### Fixed
+- **Desktop**: Bundle `electron-updater` langsung ke dalam build main process (`electron.vite.config.ts`), mengatasi crash startup `TypeError: Cannot read properties of undefined (reading 'default')` di macOS dan Windows.
+
+### Changed
+- **Desktop**: Hapus dependensi `@electron-toolkit/utils` yang tidak terpakai dari `apps/desktop/package.json`.
+
 ## [v0.4.0-desktop] - 2026-10-07
 
 ### Added

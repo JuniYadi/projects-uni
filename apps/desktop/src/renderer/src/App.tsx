@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { resolveCountryCode } from '@univpn/shared'
 import { Strings } from '../../../../mobile/src/constants/strings'
-import type { ProfileInfo, VpnStatus, DesktopSettingsState } from './electron'
+import type { ProfileInfo, VpnStatus, DesktopSettingsState, UpdateInfoState } from './electron'
 import { BrandLogo } from './components/BrandLogo'
 import { WelcomeMap } from './components/WelcomeMap'
 import { CountryBadge } from './components/CountryBadge'
@@ -79,6 +79,16 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [showLogModal, setShowLogModal] = useState(false)
 
+  // Update System State
+  const [updateState, setUpdateState] = useState<UpdateInfoState>({
+    currentVersion: '0.3.1',
+    status: 'idle',
+  })
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [dismissBanner, setDismissBanner] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [installingUpdate, setInstallingUpdate] = useState(false)
+
   const isDarkTheme =
     theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
@@ -142,6 +152,42 @@ export default function App() {
     return () => clearInterval(id)
   }, [authenticated])
 
+  // Subscribe to update state
+  useEffect(() => {
+    window.electronAPI.getUpdateState().then((s) => setUpdateState(s)).catch(() => {})
+    const unsub = window.electronAPI.onUpdateStateChanged((next) => {
+      setUpdateState(next)
+      if (next.status === 'expired' || next.mandatory) {
+        setShowUpdateModal(true)
+      }
+    })
+    return unsub
+  }, [])
+
+  const handleManualCheckUpdate = async () => {
+    setCheckingUpdate(true)
+    try {
+      const res = await window.electronAPI.checkForUpdates()
+      if (res.state) {
+        setUpdateState(res.state)
+        if (res.state.availableVersion) {
+          setShowUpdateModal(true)
+        }
+      }
+    } finally {
+      setCheckingUpdate(false)
+    }
+  }
+
+  const handleApplyUpdate = async () => {
+    setInstallingUpdate(true)
+    try {
+      await window.electronAPI.installUpdate()
+    } finally {
+      setInstallingUpdate(false)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!subId.trim() || loginBusy) return
@@ -171,7 +217,15 @@ export default function App() {
     setModeLanjutan(false)
   }
 
+  const isExpired = updateState.status === 'expired'
+  const isMandatory = Boolean(updateState.mandatory)
+  const isBlocked = isExpired || isMandatory
+
   const connect = async () => {
+    if (isBlocked) {
+      setShowUpdateModal(true)
+      return
+    }
     if (!selectedId) return
     setConnectError(false)
     setStatus('connecting')
@@ -297,6 +351,67 @@ export default function App() {
               </div>
               <span className="text-base font-semibold tracking-tight text-fg">UniVPN</span>
             </header>
+
+            {/* Update Banner: Ready or Available */}
+            {(updateState.status === 'ready' || updateState.status === 'available' || updateState.status === 'downloading') && !dismissBanner && (
+              <div className="mt-2 mb-1 flex flex-col gap-2 rounded-2xl border border-[#22C55E]/30 bg-gradient-to-br from-[#22C55E]/15 to-[#22C55E]/5 p-3 text-left shadow-sm">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#22C55E] text-[#052E16]">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-fg">
+                        UniVPN v{updateState.availableVersion || '1.1.0'} {updateState.status === 'ready' ? 'Siap Dipasang' : 'Tersedia'}
+                      </span>
+                      <span className="rounded bg-[#22C55E] px-1.5 py-0.2 text-[9px] font-bold text-[#052E16]">BARU</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-tight text-dim">
+                      {updateState.status === 'ready'
+                        ? 'Unduhan selesai di latar belakang. Mulai ulang untuk menerapkan.'
+                        : updateState.status === 'downloading'
+                          ? `Mengunduh di latar belakang (${updateState.progress || 0}%)…`
+                          : 'Pembaruan versi terbaru siap diunduh.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  {updateState.status === 'ready' ? (
+                    <button
+                      type="button"
+                      onClick={handleApplyUpdate}
+                      disabled={installingUpdate}
+                      className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#22C55E] py-1.5 text-xs font-bold text-[#052E16] hover:opacity-90 active:scale-98"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10" />
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                      </svg>
+                      {installingUpdate ? 'Memasang…' : 'Mulai Ulang Sekarang'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowUpdateModal(true)}
+                      className="flex flex-1 cursor-pointer items-center justify-center rounded-xl bg-[#22C55E] py-1.5 text-xs font-bold text-[#052E16] hover:opacity-90 active:scale-98"
+                    >
+                      Lihat Detail & Unduh
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setDismissBanner(true)}
+                    className="cursor-pointer rounded-xl border border-line bg-card px-3 py-1.5 text-xs font-medium text-dim hover:text-fg"
+                  >
+                    Nanti
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Center Area: Big Button & Status Texts */}
             <div className="my-auto flex flex-col items-center justify-center gap-6 py-6 text-center">
@@ -580,6 +695,37 @@ export default function App() {
                   <IconChevronRight size={18} className="text-dim" />
                 </button>
 
+                {/* Pembaruan Aplikasi card */}
+                <div className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-3.5 text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-fg">Versi Aplikasi</span>
+                      <span className="rounded-md bg-[#22C55E]/15 px-2 py-0.5 text-[11px] font-bold text-[#22C55E]">
+                        v{updateState.currentVersion}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleManualCheckUpdate}
+                      disabled={checkingUpdate || updateState.status === 'downloading'}
+                      className="cursor-pointer rounded-lg border border-[#22C55E] bg-transparent px-3 py-1 text-xs font-semibold text-[#22C55E] transition-colors hover:bg-[#22C55E]/10 disabled:opacity-50"
+                    >
+                      {checkingUpdate ? 'Memeriksa…' : updateState.status === 'ready' ? 'Pasang' : 'Periksa'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-dim">
+                    {updateState.status === 'ready'
+                      ? `Versi v${updateState.availableVersion} siap dipasang. Mulai ulang aplikasi.`
+                      : updateState.status === 'downloading'
+                        ? `Sedang mengunduh update v${updateState.availableVersion} (${updateState.progress || 0}%)…`
+                        : updateState.status === 'available'
+                          ? `Tersedia versi v${updateState.availableVersion}. Siap diunduh.`
+                          : updateState.status === 'not-available'
+                            ? 'Kamu memakai versi terbaru.'
+                            : 'Pengecekan otomatis aktif (tiap 24 jam via GitHub).'}
+                  </p>
+                </div>
+
                 {/* Account row */}
                 <div className="flex items-center justify-between rounded-2xl border border-line bg-card p-3.5">
                   <span className="text-sm font-medium text-fg">{Strings.account.subscriptionId}</span>
@@ -734,9 +880,18 @@ export default function App() {
                 </div>
 
                 {/* Versi */}
-                <div className="flex justify-between px-1 text-xs text-dim">
+                <div className="flex items-center justify-between px-1 text-xs text-dim">
                   <span>{Strings.advanced.version}</span>
-                  <span>1.0.0</span>
+                  <div className="flex items-center gap-2">
+                    <span>v{updateState.currentVersion}</span>
+                    <button
+                      type="button"
+                      onClick={handleManualCheckUpdate}
+                      className="cursor-pointer text-accent hover:underline"
+                    >
+                      Cek Update
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -839,6 +994,138 @@ export default function App() {
                 className="cursor-pointer rounded-xl bg-[#22C55E] px-4 py-1.5 text-xs font-semibold text-[#052E16]"
               >
                 Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Modal: Normal Update, Expired Sunset, or Mandatory Blocking */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
+          <div className="flex w-full max-w-sm flex-col overflow-hidden rounded-3xl border border-line bg-card p-5 shadow-2xl">
+            {/* Header Icon & Tag */}
+            <div className="flex items-start justify-between">
+              <div
+                className={`flex size-11 items-center justify-center rounded-2xl ${
+                  isBlocked
+                    ? 'border border-error/30 bg-error/15 text-error'
+                    : 'border border-[#22C55E]/30 bg-[#22C55E]/15 text-[#22C55E]'
+                }`}
+              >
+                {isBlocked ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                )}
+              </div>
+              <span
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                  isBlocked
+                    ? 'bg-error/15 text-error'
+                    : 'bg-[#22C55E]/15 text-[#22C55E]'
+                }`}
+              >
+                {updateState.availableVersion ? `v${updateState.availableVersion}` : 'Versi Baru'}
+              </span>
+            </div>
+
+            {/* Title & Description */}
+            <h2 className={`mt-3.5 text-lg font-bold ${isBlocked ? 'text-error' : 'text-fg'}`}>
+              {isMandatory
+                ? 'Pembaruan Wajib (Kritis)'
+                : isExpired
+                  ? 'Versi Kedaluwarsa'
+                  : 'Pembaruan Tersedia'}
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-dim">
+              {isBlocked
+                ? updateState.sunsetMessage || 'Versi Anda sudah tidak didukung demi menjaga keamanan protokol. Perbarui UniVPN untuk melanjutkan koneksi.'
+                : 'Versi terbaru UniVPN siap dipasang di komputermu dengan peningkatan kinerja dan stabilitas.'}
+            </p>
+
+            {/* Release notes summary */}
+            <div className="mt-3.5 flex flex-col gap-1 rounded-xl border border-line bg-black/20 p-3 text-xs leading-relaxed text-dim">
+              <span className="font-semibold text-fg">Apa yang baru:</span>
+              {updateState.releaseNotes ? (
+                <div className="whitespace-pre-line">{updateState.releaseNotes}</div>
+              ) : (
+                <>
+                  <div>• Peningkatan kestabilan protokol WireGuard</div>
+                  <div>• Sambung instan saat bangun dari mode tidur/hibernasi</div>
+                  <div>• Perbaikan integrasi tray icon sistem</div>
+                </>
+              )}
+            </div>
+
+            {/* Download progress if downloading */}
+            {updateState.status === 'downloading' && (
+              <div className="mt-3 flex flex-col gap-1.5">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-dim">Mengunduh di latar belakang…</span>
+                  <span className="text-[#22C55E]">{updateState.progress || 0}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-line">
+                  <div
+                    className="h-full rounded-full bg-[#22C55E] transition-all"
+                    style={{ width: `${updateState.progress || 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="mt-4 flex gap-2">
+              {updateState.status === 'ready' ? (
+                <button
+                  type="button"
+                  onClick={handleApplyUpdate}
+                  disabled={installingUpdate}
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-[#052E16] hover:opacity-95 active:scale-98"
+                >
+                  {installingUpdate ? 'Memasang…' : 'Mulai Ulang Sekarang'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void window.electronAPI.openReleaseUrl()
+                  }}
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-[#052E16] hover:opacity-95 active:scale-98"
+                >
+                  Unduh Rilis Resmi
+                </button>
+              )}
+
+              {!isBlocked && (
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateModal(false)}
+                  className="cursor-pointer rounded-xl border border-line bg-card px-4 py-2.5 text-xs font-semibold text-fg hover:bg-white/5"
+                >
+                  Tutup
+                </button>
+              )}
+            </div>
+
+            {/* Manual download fallback */}
+            <div className="mt-3 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  void window.electronAPI.openReleaseUrl()
+                }}
+                className="cursor-pointer text-[11px] text-dim underline hover:text-fg"
+              >
+                Kendala unduhan? Unduh manual dari GitHub Releases
               </button>
             </div>
           </div>

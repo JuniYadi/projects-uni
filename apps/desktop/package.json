@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "UniVPN Desktop MVP",
   "author": "UniVPN",
   "private": true,
@@ -23,6 +23,7 @@
     "@univpn/shared": "1.0.0",
     "@univpn/vpn-core": "1.0.0",
     "@univpn/vpn-platform": "1.0.0",
+    "electron-updater": "^6.8.9",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

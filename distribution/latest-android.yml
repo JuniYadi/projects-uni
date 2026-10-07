@@ -1,0 +1,22 @@
+# ==============================================================================
+# UniVPN Android Release Manifest (In-App Check & Website metadata)
+# URL: https://github.com/juniyadi/projects-uni/releases/latest/download/latest-android.yml
+# ==============================================================================
+version: "0.4.1"
+versionCode: 401
+releaseDate: "2026-10-07T03:11:54.055Z"
+packageId: "com.univpn.mobile"
+
+minSupportedVersion: "0.0.0"
+minSupportedVersionCode: 381
+mandatory: false
+sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis). Harap perbarui UniVPN dari Google Play Store."
+
+distribution:
+  playStore:
+    track: "production"
+    url: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
+  directDownload:
+    apkUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-v0.4.1.apk"
+    sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    size: 42150000

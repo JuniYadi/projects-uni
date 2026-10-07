@@ -4,6 +4,7 @@ import path from 'node:path'
 import './ipc'
 import { vpnService } from './vpn'
 import { createTray } from './tray'
+import { setupAutoUpdater, registerUpdateIpc } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 let quitting = false
@@ -64,8 +65,10 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', showWindow)
 
   app.whenReady().then(async () => {
+    registerUpdateIpc()
     await vpnService.initialize()
     createWindow()
+    if (mainWindow) setupAutoUpdater(mainWindow)
     createTray(showWindow)
 
     app.on('activate', showWindow)

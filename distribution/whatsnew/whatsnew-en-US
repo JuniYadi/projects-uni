@@ -1,7 +1,5 @@
-v0.4.0 is now available!
+v0.4.1 is now available!
 
-- Full Google Play policy compliance: client-only account model without external store links
-- Refined Login screen: clean Subscription ID input and QR scanner
-- Improved Expired Subscription screen: seamless and secure switch-account action
-- App update prompt directly links to Google Play Store
-- UI polish and performance optimizations
+- Fix server location flags loading for United States & Hong Kong
+- Normalized server country code resolution and FlagCDN flag rendering
+- Performance and stability optimizations

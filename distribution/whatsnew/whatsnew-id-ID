@@ -1,7 +1,5 @@
-v0.4.0 telah tersedia!
+v0.4.1 telah tersedia!
 
-- Kepatuhan penuh kebijakan Google Play: model akun client-only tanpa link pembelian eksternal
-- Pembaruan layar Masuk: form ID Langganan dan pemindaian QR yang lebih bersih
-- Penyegaran layar Langganan Berakhir: aksi cepat ganti akun yang aman
-- Peningkatan alur pembaruan aplikasi langsung terhubung ke Google Play Store
-- Optimalisasi performa dan perbaikan antarmuka
+- Perbaikan pemuatan bendera lokasi server (Amerika Serikat & Hong Kong)
+- Normalisasi kode negara server dan optimalisasi pemuatan bendera FlagCDN
+- Optimalisasi performa dan kestabilan aplikasi

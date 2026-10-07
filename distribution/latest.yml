@@ -1,0 +1,47 @@
+# ==============================================================================
+# UniVPN Multi-Platform Version Manifest (Global Single Source of Truth)
+# Used by Website Landing Page & UI Clients to inspect version availability.
+# ==============================================================================
+schemaVersion: 1
+updatedAt: "2026-10-07T03:11:54.055Z"
+
+policy:
+  maxMinorLag: 5
+  maxMajorLag: 2
+  sunsetMessage:
+    id: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis). Harap perbarui UniVPN untuk melanjutkan koneksi."
+    en: "Your UniVPN version is no longer supported (more than 5 releases behind). Please update to continue connecting."
+
+platforms:
+  windows:
+    version: "0.3.2"
+    minSupportedVersion: "0.0.0"
+    mandatory: false
+    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-win.yml"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-Setup-0.3.2-x64.exe"
+    installerType: "nsis"
+    architecture: ["x64"]
+    releaseDate: "2026-10-07T03:11:54.055Z"
+
+  macos:
+    version: "0.3.2"
+    minSupportedVersion: "0.0.0"
+    mandatory: false
+    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-mac.yml"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.3.2-arm64.dmg"
+    zipUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-0.3.2-mac.zip"
+    installerType: "dmg"
+    architecture: ["arm64", "x64"]
+    releaseDate: "2026-10-07T03:11:54.055Z"
+
+  android:
+    version: "0.4.1"
+    versionCode: 401
+    minSupportedVersion: "0.0.0"
+    minSupportedVersionCode: 381
+    mandatory: false
+    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-android.yml"
+    playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
+    directApkUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-v0.4.1.apk"
+    packageId: "com.univpn.mobile"
+    releaseDate: "2026-10-07T03:11:54.055Z"

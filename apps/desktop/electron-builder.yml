@@ -2,6 +2,11 @@ appId: com.univpn.desktop
 productName: UniVPN
 # ponytail: no code signing for MVP; Windows Defender may warn
 copyright: Copyright © 2026 UniVPN
+publish:
+  provider: github
+  owner: juniyadi
+  repo: projects-uni
+  releaseType: release
 directories:
   output: dist
   buildResources: build-resources

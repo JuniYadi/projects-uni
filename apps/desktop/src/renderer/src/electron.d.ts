@@ -28,6 +28,18 @@ export interface DesktopSettingsState {
   favorites: string[]
 }
 
+export interface UpdateInfoState {
+  currentVersion: string
+  availableVersion?: string
+  minSupportedVersion?: string
+  mandatory?: boolean
+  sunsetMessage?: string
+  releaseNotes?: string
+  status: 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'not-available' | 'error' | 'expired'
+  progress?: number
+  error?: string
+}
+
 export interface ElectronAPI {
   platform: string
 
@@ -44,6 +56,12 @@ export interface ElectronAPI {
 
   getSettings: () => Promise<DesktopSettingsState>
   setSettings: (settings: Partial<DesktopSettingsState>) => Promise<void>
+
+  getUpdateState: () => Promise<UpdateInfoState>
+  checkForUpdates: () => Promise<{ ok: boolean; state?: UpdateInfoState; error?: string; isDev?: boolean }>
+  installUpdate: () => Promise<{ ok: boolean; error?: string }>
+  openReleaseUrl: (url?: string) => Promise<{ ok: boolean }>
+  onUpdateStateChanged: (callback: (state: UpdateInfoState) => void) => () => void
 }
 
 declare global {

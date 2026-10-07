@@ -56,7 +56,7 @@ if [ -z "$PLATFORM" ]; then
   echo ""
   echo "Pilih Platform yang ingin dirilis:"
   echo "  1) mobile  (Android - AAB & APK)"
-  echo "  2) desktop (Windows - NSIS Setup & Portable .exe)"
+  echo "  2) desktop (Windows .exe & macOS .dmg/.zip)"
   read -p "Pilihan (1/2): " PLAT_OPT
   case "$PLAT_OPT" in
     1|mobile)  PLATFORM="mobile" ;;
@@ -249,6 +249,6 @@ echo -e "CI GitHub Actions otomatis berjalan:"
 if [ "$PLATFORM" = "mobile" ]; then
   echo -e "👉 Build Android: AAB akan diunggah ke Google Play ($([ "$ENV_TYPE" = "internal" ] && echo "Track Internal" || echo "Track Alpha/Produksi")) dan APK dilampirkan ke rilis."
 else
-  echo -e "👉 Build Desktop: File installer .exe (NSIS & Portable) akan otomatis dilampirkan ke halaman rilis GitHub."
+  echo -e "👉 Build Desktop: File installer (Windows .exe & macOS .dmg/.zip) akan otomatis dilampirkan ke halaman rilis GitHub."
 fi
 echo -e "Cek status di: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions"

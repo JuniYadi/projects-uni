@@ -1,6 +1,6 @@
 # Panduan Alur Rilis UniVPN
 
-Dokumen ini menjelaskan aturan, standar, dan cara merilis UniVPN untuk platform **Mobile (Android)** dan **Desktop (Windows)**.
+Dokumen ini menjelaskan aturan, standar, dan cara merilis UniVPN untuk platform **Mobile (Android)** dan **Desktop (Windows & macOS)**.
 
 ---
 
@@ -12,8 +12,8 @@ Semua rilis wajib menggunakan format tag berikut agar GitHub Actions CI dapat me
 |---|---|---|---|
 | `v<version>-mobile` | Mobile (Android) | **Rilis Produksi** | AAB ke Google Play Track Alpha/Produksi + APK terlampir di GitHub Release |
 | `v<version>-mobile-internal` | Mobile (Android) | **Rilis Internal** | AAB ke Google Play Track Internal + APK terlampir di GitHub Release |
-| `v<version>-desktop` | Desktop (Windows) | **Rilis Produksi** | Installer `.exe` (NSIS & Portable) otomatis terlampir di GitHub Release |
-| `v<version>-desktop-internal` | Desktop (Windows) | **Rilis Internal** | Installer `.exe` (NSIS & Portable) otomatis terlampir di GitHub Release |
+| `v<version>-desktop` | Desktop (Windows & macOS) | **Rilis Produksi** | Installer Windows `.exe` (NSIS & Portable) dan macOS `.dmg`/`.zip` otomatis terlampir di GitHub Release |
+| `v<version>-desktop-internal` | Desktop (Windows & macOS) | **Rilis Internal** | Installer Windows `.exe` (NSIS & Portable) dan macOS `.dmg`/`.zip` otomatis terlampir di GitHub Release |
 
 Contoh tag yang valid:
 - `v0.3.0-mobile`
@@ -94,9 +94,7 @@ atau langsung dengan script bash:
                                             └───────────┬───────────┘
                                                         │
                                                         ▼
-                                            1. bun run compile:helper
-                                            2. bun run build
-                                            3. bun run dist
-                                            4. gh release upload
-                                               (melampirkan .exe ke rilis)
-```
+                                            [Matrix Parallel: Windows & macOS]
+                                            • Windows: compile:helper -> build -> dist:win (.exe)
+                                            • macOS: compile:helper:mac -> build -> dist:mac (.dmg, .zip)
+                                            • gh release upload: lampirkan semua installer ke rilis

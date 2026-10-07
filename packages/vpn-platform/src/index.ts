@@ -1,14 +1,17 @@
+import { createDarwinDriver } from './darwin'
 import { createNoopDriver } from './noop'
 import { createWindowsDriver } from './windows'
 import type { VpnPlatformDriver, VpnStats, VpnStatus } from './types'
 
 export type { VpnPlatformDriver, VpnStats, VpnStatus }
-export { createWindowsDriver, createNoopDriver }
+export { createWindowsDriver, createDarwinDriver, createNoopDriver }
 
 export function createPlatformDriver(): VpnPlatformDriver {
   if (process.platform === 'win32') {
     return createWindowsDriver()
   }
-  // ponytail: macOS driver will be added in M4
+  if (process.platform === 'darwin') {
+    return createDarwinDriver()
+  }
   return createNoopDriver()
 }

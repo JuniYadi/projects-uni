@@ -3,6 +3,18 @@
 All notable changes to UniVPN are documented here.
 
 
+## [v0.4.0-desktop] - 2026-10-07
+
+### Added
+- **Desktop**: Prioritaskan IP server publik untuk endpoint WireGuard dengan fallback otomatis ke domain, mencegah handshake timeout saat subdomain belum dipointing di DNS
+- **Desktop**: Sistem pembaruan otomatis (auto-update) menggunakan electron-updater dengan modal dialog interaktif dan manifes multiplatform YAML
+- **Desktop**: Dukungan platform macOS lengkap dengan daemon `univpn-helper`, kompilasi universal binary, dan packaging DMG/ZIP
+- **Desktop**: Modal Log & Diagnostik dengan penampil status koneksi real-time dan tombol salin log
+- **CI**: Workflow build parallel matrix untuk Windows (`.exe`) dan macOS (`.dmg`, `.zip`) dengan checksum SHA256
+
+### Fixed
+- **Desktop**: Resolusi ikon bendera negara untuk server Amerika Serikat (US) dan Hong Kong (HK)
+
 ## [v0.4.0-mobile] - 2026-10-07
 
 ### Added

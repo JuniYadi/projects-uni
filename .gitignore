@@ -26,4 +26,5 @@ docs/*
 .tmp/
 out/
 goals/
-resources/wg-helper.exe
+**/resources/wg-helper.exe
+**/resources/mac/univpn-helper

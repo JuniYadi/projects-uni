@@ -1,6 +1,7 @@
 import { createApiClient, type AuthStorage } from '@univpn/api'
 import { createVpnCore, type VpnCore } from '@univpn/vpn-core'
-import { createNoopDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
+import { createNoopDriver, createDarwinDriver, createPlatformDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
+import { parseWireGuardConfig } from '../../../packages/vpn-platform/src/mac-helper'
 import type { VpnApiClient } from '@univpn/api'
 
 let passed = 0
@@ -116,6 +117,34 @@ assert((await core.status()) === 'disconnected', 'setelah disconnect status disc
 
 const noop = createNoopDriver()
 assert(typeof noop.connect === 'function', 'noop driver tersedia untuk non-Windows')
+
+const darwinDriver = createDarwinDriver()
+assert(typeof darwinDriver.connect === 'function', 'createDarwinDriver menyediakan fungsi connect')
+assert(typeof darwinDriver.initialize === 'function', 'createDarwinDriver menyediakan fungsi initialize')
+
+const platformDriver = createPlatformDriver()
+if (process.platform === 'darwin') {
+  assert(typeof platformDriver.connect === 'function', 'createPlatformDriver mengembalikan darwin driver di macOS')
+}
+
+const sampleConf = `[Interface]
+PrivateKey = aaaa
+Address = 10.66.66.2/32, fd00::2/128
+DNS = 1.1.1.1, 8.8.8.8
+MTU = 1380
+
+[Peer]
+PublicKey = bbbb
+Endpoint = 198.51.100.1:51820
+AllowedIPs = 0.0.0.0/0, ::/0`
+
+const parsed = parseWireGuardConfig(sampleConf)
+assert(parsed.addresses.length === 2 && parsed.addresses[0] === '10.66.66.2/32', 'parseWireGuardConfig parse Address dengan benar')
+assert(parsed.dnsServers.length === 2 && parsed.dnsServers[0] === '1.1.1.1', 'parseWireGuardConfig parse DNS dengan benar')
+assert(parsed.mtu === 1380, 'parseWireGuardConfig parse MTU dengan benar')
+assert(parsed.endpoint === '198.51.100.1:51820', 'parseWireGuardConfig parse Endpoint dengan benar')
+assert(parsed.allowedIps.includes('0.0.0.0/0'), 'parseWireGuardConfig parse AllowedIPs dengan benar')
+assert(!parsed.cleanConfig.includes('Address =') && !parsed.cleanConfig.includes('DNS ='), 'cleanConfig menyaring Address & DNS untuk wg tool')
 
 // ─── 4. Linux driver bisa ditambah tanpa ubah VpnCore ─────────
 

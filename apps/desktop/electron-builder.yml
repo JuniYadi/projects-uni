@@ -20,6 +20,11 @@ extraResources:
     to: resources/win
     filter:
       - '**/*'
+  # macOS WireGuard binaries (wireguard-go, wg, univpn-helper)
+  - from: resources/mac
+    to: resources/mac
+    filter:
+      - '**/*'
 win:
   target:
     - nsis

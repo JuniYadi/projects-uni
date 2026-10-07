@@ -60,11 +60,13 @@ export function generateManifests(options?: {
   )
 
   const dVersion = options?.desktopVersion || desktopPkg.version || '0.3.1'
-  const aVersion = options?.androidVersion || mobileAppJson.expo?.version || '0.3.1'
+  // RULE: Versi internal (v*-internal) KHUSUS staff testing (API internal / staging)
+  // dan DILARANG KERAS masuk ke manifes publik (latest.yml, latest-android.yml, dsb).
+  // Manifes publik HANYA untuk versi rilis produksi publik (v*-mobile / v*-desktop).
+  const aVersion = options?.androidVersion || '0.4.0'
   const aVersionCode =
     options?.androidVersionCode ||
-    mobileAppJson.expo?.android?.versionCode ||
-    31
+    400
   const isMandatory = options?.mandatory ?? false
 
   const minDesktop = calculateMinSupportedVersion(dVersion)
@@ -93,8 +95,8 @@ platforms:
     version: "${dVersion}"
     minSupportedVersion: "${minDesktop}"
     mandatory: ${isMandatory}
-    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-win.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-Setup-${dVersion}-x64.exe"
+    manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-win.yml"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${dVersion}-desktop/UniVPN-Setup-${dVersion}-x64.exe"
     installerType: "nsis"
     architecture: ["x64"]
     releaseDate: "${now}"
@@ -103,9 +105,9 @@ platforms:
     version: "${dVersion}"
     minSupportedVersion: "${minDesktop}"
     mandatory: ${isMandatory}
-    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-mac.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-${dVersion}-arm64.dmg"
-    zipUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-${dVersion}-mac.zip"
+    manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-mac.yml"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${dVersion}-desktop/UniVPN-${dVersion}-arm64.dmg"
+    zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${dVersion}-desktop/UniVPN-${dVersion}-mac.zip"
     installerType: "dmg"
     architecture: ["arm64", "x64"]
     releaseDate: "${now}"
@@ -116,9 +118,9 @@ platforms:
     minSupportedVersion: "${minAndroid}"
     minSupportedVersionCode: ${minAndroidCode}
     mandatory: ${isMandatory}
-    manifestUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/latest-android.yml"
+    manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-android.yml"
     playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
-    directApkUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-v${aVersion}.apk"
+    directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
     packageId: "com.univpn.mobile"
     releaseDate: "${now}"
 `
@@ -183,17 +185,15 @@ minSupportedVersion: "${minAndroid}"
 minSupportedVersionCode: ${minAndroidCode}
 mandatory: ${isMandatory}
 sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis). Harap perbarui UniVPN dari Google Play Store."
-
 distribution:
   playStore:
     track: "production"
     url: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
   directDownload:
-    apkUrl: "https://github.com/juniyadi/projects-uni/releases/latest/download/UniVPN-v${aVersion}.apk"
+    apkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 42150000
 `
-
   fs.writeFileSync(path.join(distDir, 'latest.yml'), globalYaml, 'utf-8')
   fs.writeFileSync(path.join(distDir, 'latest-win.yml'), winYaml, 'utf-8')
   fs.writeFileSync(path.join(distDir, 'latest-mac.yml'), macYaml, 'utf-8')

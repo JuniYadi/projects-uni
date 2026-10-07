@@ -26,8 +26,10 @@ jobs:
             compile_cmd: bun run compile:helper
             dist_flags: --win
             artifact_name: univpn-desktop-windows
-            artifact_path: apps/desktop/dist/*.exe
-            release_files: 'apps/desktop/dist/*.exe'
+            artifact_path: |
+              apps/desktop/dist/*.exe
+              apps/desktop/dist/SHA256SUMS-windows.txt
+            release_files: 'apps/desktop/dist/*.exe apps/desktop/dist/SHA256SUMS-windows.txt'
           - os: macos-latest
             platform: macos
             compile_cmd: bun run compile:helper:mac
@@ -36,7 +38,8 @@ jobs:
             artifact_path: |
               apps/desktop/dist/*.dmg
               apps/desktop/dist/*.zip
-            release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip'
+              apps/desktop/dist/SHA256SUMS-macos.txt
+            release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/SHA256SUMS-macos.txt'
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -86,6 +89,17 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: bun run dist -- ${{ matrix.dist_flags }}
         working-directory: apps/desktop
+      - name: Generate SHA256 Checksums
+        shell: bash
+        run: |
+          cd apps/desktop/dist
+          shopt -s nullglob
+          FILES=(*.exe *.dmg *.zip)
+          if [ ${#FILES[@]} -gt 0 ]; then
+            shasum -a 256 "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            echo "Generated SHA256SUMS-${{ matrix.platform }}.txt:"
+            cat "SHA256SUMS-${{ matrix.platform }}.txt"
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

@@ -97,4 +97,5 @@ atau langsung dengan script bash:
                                             [Matrix Parallel: Windows & macOS]
                                             • Windows: compile:helper -> build -> dist:win (.exe)
                                             • macOS: compile:helper:mac -> build -> dist:mac (.dmg, .zip)
-                                            • gh release upload: lampirkan semua installer ke rilis
+                                            • shasum -a 256: generate file SHA256SUMS-<platform>.txt
+                                            • gh release upload: lampirkan semua installer & SHA256 ke rilis

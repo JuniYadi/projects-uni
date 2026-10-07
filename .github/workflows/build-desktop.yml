@@ -15,9 +15,32 @@ on:
           - internal
 
 jobs:
-  build-windows:
+  build-desktop:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && contains(github.event.release.tag_name, '-desktop'))
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            compile_cmd: bun run compile:helper
+            dist_flags: --win
+            artifact_name: univpn-desktop-windows
+            artifact_path: |
+              apps/desktop/dist/*.exe
+              apps/desktop/dist/SHA256SUMS-windows.txt
+            release_files: 'apps/desktop/dist/*.exe apps/desktop/dist/SHA256SUMS-windows.txt'
+          - os: macos-latest
+            platform: macos
+            compile_cmd: bun run compile:helper:mac
+            dist_flags: --mac
+            artifact_name: univpn-desktop-macos
+            artifact_path: |
+              apps/desktop/dist/*.dmg
+              apps/desktop/dist/*.zip
+              apps/desktop/dist/SHA256SUMS-macos.txt
+            release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/SHA256SUMS-macos.txt'
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
     steps:
@@ -53,30 +76,48 @@ jobs:
             npm pkg set version="$VERSION" --prefix apps/desktop
           fi
 
-      - name: Compile wg-helper
-        run: bun run compile:helper
+      - name: Compile helper
+        run: ${{ matrix.compile_cmd }}
         working-directory: apps/desktop
 
       - name: Build desktop app
-        run: |
-          cd apps/desktop
-          bun run build
+        run: bun run build
+        working-directory: apps/desktop
 
       - name: Package with electron-builder
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: bun run dist -- ${{ matrix.dist_flags }}
+        working-directory: apps/desktop
+      - name: Generate SHA256 Checksums
+        shell: bash
         run: |
-          cd apps/desktop
-          bun run dist
+          cd apps/desktop/dist
+          shopt -s nullglob
+          FILES=(*.exe *.dmg *.zip)
+          if [ ${#FILES[@]} -gt 0 ]; then
+            shasum -a 256 "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            echo "Generated SHA256SUMS-${{ matrix.platform }}.txt:"
+            cat "SHA256SUMS-${{ matrix.platform }}.txt"
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: univpn-desktop-windows
-          path: apps/desktop/dist/*.exe
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
           if-no-files-found: error
+
       - name: Publish to GitHub Release
         if: github.event_name == 'release'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" apps/desktop/dist/*.exe --clobber
+          shopt -s nullglob
+          FILES=(${{ matrix.release_files }})
+          if [ ${#FILES[@]} -gt 0 ]; then
+            gh release upload "${{ github.event.release.tag_name }}" "${FILES[@]}" --clobber
+          else
+            echo "Warning: No release files found matching ${{ matrix.release_files }}"
+          fi

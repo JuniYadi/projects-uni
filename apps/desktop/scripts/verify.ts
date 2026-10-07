@@ -175,6 +175,15 @@ try {
 } finally {
   ;(process as NodeJS.Process & { resourcesPath?: string }).resourcesPath = originalResourcesPath
 }
+
+// ─── Windows Service Installer Script Verification ────────────────
+const installerNsh = join(import.meta.dir, '../build-resources/installer.nsh')
+assert(existsSync(installerNsh), 'build-resources/installer.nsh ada')
+const nshContent = readFileSync(installerNsh, 'utf8')
+assert(nshContent.includes('sc.exe create UniVPNService'), 'installer.nsh mendaftarkan UniVPNService')
+assert(nshContent.includes('sc.exe sidtype UniVPNService unrestricted'), 'installer.nsh mengonfigurasi unrestricted SID type')
+assert(nshContent.includes('sc.exe sdset UniVPNService'), 'installer.nsh mengonfigurasi Service Security Descriptor (SDDL)')
+assert(nshContent.includes('customUnInstall'), 'installer.nsh menyediakan uninstaller hook')
 const darwinDriver = createDarwinDriver()
 assert(typeof darwinDriver.connect === 'function', 'createDarwinDriver menyediakan fungsi connect')
 assert(typeof darwinDriver.initialize === 'function', 'createDarwinDriver menyediakan fungsi initialize')

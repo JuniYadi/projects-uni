@@ -2,8 +2,19 @@
 
 All notable changes to UniVPN are documented here.
 
-## [v0.4.2-desktop] - 2026-10-07
+## [v0.4.3-desktop] - 2026-10-07
 
+### Added
+- **macOS**: Mekanisme in-place auto-updater fallback otomatis saat restart pada build bertanda tangan ad-hoc (`identity: '-'`), mengatasi kegagalan senyap Squirrel.Mac / ShipIt.
+- **Desktop**: Ikon branding aplikasi resmi multiplatform (`.ico` untuk Windows, `.icns` untuk macOS, dan `.png` untuk Linux/Web).
+
+### Fixed
+- **macOS**: Memperbaiki false premature exit detection (`wireguard-go exited prematurely code 0`) saat server membutuhkan waktu respons handshake lebih lama.
+- **WireGuard**: Memperpanjang toleransi handshake time window menjadi 10 detik untuk koneksi server dengan latensi lintas negara.
+- **Windows**: Menyelaraskan nama file konfigurasi ke `univpn.conf` dan menyempurnakan pelaporan error hak administrator (UAC) pada antarmuka.
+- **Distribution**: Memperbarui dan menyinkronkan seluruh manifes rilis multiplatform `latest.yml`, `latest-win.yml`, dan `latest-mac.yml`.
+
+## [v0.4.2-desktop] - 2026-10-07
 ### Fixed
 - **macOS**: Memperbaiki instalasi LaunchDaemon `univpn-helper` agar tidak meminta password administrator berulang-ulang setiap kali koneksi (cukup satu kali autentikasi).
 - **macOS**: Menyalin binary pasangan `wireguard-go` dan `wg` ke `/Library/PrivilegedHelperTools/` agar daemon dapat berjalan tanpa dependensi luar.

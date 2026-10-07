@@ -13,18 +13,10 @@ on:
         options:
           - production
           - internal
-  pull_request:
-    paths:
-      - 'apps/desktop/**'
-      - 'packages/**'
-      - '.github/workflows/build-desktop.yml'
 
 jobs:
   build-windows:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'release' && contains(github.event.release.tag_name, '-desktop'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && contains(github.event.release.tag_name, '-desktop'))
     runs-on: windows-latest
     permissions:
       contents: write

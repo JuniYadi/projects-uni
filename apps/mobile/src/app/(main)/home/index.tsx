@@ -111,6 +111,7 @@ export default function HomeScreen() {
             disabled={status === 'idle' && !location}
             onPress={onPress}
             onViewDetail={() => router.push('/(main)/settings/detail-koneksi')}
+            onViewLog={() => router.push('/(main)/settings/log')}
           />
         </View>
 
@@ -118,8 +119,6 @@ export default function HomeScreen() {
         <View style={{ width: '100%', maxWidth: 440, minHeight: 64, justifyContent: 'center' }}>
           {status === 'connecting' ? (
             <Button variant="secondary" label={Strings.actions.cancel} onPress={disconnect} />
-          ) : status === 'failed' ? (
-            <Button label={Strings.actions.retry} onPress={connect} />
           ) : status === 'dropped' ? (
             <View style={{ gap: 8 }}>
               <Button label={Strings.actions.reconnect} onPress={connect} />
@@ -172,20 +171,28 @@ export default function HomeScreen() {
                       {location.name}
                     </Text>
                     <Text style={{ fontFamily: Figtree.regular, fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>
-                      {location.city && location.city !== location.name ? `${location.city} · ` : ''}
-                      <Text
-                        style={{
-                          color:
-                            latencyCategory(location.ping) === 'fast'
-                              ? theme.accent
-                              : latencyCategory(location.ping) === 'normal'
-                                ? '#F59E0B'
-                                : theme.textSecondary,
-                          fontFamily: Figtree.medium,
-                        }}
-                      >
-                        {latencyLabel(location.ping)}
-                      </Text>
+                      {status === 'failed' ? (
+                        <Text style={{ color: theme.error, fontFamily: Figtree.medium }}>
+                          Gagal terhubung · Ganti lokasi
+                        </Text>
+                      ) : (
+                        <>
+                          {location.city && location.city !== location.name ? `${location.city} · ` : ''}
+                          <Text
+                            style={{
+                              color:
+                                latencyCategory(location.ping) === 'fast'
+                                  ? theme.accent
+                                  : latencyCategory(location.ping) === 'normal'
+                                    ? '#F59E0B'
+                                    : theme.textSecondary,
+                              fontFamily: Figtree.medium,
+                            }}
+                          >
+                            {latencyLabel(location.ping)}
+                          </Text>
+                        </>
+                      )}
                     </Text>
                   </>
                 ) : (

@@ -33,6 +33,7 @@ type Props = {
   onDisconnect: () => void;
   onUseWithoutVpn?: () => void;
   /** Disable connecting (no location yet). */
+  onViewLog?: () => void;
   disabled?: boolean;
   buttonStyle?: HomeButtonStyle;
   /** Whether to render actions inside this component (false when rendered in bottom slot). Default true. */
@@ -43,7 +44,8 @@ type Props = {
 /** Big round button + one status sentence + the actions of each of the 5 states. */
 export function ConnectionStatus({
   status, size, onPress, onCancel, onRetry, onReconnect, onDisconnect, onUseWithoutVpn, disabled,
-  buttonStyle = 'cyber', renderActions = true, onViewDetail,
+  onViewDetail,
+  onViewLog,
 }: Props) {
   const theme = useTheme();
   const reduced = useReducedMotion();
@@ -231,6 +233,37 @@ export function ConnectionStatus({
               {Strings.detail.title}
             </Text>
             <Icon name="chevron-right" size={12} color={theme.accent} />
+          </Pressable>
+        )}
+        {status === 'failed' && onViewLog && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Inspeksi log masalah"
+            onPress={onViewLog}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              marginTop: 6,
+              paddingVertical: 5,
+              paddingHorizontal: 12,
+              borderRadius: 20,
+              backgroundColor: theme.isDark ? 'rgba(248, 113, 113, 0.12)' : 'rgba(220, 38, 38, 0.08)',
+              borderWidth: 1,
+              borderColor: theme.isDark ? 'rgba(248, 113, 113, 0.3)' : 'rgba(220, 38, 38, 0.25)',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Icon name="info" size={13} color={theme.error} />
+            <Text
+              style={{
+                fontFamily: Figtree.semibold,
+                fontSize: 12,
+                color: theme.error,
+              }}
+            >
+              Inspeksi log masalah ›
+            </Text>
           </Pressable>
         )}
       </Animated.View>

@@ -131,7 +131,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         if (process.env.EXPO_PUBLIC_APP_DEBUG === 'true') {
           console.log('[ProfileStore] Raw API /profiles response:', JSON.stringify(res, null, 2));
         }
-        rawProfiles = res.profiles.map(mapProfile);
+        // Filter strictly for WireGuard profiles since client engine is WireGuard-only
+        rawProfiles = res.profiles
+          .filter((p) => p.protocol?.toUpperCase() === 'WIREGUARD')
+          .map(mapProfile);
         regions = [...new Set(rawProfiles.map((p) => p.region))] as string[];
       }
       if (signal.aborted) return

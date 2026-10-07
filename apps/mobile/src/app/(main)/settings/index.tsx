@@ -49,6 +49,11 @@ export default function SettingsScreen() {
           value={subscriptionId ?? undefined}
           onPress={() => router.push('/(main)/settings/akun')}
         />
+        <Row
+          label="Log & Diagnostik"
+          hint="Riwayat status & analisis koneksi"
+          onPress={() => router.push('/(main)/settings/log')}
+        />
         <Row label={Strings.settings.advanced} onPress={() => router.push('/(main)/settings/lanjutan')} last />
       </Group>
     </Screen>

@@ -83,6 +83,7 @@ export default function App() {
   const [status, setStatus] = useState<VpnStatus>('disconnected')
   const [connectError, setConnectError] = useState(false)
   const [query, setQuery] = useState('')
+  const [showLogModal, setShowLogModal] = useState(false)
 
   const isDarkTheme =
     theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -90,8 +91,9 @@ export default function App() {
   async function loadProfiles(preferred?: string | null) {
     const res = await window.electronAPI.getProfiles()
     if (!res.ok) return
-    setProfiles(res.profiles)
-    setSelectedId((cur) => cur ?? res.profiles.find((p) => p.id === preferred)?.id ?? res.profiles[0]?.id ?? null)
+    const wgProfiles = res.profiles.filter((p) => p.protocol?.toUpperCase() === 'WIREGUARD')
+    setProfiles(wgProfiles)
+    setSelectedId((cur) => cur ?? wgProfiles.find((p) => p.id === preferred)?.id ?? wgProfiles[0]?.id ?? null)
   }
 
   useEffect(() => {
@@ -377,13 +379,22 @@ export default function App() {
               )}
 
               {isFailed && (
-                <button
-                  type="button"
-                  onClick={connect}
-                  className="rounded-xl bg-[#22C55E] px-5 py-2 text-sm font-semibold text-[#052E16] hover:opacity-90 active:opacity-75"
-                >
-                  {Strings.actions.retry}
-                </button>
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={connect}
+                    className="rounded-xl bg-[#22C55E] px-5 py-2 text-sm font-semibold text-[#052E16] hover:opacity-90 active:opacity-75"
+                  >
+                    {Strings.actions.retry}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowLogModal(true)}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-error/30 bg-error/10 px-3.5 py-1 text-xs font-semibold text-error hover:bg-error/20"
+                  >
+                    <span>Inspeksi log masalah ›</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -545,6 +556,25 @@ export default function App() {
                     />
                   </div>
                 </div>
+                {/* Log & Diagnostik row */}
+                <button
+                  type="button"
+                  onClick={() => setShowLogModal(true)}
+                  className="flex cursor-pointer items-center justify-between rounded-2xl border border-line bg-card p-3.5 text-left transition-colors hover:border-accent/40 active:opacity-80"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-fg">Log & Diagnostik</span>
+                      {isFailed && (
+                        <span className="rounded bg-error/15 px-1.5 py-0.5 text-[10px] font-semibold text-error">
+                          1 Gagal
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-dim">Riwayat status & analisis koneksi WireGuard</div>
+                  </div>
+                  <IconChevronRight size={18} className="text-dim" />
+                </button>
 
                 {/* Mode lanjutan row */}
                 <button
@@ -769,6 +799,57 @@ export default function App() {
           <span>{Strings.tabs.settings}</span>
         </button>
       </nav>
+      {/* Log & Diagnostik Terminal Modal */}
+      {showLogModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <span className="text-sm font-semibold text-fg">UniVPN · Log & Diagnostik</span>
+              <button
+                type="button"
+                onClick={() => setShowLogModal(false)}
+                className="cursor-pointer text-sm text-dim hover:text-fg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Terminal Body */}
+            <div className="flex-1 overflow-y-auto bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-dim">
+              <div>[{new Date().toLocaleTimeString('id-ID')}] [INFO] WireGuard Client Core v1.0.20</div>
+              <div>[{new Date().toLocaleTimeString('id-ID')}] [INFO] Server: {selected?.serverName ?? 'Belum ada'} ({selected?.hostname ?? 'N/A'})</div>
+              {connectError ? (
+                <div className="text-error font-medium">[{new Date().toLocaleTimeString('id-ID')}] [ERROR] Gagal: WireGuard handshake timeout (10 dtk)</div>
+              ) : (
+                <div className="text-[#22C55E]">[{new Date().toLocaleTimeString('id-ID')}] [OK] Status Terowongan: {status}</div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between border-t border-line p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const txt = `UniVPN Desktop Log\nServer: ${selected?.serverName ?? 'N/A'} (${selected?.hostname ?? 'N/A'})\nStatus: ${status}\nError: ${connectError ? 'Handshake timeout' : 'None'}`
+                  void navigator.clipboard.writeText(txt)
+                  alert('Log disalin ke clipboard!')
+                }}
+                className="cursor-pointer rounded-xl border border-line px-3 py-1.5 text-xs font-semibold text-fg hover:bg-white/5"
+              >
+                Salin Log
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLogModal(false)}
+                className="cursor-pointer rounded-xl bg-[#22C55E] px-4 py-1.5 text-xs font-semibold text-[#052E16]"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

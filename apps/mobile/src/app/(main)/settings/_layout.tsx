@@ -30,6 +30,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="akun" options={{ title: Strings.account.title, headerLargeTitle: false }} />
       <Stack.Screen name="lanjutan" options={{ title: Strings.settings.advanced, headerLargeTitle: false }} />
       <Stack.Screen name="detail-koneksi" options={{ title: Strings.detail.title, headerLargeTitle: false }} />
+      <Stack.Screen name="log" options={{ title: 'Log Koneksi', headerLargeTitle: false }} />
     </Stack>
   );
 }

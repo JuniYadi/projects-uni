@@ -1057,26 +1057,35 @@ export default function App() {
                 ? 'Pembaruan Wajib (Kritis)'
                 : isExpired
                   ? 'Versi Kedaluwarsa'
-                  : 'Pembaruan Tersedia'}
+                  : updateState.status === 'ready'
+                    ? 'Pembaruan Siap Dipasang'
+                    : 'Pembaruan Tersedia'}
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-dim">
               {isBlocked
                 ? updateState.sunsetMessage || 'Versi Anda sudah tidak didukung demi menjaga keamanan protokol. Perbarui UniVPN untuk melanjutkan koneksi.'
-                : 'Versi terbaru UniVPN siap dipasang di komputermu dengan peningkatan kinerja dan stabilitas.'}
+                : updateState.status === 'ready'
+                  ? `Versi ${updateState.availableVersion || 'terbaru'} telah diunduh. Mulai ulang aplikasi sekarang untuk menerapkan pembaruan.`
+                  : 'Versi terbaru UniVPN siap dipasang di komputermu dengan peningkatan kinerja dan stabilitas.'}
             </p>
 
             {/* Release notes summary */}
-            <div className="mt-3.5 flex flex-col gap-1 rounded-xl border border-line bg-black/20 p-3 text-xs leading-relaxed text-dim">
-              <span className="font-semibold text-fg">Apa yang baru:</span>
-              {updateState.releaseNotes ? (
-                <div className="whitespace-pre-line">{updateState.releaseNotes}</div>
-              ) : (
-                <>
-                  <div>• Peningkatan kestabilan protokol WireGuard</div>
-                  <div>• Sambung instan saat bangun dari mode tidur/hibernasi</div>
-                  <div>• Perbaikan integrasi tray icon sistem</div>
-                </>
-              )}
+            <div className="mt-3.5 flex flex-col rounded-xl border border-line bg-black/20 p-3 text-xs leading-relaxed">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-semibold text-fg">Catatan Pembaruan</span>
+                <span className="text-[10px] text-dim">Gulir untuk detail ↓</span>
+              </div>
+              <div className="log-scroll max-h-36 overflow-y-auto pr-1 text-dim leading-relaxed select-text">
+                {updateState.releaseNotes ? (
+                  <div className="whitespace-pre-line">{updateState.releaseNotes}</div>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    <div>• Peningkatan kestabilan protokol WireGuard</div>
+                    <div>• Sambung instan saat bangun dari mode tidur/hibernasi</div>
+                    <div>• Perbaikan integrasi tray icon sistem</div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Download progress if downloading */}
@@ -1097,6 +1106,16 @@ export default function App() {
 
             {/* Action buttons */}
             <div className="mt-4 flex gap-2">
+              {!isBlocked && (
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateModal(false)}
+                  className="cursor-pointer rounded-xl border border-line bg-card px-4 py-2.5 text-xs font-semibold text-fg hover:bg-white/5 active:scale-98"
+                >
+                  {updateState.status === 'ready' ? 'Nanti Saja' : 'Tutup'}
+                </button>
+              )}
+
               {updateState.status === 'ready' ? (
                 <button
                   type="button"
@@ -1104,6 +1123,10 @@ export default function App() {
                   disabled={installingUpdate}
                   className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#22C55E] py-2.5 text-xs font-bold text-[#052E16] hover:opacity-95 active:scale-98"
                 >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
                   {installingUpdate ? 'Memasang…' : 'Mulai Ulang Sekarang'}
                 </button>
               ) : (
@@ -1117,16 +1140,6 @@ export default function App() {
                   Unduh Rilis Resmi
                 </button>
               )}
-
-              {!isBlocked && (
-                <button
-                  type="button"
-                  onClick={() => setShowUpdateModal(false)}
-                  className="cursor-pointer rounded-xl border border-line bg-card px-4 py-2.5 text-xs font-semibold text-fg hover:bg-white/5"
-                >
-                  Tutup
-                </button>
-              )}
             </div>
 
             {/* Manual download fallback */}
@@ -1138,7 +1151,7 @@ export default function App() {
                 }}
                 className="cursor-pointer text-[11px] text-dim underline hover:text-fg"
               >
-                Kendala unduhan? Unduh manual dari GitHub Releases
+                Kendala unduhan? Unduh manual (.exe / .dmg)
               </button>
             </div>
           </div>

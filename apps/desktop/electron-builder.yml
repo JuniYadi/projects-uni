@@ -29,23 +29,9 @@ win:
   artifactName: 'UniVPN-${version}-${arch}.${ext}'
   icon: build-resources/icon.ico
   extraResources:
-    # Compiled wg-helper for Windows WireGuard FFI (placed in win/ and resources root)
-    - from: resources/wg-helper.exe
-      to: win/wg-helper.exe
-    - from: resources/wg-helper.exe
-      to: wg-helper.exe
-    # Windows WireGuard DLLs (tunnel.dll, wireguard.dll)
-    # Placed in win/, resources/win/, and resources root to ensure co-location with wg-helper.exe
+    # Windows WireGuard helper and DLLs (placed in win/ for installer.nsh and runtime driver)
     - from: resources/win
       to: win
-      filter:
-        - '**/*'
-    - from: resources/win
-      to: resources/win
-      filter:
-        - '**/*'
-    - from: resources/win
-      to: .
       filter:
         - '**/*'
 nsis:

@@ -81,7 +81,7 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
       }
 
       tempDir = mkdtempSync(path.join(tmpdir(), 'univpn-'))
-      const confPath = path.join(tempDir, 'tunnel.conf')
+      const confPath = path.join(tempDir, 'univpn.conf')
       writeFileSync(confPath, config, 'utf8')
 
       status = 'connecting'
@@ -89,30 +89,61 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
 
       return new Promise<void>((resolve, reject) => {
         let stderr = ''
+        let stdout = ''
+        let settled = false
+
+        connectProcess!.stdout?.on('data', (chunk) => {
+          stdout += chunk.toString()
+          try {
+            const lines = stdout.split('\n')
+            for (const line of lines) {
+              if (!line.trim()) continue
+              const res = JSON.parse(line.trim())
+              if (res.status === 'started' && !settled) {
+                settled = true
+                status = 'connected'
+                resolve()
+              } else if (res.status === 'error' && !settled) {
+                settled = true
+                status = 'error'
+                reject(new Error(res.error || 'Gagal memulai adapter WireGuard (butuh akses Administrator)'))
+              }
+            }
+          } catch {
+            // non-json output or partial stream
+          }
+        })
+
         connectProcess!.stderr?.on('data', (chunk) => {
           stderr += chunk.toString()
         })
 
         connectProcess!.on('error', (err) => {
-          status = 'error'
-          connectProcess = null
-          reject(err)
+          if (!settled) {
+            settled = true
+            status = 'error'
+            connectProcess = null
+            reject(err)
+          }
         })
 
-        // Give the helper a moment to report that it started.
+        // Give the helper up to 3 seconds to confirm startup via stdout
         const timeout = setTimeout(() => {
-          if (status === 'connecting') {
+          if (!settled && status === 'connecting') {
+            settled = true
             status = 'connected'
             resolve()
           }
-        }, 1500)
+        }, 3000)
 
         connectProcess!.on('close', (code) => {
           clearTimeout(timeout)
           connectProcess = null
-          if (status === 'connecting') {
+          if (!settled || status === 'connecting') {
+            settled = true
             status = 'error'
-            reject(new Error(stderr || `Helper exited with code ${code}`))
+            const msg = stderr.trim() || `WireGuard helper terminated (exit code ${code}). Pastikan aplikasi dijalankan dengan hak Administrator.`
+            reject(new Error(msg))
           }
         })
       })

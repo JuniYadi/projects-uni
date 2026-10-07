@@ -50,6 +50,9 @@ win:
         - '**/*'
 nsis:
   oneClick: true
+  perMachine: true
+  allowElevation: true
+  include: build-resources/installer.nsh
   artifactName: 'UniVPN-Setup-${version}-${arch}.${ext}'
 mac:
   target:

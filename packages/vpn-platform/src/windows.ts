@@ -1,5 +1,5 @@
-import { spawn } from 'node:child_process'
-import { copyFileSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { execFile, spawn } from 'node:child_process'
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { VpnPlatformDriver, VpnStats, VpnStatus } from './types'
@@ -12,6 +12,20 @@ export interface WindowsDriverOptions {
   /** Path to wireguard.dll. Passed to helper via env. */
   wireguardDllPath?: string
   adapterName?: string
+  /** Name of the registered Windows Service. Defaults to 'UniVPNService'. */
+  serviceName?: string
+}
+
+export function execFilePromise(cmd: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
+  const { promise, resolve, reject } = Promise.withResolvers<{ stdout: string; stderr: string }>()
+  execFile(cmd, args, (err, stdout, stderr) => {
+    if (err) {
+      reject(new Error(`Command failed: ${cmd} ${args.join(' ')}\n${stderr || err.message}`))
+    } else {
+      resolve({ stdout: stdout.trim(), stderr: stderr.trim() })
+    }
+  })
+  return promise
 }
 
 function resolveFirstExisting(paths: (string | null | undefined)[]): string | undefined {
@@ -114,9 +128,21 @@ export function resolveWindowsResources(options: WindowsDriverOptions = {}) {
 export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlatformDriver {
   const { helperPath, tunnelDllPath, wireguardDllPath } = resolveWindowsResources(options)
   const adapterName = options.adapterName ?? 'UniVPN'
+  const serviceName = options.serviceName ?? 'UniVPNService'
   let connectProcess: ReturnType<typeof spawn> | null = null
   let status: VpnStatus = 'disconnected'
   let tempDir: string | null = null
+  let isServiceMode = false
+
+  async function checkWindowsServiceExists(): Promise<boolean> {
+    if (process.platform !== 'win32') return false
+    try {
+      const { stdout } = await execFilePromise('sc.exe', ['query', serviceName])
+      return stdout.includes('SERVICE_NAME') || stdout.includes('STATE')
+    } catch {
+      return false
+    }
+  }
 
   function runHelper(args: string[]): ReturnType<typeof spawn> {
     const isScript = helperPath.endsWith('.ts')
@@ -140,42 +166,94 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
   }
 
   async function queryStatus(): Promise<VpnStatus> {
-    return new Promise((resolve) => {
-      const proc = runHelper(['status'])
-      let stdout = ''
-      proc.stdout?.on('data', (chunk) => {
-        stdout += chunk.toString()
-      })
-      proc.on('close', () => {
-        try {
-          const parsed = JSON.parse(stdout.trim()) as { status: VpnStatus }
-          resolve(parsed.status)
-        } catch {
-          resolve('error')
-        }
-      })
-      proc.on('error', () => resolve('error'))
+    if (isServiceMode) {
+      try {
+        const { stdout } = await execFilePromise('sc.exe', ['query', serviceName])
+        if (stdout.includes('RUNNING')) return 'connected'
+        if (stdout.includes('START_PENDING')) return 'connecting'
+        if (stdout.includes('STOP_PENDING') || stdout.includes('STOPPED')) return 'disconnected'
+      } catch {
+        // ignore and fallback
+      }
+    }
+    const { promise, resolve } = Promise.withResolvers<VpnStatus>()
+    const proc = runHelper(['status'])
+    let stdout = ''
+    proc.stdout?.on('data', (chunk) => {
+      stdout += chunk.toString()
     })
+    proc.on('close', () => {
+      try {
+        const parsed = JSON.parse(stdout.trim()) as { status: VpnStatus }
+        resolve(parsed.status)
+      } catch {
+        resolve('error')
+      }
+    })
+    proc.on('error', () => resolve('error'))
+    return promise
   }
 
   return {
     initialize: async () => {
-      if (!existsSync(helperPath) && !helperPath.endsWith('.ts')) {
-        throw new Error(`WireGuard helper tidak ditemukan: ${helperPath}`)
-      }
-      if (!existsSync(tunnelDllPath)) {
-        throw new Error(`WireGuard tunnel DLL tidak ditemukan di: ${tunnelDllPath}`)
-      }
-      if (!existsSync(wireguardDllPath)) {
-        throw new Error(`WireGuard NT driver DLL tidak ditemukan di: ${wireguardDllPath}`)
+      isServiceMode = await checkWindowsServiceExists()
+      if (!isServiceMode) {
+        if (!existsSync(helperPath) && !helperPath.endsWith('.ts')) {
+          throw new Error(`WireGuard helper tidak ditemukan: ${helperPath}`)
+        }
+        if (!existsSync(tunnelDllPath)) {
+          throw new Error(`WireGuard tunnel DLL tidak ditemukan di: ${tunnelDllPath}`)
+        }
+        if (!existsSync(wireguardDllPath)) {
+          throw new Error(`WireGuard NT driver DLL tidak ditemukan di: ${wireguardDllPath}`)
+        }
       }
     },
 
     connect: async (config: string) => {
-      if (connectProcess) {
+      if (connectProcess || (isServiceMode && status === 'connected')) {
         throw new Error('Already connected')
       }
 
+      // Check if installed background service is available
+      isServiceMode = await checkWindowsServiceExists()
+
+      if (isServiceMode) {
+        status = 'connecting'
+        try {
+          // Write config to shared ProgramData directory
+          const programData = process.env.ProgramData || 'C:\\ProgramData'
+          const confDir = path.join(programData, 'UniVPN')
+          mkdirSync(confDir, { recursive: true })
+          const confPath = path.join(confDir, 'tunnel.conf')
+          writeFileSync(confPath, config, 'utf8')
+
+          // Start service via sc.exe (works for unprivileged users thanks to installer SDDL)
+          await execFilePromise('sc.exe', ['start', serviceName])
+
+          // Poll service status until RUNNING
+          let started = false
+          for (let i = 0; i < 15; i++) {
+            await new Promise((r) => setTimeout(r, 400))
+            const { stdout } = await execFilePromise('sc.exe', ['query', serviceName])
+            if (stdout.includes('RUNNING')) {
+              started = true
+              break
+            }
+          }
+
+          if (!started) {
+            throw new Error(`Service ${serviceName} gagal mencapai state RUNNING`)
+          }
+          status = 'connected'
+          return
+        } catch (err) {
+          status = 'error'
+          throw err
+        }
+      }
+
+      // Fallback: direct helper spawn (requires elevated user if connecting directly)
       tempDir = mkdtempSync(path.join(tmpdir(), 'univpn-'))
       const confPath = path.join(tempDir, 'univpn.conf')
       writeFileSync(confPath, config, 'utf8')
@@ -183,69 +261,79 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
       status = 'connecting'
       connectProcess = runHelper(['connect', confPath])
 
-      return new Promise<void>((resolve, reject) => {
-        let stderr = ''
-        let stdout = ''
-        let settled = false
+      const { promise, resolve, reject } = Promise.withResolvers<void>()
+      let stderr = ''
+      let stdout = ''
+      let settled = false
 
-        connectProcess!.stdout?.on('data', (chunk) => {
-          stdout += chunk.toString()
-          try {
-            const lines = stdout.split('\n')
-            for (const line of lines) {
-              if (!line.trim()) continue
-              const res = JSON.parse(line.trim())
-              if (res.status === 'started' && !settled) {
-                settled = true
-                status = 'connected'
-                resolve()
-              } else if (res.status === 'error' && !settled) {
-                settled = true
-                status = 'error'
-                reject(new Error(res.error || 'Gagal memulai adapter WireGuard (butuh akses Administrator)'))
-              }
+      connectProcess!.stdout?.on('data', (chunk) => {
+        stdout += chunk.toString()
+        try {
+          const lines = stdout.split('\n')
+          for (const line of lines) {
+            if (!line.trim()) continue
+            const res = JSON.parse(line.trim())
+            if (res.status === 'started' && !settled) {
+              settled = true
+              status = 'connected'
+              resolve()
+            } else if (res.status === 'error' && !settled) {
+              settled = true
+              status = 'error'
+              reject(new Error(res.error || 'Gagal memulai adapter WireGuard (butuh akses Administrator)'))
             }
-          } catch {
-            // non-json output or partial stream
           }
-        })
-
-        connectProcess!.stderr?.on('data', (chunk) => {
-          stderr += chunk.toString()
-        })
-
-        connectProcess!.on('error', (err) => {
-          if (!settled) {
-            settled = true
-            status = 'error'
-            connectProcess = null
-            reject(err)
-          }
-        })
-
-        // Give the helper up to 3 seconds to confirm startup via stdout
-        const timeout = setTimeout(() => {
-          if (!settled && status === 'connecting') {
-            settled = true
-            status = 'connected'
-            resolve()
-          }
-        }, 3000)
-
-        connectProcess!.on('close', (code) => {
-          clearTimeout(timeout)
-          connectProcess = null
-          if (!settled || status === 'connecting') {
-            settled = true
-            status = 'error'
-            const msg = stderr.trim() || `WireGuard helper terminated (exit code ${code}). Pastikan aplikasi dijalankan dengan hak Administrator.`
-            reject(new Error(msg))
-          }
-        })
+        } catch {
+          // non-json output or partial stream
+        }
       })
+
+      connectProcess!.stderr?.on('data', (chunk) => {
+        stderr += chunk.toString()
+      })
+
+      connectProcess!.on('error', (err) => {
+        if (!settled) {
+          settled = true
+          status = 'error'
+          connectProcess = null
+          reject(err)
+        }
+      })
+
+      // Give the helper up to 3 seconds to confirm startup via stdout
+      const timeout = setTimeout(() => {
+        if (!settled && status === 'connecting') {
+          settled = true
+          status = 'connected'
+          resolve()
+        }
+      }, 3000)
+
+      connectProcess!.on('close', (code) => {
+        clearTimeout(timeout)
+        connectProcess = null
+        if (!settled || status === 'connecting') {
+          settled = true
+          status = 'error'
+          const msg = stderr.trim() || `WireGuard helper terminated (exit code ${code}). Pastikan aplikasi dijalankan dengan hak Administrator.`
+          reject(new Error(msg))
+        }
+      })
+      return promise
     },
 
     disconnect: async () => {
+      if (isServiceMode) {
+        try {
+          await execFilePromise('sc.exe', ['stop', serviceName])
+        } catch {
+          // best effort
+        }
+        status = 'disconnected'
+        return
+      }
+
       if (!connectProcess) {
         status = 'disconnected'
         return
@@ -256,27 +344,27 @@ export function createWindowsDriver(options: WindowsDriverOptions = {}): VpnPlat
     },
 
     status: async () => {
-      if (!connectProcess) return 'disconnected'
+      if (!connectProcess && !isServiceMode) return 'disconnected'
       return queryStatus()
     },
 
     stats: async (): Promise<VpnStats | null> => {
-      if (!connectProcess) return null
-      return new Promise((resolve) => {
-        const proc = runHelper(['stats'])
-        let stdout = ''
-        proc.stdout?.on('data', (chunk) => {
-          stdout += chunk.toString()
-        })
-        proc.on('close', () => {
-          try {
-            resolve(JSON.parse(stdout.trim()) as VpnStats)
-          } catch {
-            resolve(null)
-          }
-        })
-        proc.on('error', () => resolve(null))
+      if (!connectProcess && !isServiceMode) return null
+      const { promise, resolve } = Promise.withResolvers<VpnStats | null>()
+      const proc = runHelper(['stats'])
+      let stdout = ''
+      proc.stdout?.on('data', (chunk) => {
+        stdout += chunk.toString()
       })
+      proc.on('close', () => {
+        try {
+          resolve(JSON.parse(stdout.trim()) as VpnStats)
+        } catch {
+          resolve(null)
+        }
+      })
+      proc.on('error', () => resolve(null))
+      return promise
     },
   }
 }

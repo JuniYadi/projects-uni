@@ -112,7 +112,21 @@ function send(obj: unknown) {
   console.log(JSON.stringify(obj))
 }
 
-if (command === 'connect') {
+if (command === 'service' || command === '/service') {
+  // Windows Service entry point
+  // Reads config from arg, or falls back to standard ProgramData tunnel config
+  const programData = env.ProgramData || 'C:\\ProgramData'
+  const serviceConfPath = arg ?? path.join(programData, 'UniVPN', 'tunnel.conf')
+
+  try {
+    const tunnel = loadTunnelDll()
+    const ok = tunnel.symbols.WireGuardTunnelService(ptr(wstr(serviceConfPath)))
+    exit(ok ? 0 : 1)
+  } catch (err) {
+    console.error('Service error:', (err as Error).message)
+    exit(1)
+  }
+} else if (command === 'connect') {
   if (!arg) {
     console.error('Usage: wg-helper connect <confPath>')
     exit(1)

@@ -4,6 +4,7 @@ import { useConnectionStore } from '@/stores/connectionStore';
 import { api } from '@/services/api';
 import { pingHost } from '@/services/pingService';
 import * as storage from '@/services/storageService';
+import { resolveCountryCode, resolveCountryName } from '@univpn/shared';
 
 // ponytail: dev bypass fallback
 const SKIP_AUTH = process.env.EXPO_PUBLIC_SKIP_AUTH === '1'
@@ -17,13 +18,6 @@ const MOCK_PROFILES: VpnProfile[] = [
   { id: 'us-dal', name: 'Dallas', country: 'United States', countryCode: 'US', city: 'Dallas', region: 'Amerika', protocol: 'wireguard', port: 51820, load: 40, ping: 260, encryption: 'AES-256-GCM', serverAddress: 'us-dal.vpn.example.com', serverIp: '203.0.113.70', latitude: 32.7767, longitude: -96.797 },
 ];
 
-const COUNTRY_CODES: Record<string, string> = {
-  INDONESIA: 'ID',
-  'HONG KONG': 'HK',
-  JAPAN: 'JP',
-  SINGAPORE: 'SG',
-  'UNITED STATES': 'US',
-};
 
 // Map API ProfileInfo → local VpnProfile
 function mapProfile(apiProfile: {
@@ -45,9 +39,11 @@ function mapProfile(apiProfile: {
   lang?: number;
   long?: number;
 }): VpnProfile {
-  const country = apiProfile.country ?? apiProfile.region;
-  const countryCode = COUNTRY_CODES[country.toUpperCase()] ?? COUNTRY_CODES[apiProfile.region.toUpperCase()] ?? country;
-
+  const countryCode = resolveCountryCode(apiProfile);
+  const country =
+    apiProfile.country && !['US', 'HK', 'ID', 'SG', 'JP', 'NL', 'DE', 'AMERIKA'].includes(apiProfile.country.toUpperCase())
+      ? apiProfile.country
+      : resolveCountryName(countryCode) || apiProfile.country || apiProfile.region;
   if (process.env.EXPO_PUBLIC_APP_DEBUG === 'true') {
     console.log(`[ProfileStore] Raw profile keys for ${apiProfile.serverName}:`, Object.keys(apiProfile));
     console.log(`[ProfileStore] Raw profile object for ${apiProfile.serverName}:`, JSON.stringify(apiProfile, null, 2));

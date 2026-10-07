@@ -34,6 +34,7 @@ jobs:
             platform: macos
             compile_cmd: bun run compile:helper:mac
             dist_flags: --mac --arm64 --x64
+            artifact_name: univpn-desktop-macos
             artifact_path: |
               apps/desktop/dist/*.dmg
               apps/desktop/dist/*.zip

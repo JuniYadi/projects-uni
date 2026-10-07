@@ -96,7 +96,19 @@ jobs:
           shopt -s nullglob
           FILES=(*.exe *.dmg *.zip)
           if [ ${#FILES[@]} -gt 0 ]; then
-            shasum -a 256 "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            elif command -v shasum >/dev/null 2>&1; then
+              shasum -a 256 "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            else
+              node -e '
+                const fs = require("fs"), crypto = require("crypto");
+                process.argv.slice(1).forEach(f => {
+                  const h = crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
+                  console.log(`${h}  ${f}`);
+                });
+              ' "${FILES[@]}" > "SHA256SUMS-${{ matrix.platform }}.txt"
+            fi
             echo "Generated SHA256SUMS-${{ matrix.platform }}.txt:"
             cat "SHA256SUMS-${{ matrix.platform }}.txt"
           fi

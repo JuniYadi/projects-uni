@@ -159,7 +159,8 @@ assert(typeof noop.connect === 'function', 'noop driver tersedia untuk non-Windo
 const darwinDriver = createDarwinDriver()
 assert(typeof darwinDriver.connect === 'function', 'createDarwinDriver menyediakan fungsi connect')
 assert(typeof darwinDriver.initialize === 'function', 'createDarwinDriver menyediakan fungsi initialize')
-
+await darwinDriver.initialize()
+assert((await darwinDriver.status()) === 'disconnected', 'darwinDriver status awal disconnected')
 const platformDriver = createPlatformDriver()
 if (process.platform === 'darwin') {
   assert(typeof platformDriver.connect === 'function', 'createPlatformDriver mengembalikan darwin driver di macOS')

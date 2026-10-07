@@ -57,7 +57,10 @@ ipcMain.handle('vpn:connect', async (_event, profileId: string) => {
     setSettings({ lastProfileId: profileId })
     return { ok: true }
   } catch (err) {
-    return { ok: false, error: getErrorMessage((err as Error).message) }
+    const rawMsg = (err as Error).message
+    const mapped = getErrorMessage(rawMsg)
+    const errorMsg = mapped !== 'Terjadi kesalahan' ? mapped : rawMsg
+    return { ok: false, error: errorMsg }
   }
 })
 

@@ -17,9 +17,21 @@ export interface DarwinDriverOptions {
   socketPath?: string
 }
 
-const resourcesDir =
-  (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath ??
-  path.resolve(import.meta.dirname, '../../../apps/desktop/resources')
+function resolveMacResourcesDir(): string {
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath
+  const candidates = [
+    process.env.UNIVPN_RESOURCES_DIR,
+    resourcesPath ? path.join(resourcesPath, 'resources', 'mac') : null,
+    resourcesPath ? path.join(resourcesPath, 'mac') : null,
+    path.resolve(process.cwd(), 'apps/desktop/resources/mac'),
+    path.resolve(process.cwd(), 'resources/mac'),
+    path.resolve(import.meta.dirname, '../../../apps/desktop/resources/mac'),
+    path.resolve(import.meta.dirname, '../../apps/desktop/resources/mac'),
+    path.resolve(import.meta.dirname, '../resources/mac'),
+  ].filter((p): p is string => Boolean(p && existsSync(p)))
+
+  return candidates[0] ?? path.resolve(process.cwd(), 'apps/desktop/resources/mac')
+}
 
 function execFilePromise(cmd: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
   const { promise, resolve, reject } = Promise.withResolvers<{ stdout: string; stderr: string }>()
@@ -35,12 +47,31 @@ function execFilePromise(cmd: string, args: string[]): Promise<{ stdout: string;
 
 export function createDarwinDriver(options: DarwinDriverOptions = {}): VpnPlatformDriver {
   const socketPath = options.socketPath ?? '/var/run/univpn.sock'
+  const resDir = resolveMacResourcesDir()
 
   const helperPath = options.helperPath ?? (() => {
-    const candidateBin = path.join(resourcesDir, 'mac', 'univpn-helper')
+    const candidateBin = path.join(resDir, 'univpn-helper')
     if (existsSync(candidateBin)) return candidateBin
+    const installed = '/Library/PrivilegedHelperTools/univpn-helper'
+    if (existsSync(installed)) return installed
     const candidateTs = path.join(import.meta.dirname, 'mac-helper.ts')
     return existsSync(candidateTs) ? candidateTs : candidateBin
+  })()
+
+  const wireguardGoPath = options.wireguardGoPath ?? (() => {
+    const candidate = path.join(resDir, 'wireguard-go')
+    if (existsSync(candidate)) return candidate
+    const installed = '/Library/PrivilegedHelperTools/wireguard-go'
+    if (existsSync(installed)) return installed
+    return candidate
+  })()
+
+  const wgPath = options.wgPath ?? (() => {
+    const candidate = path.join(resDir, 'wg')
+    if (existsSync(candidate)) return candidate
+    const installed = '/Library/PrivilegedHelperTools/wg'
+    if (existsSync(installed)) return installed
+    return candidate
   })()
 
   let currentStatus: VpnStatus = 'disconnected'
@@ -111,46 +142,90 @@ export function createDarwinDriver(options: DarwinDriverOptions = {}): VpnPlatfo
 
   async function installLaunchDaemon(): Promise<void> {
     const isScript = helperPath.endsWith('.ts')
-    const executable = isScript ? '/usr/local/bin/bun' : '/Library/PrivilegedHelperTools/univpn-helper'
+    const executable = isScript ? process.execPath : '/Library/PrivilegedHelperTools/univpn-helper'
     const daemonArgs = isScript
       ? `<string>run</string><string>${helperPath}</string><string>daemon</string>`
       : `<string>daemon</string>`
 
-    const scriptParts = [
+    const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.univpn.helper</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>${executable}</string>
+        ${daemonArgs}
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/var/log/univpn-helper.err</string>
+    <key>StandardOutPath</key>
+    <string>/var/log/univpn-helper.out</string>
+</dict>
+</plist>
+`
+
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'univpn-install-'))
+    const tempPlist = path.join(tempDir, 'com.univpn.helper.plist')
+    writeFileSync(tempPlist, plistContent, 'utf8')
+
+    const commands: string[] = [
       'mkdir -p /Library/PrivilegedHelperTools',
-      !isScript ? `cp "${helperPath}" /Library/PrivilegedHelperTools/univpn-helper` : '',
-      !isScript ? `chmod 755 /Library/PrivilegedHelperTools/univpn-helper` : '',
-      `cat << 'EOF' > /Library/LaunchDaemons/com.univpn.helper.plist`,
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
-      '<plist version="1.0">',
-      '<dict>',
-      '    <key>Label</key>',
-      '    <string>com.univpn.helper</string>',
-      '    <key>ProgramArguments</key>',
-      '    <array>',
-      `        <string>${executable}</string>`,
-      `        ${daemonArgs}`,
-      '    </array>',
-      '    <key>RunAtLoad</key>',
-      '    <true/>',
-      '    <key>KeepAlive</key>',
-      '    <true/>',
-      '    <key>StandardErrorPath</key>',
-      '    <string>/var/log/univpn-helper.err</string>',
-      '    <key>StandardOutPath</key>',
-      '    <string>/var/log/univpn-helper.out</string>',
-      '</dict>',
-      '</plist>',
-      'EOF',
-      'launchctl unload /Library/LaunchDaemons/com.univpn.helper.plist 2>/dev/null || true',
-      'launchctl load -w /Library/LaunchDaemons/com.univpn.helper.plist',
-    ].filter(Boolean)
+      'mkdir -p /Library/LaunchDaemons',
+      'mkdir -p /var/run/wireguard',
+    ]
 
-    const fullScript = scriptParts.join(' && ')
-    const escapedAppleScript = `do shell script "${fullScript.replace(/"/g, '\\"')}" with administrator privileges`
+    if (!isScript) {
+      if (!existsSync(helperPath)) {
+        throw new Error(`univpn-helper binary not found at ${helperPath}`)
+      }
+      commands.push(
+        `cp -f "${helperPath}" /Library/PrivilegedHelperTools/univpn-helper`,
+        `chmod 755 /Library/PrivilegedHelperTools/univpn-helper`,
+        `chown root:wheel /Library/PrivilegedHelperTools/univpn-helper`
+      )
+    }
 
-    await execFilePromise('osascript', ['-e', escapedAppleScript])
+    if (existsSync(wireguardGoPath)) {
+      commands.push(
+        `cp -f "${wireguardGoPath}" /Library/PrivilegedHelperTools/wireguard-go`,
+        `chmod 755 /Library/PrivilegedHelperTools/wireguard-go`,
+        `chown root:wheel /Library/PrivilegedHelperTools/wireguard-go`
+      )
+    }
+
+    if (existsSync(wgPath)) {
+      commands.push(
+        `cp -f "${wgPath}" /Library/PrivilegedHelperTools/wg`,
+        `chmod 755 /Library/PrivilegedHelperTools/wg`,
+        `chown root:wheel /Library/PrivilegedHelperTools/wg`
+      )
+    }
+
+    commands.push(
+      `cp -f "${tempPlist}" /Library/LaunchDaemons/com.univpn.helper.plist`,
+      `chmod 644 /Library/LaunchDaemons/com.univpn.helper.plist`,
+      `chown root:wheel /Library/LaunchDaemons/com.univpn.helper.plist`,
+      `launchctl bootout system /Library/LaunchDaemons/com.univpn.helper.plist 2>/dev/null || launchctl unload /Library/LaunchDaemons/com.univpn.helper.plist 2>/dev/null || true`,
+      `launchctl bootstrap system /Library/LaunchDaemons/com.univpn.helper.plist 2>/dev/null || launchctl load -w /Library/LaunchDaemons/com.univpn.helper.plist`
+    )
+
+    const fullScript = commands.join(' && ')
+    const escapedAppleScript = `do shell script "${fullScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}" with administrator privileges`
+
+    try {
+      await execFilePromise('osascript', ['-e', escapedAppleScript])
+    } finally {
+      try {
+        const { rmSync } = await import('node:fs')
+        rmSync(tempDir, { recursive: true, force: true })
+      } catch {}
+    }
 
     // Wait for daemon socket to become active
     for (let i = 0; i < 20; i++) {
@@ -175,7 +250,10 @@ export function createDarwinDriver(options: DarwinDriverOptions = {}): VpnPlatfo
 
   return {
     initialize: async () => {
-      // Validate helper availability on launch without blocking UI with password prompt
+      if (await isDaemonReachable()) {
+        daemonChecked = true
+        return
+      }
       if (!existsSync(helperPath) && !helperPath.endsWith('.ts')) {
         console.warn(`[UniVPN macOS] Helper not yet compiled at ${helperPath}`)
       }

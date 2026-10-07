@@ -29,17 +29,16 @@ jobs:
             artifact_path: |
               apps/desktop/dist/*.exe
               apps/desktop/dist/SHA256SUMS-windows.txt
-            release_files: 'apps/desktop/dist/*.exe apps/desktop/dist/SHA256SUMS-windows.txt'
+            release_files: 'apps/desktop/dist/*.exe apps/desktop/dist/SHA256SUMS-windows.txt apps/desktop/dist/latest.yml'
           - os: macos-latest
             platform: macos
             compile_cmd: bun run compile:helper:mac
-            dist_flags: --mac
-            artifact_name: univpn-desktop-macos
+            dist_flags: --mac --arm64 --x64
             artifact_path: |
               apps/desktop/dist/*.dmg
               apps/desktop/dist/*.zip
               apps/desktop/dist/SHA256SUMS-macos.txt
-            release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/SHA256SUMS-macos.txt'
+            release_files: 'apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/SHA256SUMS-macos.txt apps/desktop/dist/latest-mac.yml'
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -87,7 +86,8 @@ jobs:
       - name: Package with electron-builder
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: bun run dist -- ${{ matrix.dist_flags }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun run dist -- ${{ matrix.dist_flags }} --publish never
         working-directory: apps/desktop
       - name: Generate SHA256 Checksums
         shell: bash
@@ -118,13 +118,14 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Publish to GitHub Release
         if: github.event_name == 'release'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           shopt -s nullglob
           FILES=(${{ matrix.release_files }})

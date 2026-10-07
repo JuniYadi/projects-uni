@@ -12,10 +12,10 @@
     "preview": "electron-vite preview",
     "dist": "electron-builder",
     "dist:win": "bun run compile:helper && electron-vite build && electron-builder --win",
-    "dist:mac": "bun run compile:helper:mac && electron-vite build && electron-builder --mac",
+    "dist:mac": "bun run compile:helper:mac && electron-vite build && electron-builder --mac --arm64 --x64",
     "verify": "bun run scripts/verify.ts",
     "compile:helper": "bun build --compile --target=bun-windows-x64 ../../packages/vpn-platform/src/wg-helper.ts --outfile resources/wg-helper.exe",
-    "compile:helper:mac": "bun build --compile ../../packages/vpn-platform/src/mac-helper.ts --outfile resources/mac/univpn-helper"
+    "compile:helper:mac": "bun run scripts/compile-mac-helper.ts"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",

@@ -51,6 +51,13 @@ export function getErrorMessage(code: AuthErrorCode, details?: Record<string, un
   return msg
 }
 
+// Fired when the session is dead server-side (token rejected or device revoked)
+type AuthLostHandler = (code: 'TOKEN_INVALID' | 'DEVICE_REVOKED') => void
+let authLostHandler: AuthLostHandler | null = null
+export function setAuthLostHandler(h: AuthLostHandler | null): void {
+  authLostHandler = h
+}
+
 // ─── Fingerprint ─────────────────────────────────────────
 
 let cachedFingerprint: string | null = null
@@ -103,10 +110,20 @@ class VpnApiClient {
 
       clearTimeout(timeoutId)
 
+      // Peek error code first: a revoked device may arrive as 401 or 403
+      const errBody = response.ok ? null : ((await response.clone().json().catch(() => ({}))) as ApiErrorBody)
+      const errCode = errBody?.error?.code
+
+      if (errCode === 'DEVICE_REVOKED') {
+        await storage.clearAll()
+        authLostHandler?.('DEVICE_REVOKED')
+        return Promise.reject(new Error('DEVICE_REVOKED'))
+      }
+
       // 401: clear token globally
       if (response.status === 401) {
         await storage.clearAll()
-        // ponytail: event emitter deferred — store can subscribe
+        authLostHandler?.('TOKEN_INVALID')
         return Promise.reject(new Error('TOKEN_INVALID'))
       }
 

@@ -79,6 +79,7 @@ export default function App() {
   const [copiedSubId, setCopiedSubId] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginBusy, setLoginBusy] = useState(false)
+  const [revoked, setRevoked] = useState(false)
 
   const [tab, setTab] = useState<Tab>('home')
   const [modeLanjutan, setModeLanjutan] = useState(false)
@@ -148,10 +149,29 @@ export default function App() {
           if (s.autoConnect && s.lastProfileId) {
             void window.electronAPI.connect(s.lastProfileId)
           }
+        } else if (res.revoked) {
+          setRevoked(true)
         }
       })
       .finally(() => setLoading(false))
   }, [])
+
+  // Server rejected the session (device revoked / token invalid): main already cleared auth + tunnel
+  useEffect(
+    () =>
+      window.electronAPI.onAuthLost((code) => {
+        setAuthenticated(false)
+        setSubId('')
+        setProfiles([])
+        setSelectedId(null)
+        setStatus('disconnected')
+        setTab('home')
+        setModeLanjutan(false)
+        setConnectError(null)
+        if (code === 'DEVICE_REVOKED') setRevoked(true)
+      }),
+    []
+  )
 
   useEffect(() => {
     applyTheme(theme)
@@ -397,6 +417,30 @@ export default function App() {
             </button>
           </form>
         </div>
+
+        {/* Dialog: Perangkat Dicabut (Revoked) */}
+        {revoked && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
+            <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-line bg-card p-5 text-center shadow-2xl">
+              <div className="flex size-11 items-center justify-center rounded-2xl border border-error/30 bg-error/15 text-error">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="m15 9-6 6" />
+                  <path d="m9 9 6 6" />
+                </svg>
+              </div>
+              <h2 className="mt-3 text-base font-semibold text-fg">{Strings.revoked.title}</h2>
+              <p className="mt-1.5 text-xs text-dim">{Strings.revoked.body}</p>
+              <button
+                type="button"
+                onClick={() => setRevoked(false)}
+                className="mt-4 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-[#22C55E] text-sm font-semibold text-[#052E16] hover:opacity-95 active:scale-98"
+              >
+                {Strings.revoked.signIn}
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     )
   }

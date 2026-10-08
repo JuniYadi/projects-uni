@@ -8,6 +8,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   logout: () => ipcRenderer.invoke('auth:logout'),
   restore: () => ipcRenderer.invoke('auth:restore'),
 
+  onAuthLost: (callback: (code: string) => void) => {
+    const sub = (_: unknown, code: string) => callback(code)
+    ipcRenderer.on('auth:lost', sub)
+    return () => {
+      ipcRenderer.removeListener('auth:lost', sub)
+    }
+  },
+
   // vpn
   getProfiles: () => ipcRenderer.invoke('vpn:getProfiles'),
   connect: (profileId: string) => ipcRenderer.invoke('vpn:connect', profileId),

@@ -49,7 +49,8 @@ export interface ElectronAPI {
     subscriptionId: string
   ) => Promise<{ ok: true; subscription: SubscriptionInfo } | { ok: false; error?: string }>
   logout: () => Promise<void>
-  restore: () => Promise<{ ok: true; token: string; expiresAt: string; subscriptionId: string } | { ok: false }>
+  onAuthLost: (callback: (code: 'TOKEN_INVALID' | 'DEVICE_REVOKED') => void) => () => void
+  restore: () => Promise<{ ok: true; token: string; expiresAt: string; subscriptionId: string } | { ok: false; revoked?: boolean }>
 
   getProfiles: () => Promise<{ ok: true; profiles: ProfileInfo[] } | { ok: false; error?: string }>
   connect: (profileId: string) => Promise<{ ok: true } | { ok: false; error?: string }>

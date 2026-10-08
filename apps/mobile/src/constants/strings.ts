@@ -186,6 +186,11 @@ export const Strings = {
     allow: 'Lanjut',
     body: 'Android akan meminta izin untuk membuat koneksi VPN. Ketuk OK pada jendela berikutnya.',
   },
+  revoked: {
+    title: 'Perangkat dicabut',
+    body: 'Akses untuk perangkat ini telah dihentikan dari halaman web. Hubungi admin atau masuk dengan akun lain.',
+    signIn: 'Masuk Kembali',
+  },
   expired: {
     title: 'Langgananmu sudah berakhir',
     body: 'Masa aktif langganan akun ini telah habis. Masuk dengan akun lain untuk memakai UniVPN kembali.',

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import * as storage from '@/services/storageService'
-import { api, getErrorMessage } from '@/services/api'
+import { api, getErrorMessage, setAuthLostHandler } from '@/services/api'
 import type { SubscriptionInfo } from '@univpn/shared'
 
 // ponytail: dev bypass check
@@ -13,7 +13,7 @@ interface AuthState {
   token: string | null
   expiresAt: string | null
   subscription: SubscriptionInfo | null
-  status: 'idle' | 'loading' | 'valid' | 'invalid' | 'error'
+  status: 'idle' | 'loading' | 'valid' | 'invalid' | 'revoked' | 'error'
   error: string | null
   restore: () => Promise<boolean>
   loginWithSubId: (subId: string) => Promise<void>
@@ -59,9 +59,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ token, expiresAt, subscriptionId: subId, status: 'valid' })
       return true
-    } catch {
+    } catch (err) {
       await storage.clearAll()
-      set({ status: 'invalid' })
+      set({ status: (err as Error).message === 'DEVICE_REVOKED' ? 'revoked' : 'invalid' })
       return false
     }
   },
@@ -118,5 +118,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null, status: 'idle' }),
 }))
+
+// Server killed the session while logged in → drop local auth state so the UI redirects
+setAuthLostHandler((code) => {
+  if (useAuthStore.getState().status !== 'valid') return
+  useAuthStore.setState({
+    token: null,
+    expiresAt: null,
+    subscriptionId: null,
+    subscription: null,
+    status: code === 'DEVICE_REVOKED' ? 'revoked' : 'invalid',
+    error: null,
+  })
+})
 
 export default useAuthStore

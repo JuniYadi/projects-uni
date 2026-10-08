@@ -2,6 +2,15 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.5.0] - 2026-10-08
+
+### Added
+- **Desktop & Mobile**: Logout otomatis saat perangkat dicabut (`DEVICE_REVOKED`): sesi dihapus, terowongan VPN dan heartbeat dihentikan, lalu pengguna diarahkan ke layar/dialog "Perangkat dicabut" dengan tombol "Masuk Kembali".
+
+### Fixed
+- **Desktop & Mobile**: Sesi yang ditolak server (`TOKEN_INVALID` / 401) kini juga me-reset status login di UI, bukan hanya menghapus token.
+- **Desktop**: Catatan pembaruan pada dialog update kini dirender sebagai HTML (judul, daftar, tebal, kode) alih-alih menampilkan tag mentah.
+
 ## [v0.4.6-desktop] - 2026-10-08
 
 ### Added

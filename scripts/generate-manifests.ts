@@ -63,10 +63,8 @@ export function generateManifests(options?: {
   // RULE: Versi internal (v*-internal) KHUSUS staff testing (API internal / staging)
   // dan DILARANG KERAS masuk ke manifes publik (latest.yml, latest-android.yml, dsb).
   // Manifes publik HANYA untuk versi rilis produksi publik (v*-mobile / v*-desktop).
-  const aVersion = options?.androidVersion || '0.4.0'
-  const aVersionCode =
-    options?.androidVersionCode ||
-    400
+  const aVersion = options?.androidVersion || mobileAppJson.expo.version
+  const aVersionCode = options?.androidVersionCode || mobileAppJson.expo.android.versionCode
   const isMandatory = options?.mandatory ?? false
 
   const minDesktop = calculateMinSupportedVersion(dVersion)

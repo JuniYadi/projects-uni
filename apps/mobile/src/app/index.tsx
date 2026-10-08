@@ -21,7 +21,7 @@ export default function AuthGate() {
     return () => clearTimeout(t);
   }, []);
 
-  if (done) return <Redirect href={status === 'valid' ? '/(main)/home' : '/(auth)/login'} />;
+  if (done) return <Redirect href={status === 'valid' ? '/(main)/home' : status === 'revoked' ? '/(auth)/revoked' : '/(auth)/login'} />;
   return (
     <View style={{ flex: 1, backgroundColor: theme.background, alignItems: 'center', justifyContent: 'center' }}>
       <View style={{ position: 'absolute', left: 0, right: 0 }}>

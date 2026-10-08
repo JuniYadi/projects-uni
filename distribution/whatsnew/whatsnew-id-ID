@@ -1,5 +1,6 @@
-v0.4.1 telah tersedia!
+v0.5.0 telah tersedia!
 
-- Perbaikan pemuatan bendera lokasi server (Amerika Serikat & Hong Kong)
-- Normalisasi kode negara server dan optimalisasi pemuatan bendera FlagCDN
-- Optimalisasi performa dan kestabilan aplikasi
+- Keluar otomatis saat perangkat ini dicabut, dengan layar "Perangkat dicabut" yang jelas
+- ID Langganan kini disamarkan, dengan tombol mata di layar Akun
+- Koneksi lebih cepat dan andal dengan memprioritaskan alamat IP server
+- Peningkatan performa dan kestabilan aplikasi

@@ -2,6 +2,12 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.5.1-mobile] - 2026-10-08
+
+### Fixed
+- **Mobile**: Memperbaiki missing import `create` dari `zustand` pada `connectionStore` yang menyebabkan error inisialisasi store koneksi.
+- **Mobile**: Menambahkan parameter `buttonStyle` dan `renderActions` yang terlewat pada komponen `ConnectionStatus` agar styling tombol beranda dan kontrol aksi berfungsi dengan tepat.
+
 ## [v0.5.0-desktop] - 2026-10-08
 
 ### Added

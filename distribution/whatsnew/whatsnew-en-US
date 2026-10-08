@@ -1,6 +1,5 @@
-v0.5.0 is now available!
+v0.5.1 is now available!
 
-- Automatic sign-out when this device is revoked, with a clear "Device revoked" screen
-- Subscription ID is now masked, with an eye toggle on the Account screen
-- Faster, more reliable connections by preferring the server IP address
-- Performance and stability improvements
+- Fixed connection store initialization issue
+- Fixed home connection button style and action controls
+- General stability improvements

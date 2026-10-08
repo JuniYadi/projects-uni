@@ -1,5 +1,6 @@
 // Connection store — real WireGuard integration
 // Manages VPN lifecycle: fetch config → parse → connect → heartbeat → disconnect
+import { create } from 'zustand'
 
 import { resolveEndpointHost } from '@univpn/shared'
 import type { VpnProfile, ConnectionStatus } from '@/types/vpn'

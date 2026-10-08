@@ -65,8 +65,8 @@ export function generateManifests(options?: {
   // Manifes publik HANYA untuk versi rilis produksi publik (v*-mobile / v*-desktop).
   const aVersion = options?.androidVersion || mobileAppJson.expo.version
   const aVersionCode = options?.androidVersionCode || mobileAppJson.expo.android.versionCode
+  const aPackageId = mobileAppJson.expo.android?.package || 'com.pfnapp.univpn'
   const isMandatory = options?.mandatory ?? false
-
   const minDesktop = calculateMinSupportedVersion(dVersion)
   const minAndroid = calculateMinSupportedVersion(aVersion)
   const minAndroidCode = Math.max(1, aVersionCode - 20)
@@ -117,9 +117,9 @@ platforms:
     minSupportedVersionCode: ${minAndroidCode}
     mandatory: ${isMandatory}
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-android.yml"
-    playStoreUrl: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
+    playStoreUrl: "https://play.google.com/store/apps/details?id=${aPackageId}"
     directApkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
-    packageId: "com.univpn.mobile"
+    packageId: "${aPackageId}"
     releaseDate: "${now}"
 `
 
@@ -177,7 +177,7 @@ files:
 version: "${aVersion}"
 versionCode: ${aVersionCode}
 releaseDate: "${now}"
-packageId: "com.univpn.mobile"
+packageId: "${aPackageId}"
 
 minSupportedVersion: "${minAndroid}"
 minSupportedVersionCode: ${minAndroidCode}
@@ -186,7 +186,7 @@ sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis).
 distribution:
   playStore:
     track: "production"
-    url: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
+    url: "https://play.google.com/store/apps/details?id=${aPackageId}"
   directDownload:
     apkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v${aVersion}-mobile/app-release.apk"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

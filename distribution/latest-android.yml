@@ -4,8 +4,8 @@
 # ==============================================================================
 version: "0.5.1"
 versionCode: 501
-releaseDate: "2026-10-08T15:13:04.867Z"
-packageId: "com.univpn.mobile"
+releaseDate: "2026-10-08T15:17:08.018Z"
+packageId: "com.pfnapp.univpn"
 
 minSupportedVersion: "0.0.0"
 minSupportedVersionCode: 481
@@ -14,7 +14,7 @@ sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis).
 distribution:
   playStore:
     track: "production"
-    url: "https://play.google.com/store/apps/details?id=com.univpn.mobile"
+    url: "https://play.google.com/store/apps/details?id=com.pfnapp.univpn"
   directDownload:
     apkUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.5.1-mobile/app-release.apk"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

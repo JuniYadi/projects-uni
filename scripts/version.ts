@@ -71,7 +71,7 @@ function check(): string[] {
   const m = JSON.parse(read(MOBILE_APP)).expo
   const mv = m.version as string
   const mc = m.android.versionCode as number
-
+  const mp = (m.android.package as string) || 'com.pfnapp.univpn'
   expect(read(DESKTOP_APP_TSX).includes(`currentVersion: '${d}'`), `desktop App.tsx currentVersion != ${d}`)
   expect(mc === codeOf(mv), `mobile versionCode ${mc} != ${codeOf(mv)} for ${mv}`)
 
@@ -83,6 +83,7 @@ function check(): string[] {
   eq('distribution/latest-mac.yml', /^version: "([^"]+)"/m, d)
   eq('distribution/latest-android.yml', /^version: "([^"]+)"/m, mv)
   eq('distribution/latest-android.yml', /^versionCode: (\d+)/m, mc)
+  eq('distribution/latest-android.yml', /^packageId: "([^"]+)"/m, mp)
   const g = read('distribution/latest.yml')
   const platformField = (name: string, key: string) =>
     g.match(new RegExp(`^  ${name}:\\n(?:    .*\\n)*?    ${key}: "?([^"\\n]+)"?`, 'm'))?.[1]
@@ -90,7 +91,7 @@ function check(): string[] {
   expect(platformField('macos', 'version') === d, `latest.yml macos.version != ${d}`)
   expect(platformField('android', 'version') === mv, `latest.yml android.version != ${mv}`)
   expect(platformField('android', 'versionCode') === String(mc), `latest.yml android.versionCode != ${mc}`)
-
+  expect(platformField('android', 'packageId') === mp, `latest.yml android.packageId != ${mp}`)
   // changelog: separate entry per platform, no leftover stubs
   const log = read('CHANGELOG.md')
   expect(log.includes(`## [v${d}-desktop]`), `CHANGELOG missing [v${d}-desktop]`)

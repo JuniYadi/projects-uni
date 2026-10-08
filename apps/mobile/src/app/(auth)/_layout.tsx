@@ -7,6 +7,7 @@ export default function AuthLayout() {
       <Stack.Screen name="qr-scan" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="vpn-permission" />
       <Stack.Screen name="expired" />
+      <Stack.Screen name="revoked" />
     </Stack>
   );
 }

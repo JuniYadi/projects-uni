@@ -2,9 +2,9 @@
 # UniVPN Windows Release Manifest (electron-updater & Website metadata)
 # URL: https://github.com/juniyadi/projects-uni/releases/latest/download/latest-win.yml
 # ==============================================================================
-version: "0.4.6"
-releaseDate: "2026-10-08T03:30:00.000Z"
-path: "UniVPN-Setup-0.4.6-x64.exe"
+version: "0.5.0"
+releaseDate: "2026-10-08T10:54:50.150Z"
+path: "UniVPN-Setup-0.5.0-x64.exe"
 sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 minSupportedVersion: "0.0.0"
@@ -12,9 +12,9 @@ mandatory: false
 sunsetMessage: "Versi Anda sudah tidak didukung (tertinggal lebih dari 5 rilis). Harap perbarui UniVPN untuk melanjutkan koneksi."
 
 files:
-  - url: "UniVPN-Setup-0.4.6-x64.exe"
+  - url: "UniVPN-Setup-0.5.0-x64.exe"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 68420000
-  - url: "UniVPN-Setup-0.4.6-x64.exe.blockmap"
+  - url: "UniVPN-Setup-0.5.0-x64.exe.blockmap"
     sha512: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     size: 78500

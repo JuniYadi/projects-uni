@@ -63,11 +63,13 @@
       "react-native-wireguard-vpn-patched",
       "./plugins/with-network-security-config",
       "./plugins/with-wireguard-exported",
+      "./plugins/with-wireguard-16kb",
       [
         "expo-build-properties",
         {
           "android": {
             "minSdkVersion": 26,
+            "ndkVersion": "27.2.12479018",
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "enablePngCrunchInReleaseBuilds": true

@@ -1,5 +1,6 @@
-v0.4.1 is now available!
+v0.5.0 is now available!
 
-- Fix server location flags loading for United States & Hong Kong
-- Normalized server country code resolution and FlagCDN flag rendering
-- Performance and stability optimizations
+- Automatic sign-out when this device is revoked, with a clear "Device revoked" screen
+- Subscription ID is now masked, with an eye toggle on the Account screen
+- Faster, more reliable connections by preferring the server IP address
+- Performance and stability improvements

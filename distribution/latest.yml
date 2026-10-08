@@ -3,7 +3,7 @@
 # Used by Website Landing Page & UI Clients to inspect version availability.
 # ==============================================================================
 schemaVersion: 1
-updatedAt: "2026-10-08T02:45:13.000Z"
+updatedAt: "2026-10-08T03:30:00.000Z"
 
 policy:
   maxMinorLag: 5
@@ -14,25 +14,25 @@ policy:
 
 platforms:
   windows:
-    version: "0.4.5"
+    version: "0.4.6"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-win.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.5-desktop/UniVPN-Setup-0.4.5-x64.exe"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.6-desktop/UniVPN-Setup-0.4.6-x64.exe"
     installerType: "nsis"
     architecture: ["x64"]
-    releaseDate: "2026-10-08T02:45:13.000Z"
+    releaseDate: "2026-10-08T03:30:00.000Z"
 
   macos:
-    version: "0.4.5"
+    version: "0.4.6"
     minSupportedVersion: "0.0.0"
     mandatory: false
     manifestUrl: "https://raw.githubusercontent.com/juniyadi/projects-uni/main/distribution/latest-mac.yml"
-    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.5-desktop/UniVPN-0.4.5-arm64.dmg"
-    zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.5-desktop/UniVPN-0.4.5-mac.zip"
+    downloadUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.6-desktop/UniVPN-0.4.6-arm64.dmg"
+    zipUrl: "https://github.com/juniyadi/projects-uni/releases/download/v0.4.6-desktop/UniVPN-0.4.6-mac.zip"
     installerType: "dmg"
     architecture: ["arm64", "x64"]
-    releaseDate: "2026-10-08T02:45:13.000Z"
+    releaseDate: "2026-10-08T03:30:00.000Z"
 
   android:
     version: "0.4.0"

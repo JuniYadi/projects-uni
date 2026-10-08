@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Group, Row, Screen } from '@/components/ui/list-row';
+import { Icon } from '@/components/ui/icon';
 import { Strings } from '@/constants/strings';
+import { maskSubscriptionId } from '@univpn/shared';
 import { Figtree } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/services/api';
@@ -18,6 +20,7 @@ export default function AccountScreen() {
   const disconnect = useConnectionStore((s) => s.disconnect);
   const [confirm, setConfirm] = useState(false);
   const [devices, setDevices] = useState<number | null>(null);
+  const [showId, setShowId] = useState(false);
 
   const expired = (expiresAt ? new Date(expiresAt) < new Date() : false) || (!!subscription && subscription.status !== 'active');
 
@@ -47,7 +50,29 @@ export default function AccountScreen() {
         </View>
       )}
       <Group>
-        <Row label={Strings.account.subscriptionId} value={subscriptionId ?? Strings.account.unknown} />
+        <Row
+          label={Strings.account.subscriptionId}
+          value={
+            subscriptionId
+              ? showId
+                ? subscriptionId
+                : maskSubscriptionId(subscriptionId)
+              : Strings.account.unknown
+          }
+          right={
+            subscriptionId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showId ? 'Sembunyikan ID' : 'Tampilkan ID'}
+                hitSlop={8}
+                onPress={() => setShowId(!showId)}
+                style={{ padding: 4 }}
+              >
+                <Icon name={showId ? 'eye-off' : 'eye'} size={18} color={theme.textSecondary} />
+              </Pressable>
+            ) : null
+          }
+        />
         <Row label={Strings.account.subscription} value={expired ? Strings.account.expired : Strings.account.active} />
         <Row
           label={Strings.account.validUntil}

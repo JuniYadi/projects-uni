@@ -7,6 +7,7 @@ import {
   resolveCountryName,
   isIpAddress,
   resolveEndpointHost,
+  maskSubscriptionId,
 } from './formatters'
 
 describe('resolveCountryCode', () => {
@@ -156,5 +157,33 @@ describe('resolveEndpointHost', () => {
         currentHost: '1.2.3.4',
       })
     ).toBe('1.2.3.4')
+  })
+})
+
+describe('maskSubscriptionId', () => {
+  it('handles null, undefined, and empty string', () => {
+    expect(maskSubscriptionId(null)).toBe('')
+    expect(maskSubscriptionId(undefined)).toBe('')
+    expect(maskSubscriptionId('')).toBe('')
+    expect(maskSubscriptionId('   ')).toBe('')
+  })
+
+  it('masks short subscription IDs completely', () => {
+    expect(maskSubscriptionId('dev')).toBe('••••••')
+    expect(maskSubscriptionId('123456')).toBe('••••••')
+  })
+
+  it('masks UNI- prefixed formatted codes', () => {
+    expect(maskSubscriptionId('UNI-4F9K-72QX')).toBe('UNI-••••-72QX')
+    expect(maskSubscriptionId('uni-abcd-efgh')).toBe('uni-••••-efgh')
+  })
+
+  it('masks hyphenated multi-part IDs', () => {
+    expect(maskSubscriptionId('sub-test-1234')).toBe('sub-••••-1234')
+  })
+
+  it('masks generic IDs preserving edges', () => {
+    expect(maskSubscriptionId('0194e9f7674f7988948882e0e0921a22')).toBe('0194••••1a22')
+    expect(maskSubscriptionId('12345678')).toBe('12••••78')
   })
 })

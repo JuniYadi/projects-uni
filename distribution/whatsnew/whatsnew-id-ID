@@ -1,6 +1,5 @@
-v0.5.0 telah tersedia!
+v0.5.1 telah tersedia!
 
-- Keluar otomatis saat perangkat ini dicabut, dengan layar "Perangkat dicabut" yang jelas
-- ID Langganan kini disamarkan, dengan tombol mata di layar Akun
-- Koneksi lebih cepat dan andal dengan memprioritaskan alamat IP server
-- Peningkatan performa dan kestabilan aplikasi
+- Memperbaiki masalah inisialisasi store status koneksi
+- Memperbaiki gaya tombol status koneksi dan kontrol aksi di layar utama
+- Peningkatan kestabilan aplikasi

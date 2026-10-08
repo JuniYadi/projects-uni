@@ -46,6 +46,8 @@ export function ConnectionStatus({
   status, size, onPress, onCancel, onRetry, onReconnect, onDisconnect, onUseWithoutVpn, disabled,
   onViewDetail,
   onViewLog,
+  buttonStyle,
+  renderActions = true,
 }: Props) {
   const theme = useTheme();
   const reduced = useReducedMotion();

@@ -35,6 +35,35 @@ export function applyEndpointPreference(config: string, profile?: ProfileInfo | 
     `${prefix}${chosenHost}${portSuffix}${lineEnd}`
   )
 }
+const DNS_MAP: Record<string, string> = {
+  cloudflare: '1.1.1.1, 1.0.0.1',
+  google: '8.8.8.8, 8.8.4.4',
+  adguard: '94.140.14.14, 94.140.15.15',
+}
+
+export function applyDnsPreference(config: string, dnsServer?: string | null): string {
+  if (!dnsServer || dnsServer === 'default') {
+    return config
+  }
+
+  const ips = DNS_MAP[dnsServer.toLowerCase()]
+  if (!ips) {
+    return config
+  }
+
+  if (/^([ \t]*DNS[ \t]*=[ \t]*).*$/m.test(config)) {
+    return config.replace(/^([ \t]*DNS[ \t]*=[ \t]*).*$/m, `DNS = ${ips}`)
+  }
+
+  const interfaceMatch = config.match(/^\[Interface\][ \t]*(\r?\n|$)/m)
+  if (interfaceMatch) {
+    const nl = interfaceMatch[1] || '\n'
+    return config.replace(/^\[Interface\][ \t]*(\r?\n|$)/m, `[Interface]${nl}DNS = ${ips}${nl}`)
+  }
+
+  return config
+}
+
 
 export class VpnCore {
   private api: VpnApiClient
@@ -62,7 +91,7 @@ export class VpnCore {
     return res
   }
 
-  async connect(profileId: string): Promise<void> {
+  async connect(profileId: string, options?: { dns?: string }): Promise<void> {
     if (this._status === 'connected' || this._status === 'connecting') {
       throw new Error('Already connecting or connected')
     }
@@ -80,7 +109,8 @@ export class VpnCore {
         }
       }
 
-      const finalConfig = applyEndpointPreference(config, profile)
+      let finalConfig = applyEndpointPreference(config, profile)
+      finalConfig = applyDnsPreference(finalConfig, options?.dns)
       await this.driver.connect(finalConfig)
       this.profileId = profileId
       this._status = await this.driver.status()

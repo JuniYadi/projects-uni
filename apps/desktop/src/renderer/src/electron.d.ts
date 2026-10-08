@@ -27,6 +27,7 @@ export interface DesktopSettingsState {
   autoConnect: boolean
   buttonStyle: 'cyber' | 'classic'
   favorites: string[]
+  dnsServer?: 'default' | 'cloudflare' | 'google' | 'adguard' | string
 }
 
 export interface UpdateInfoState {

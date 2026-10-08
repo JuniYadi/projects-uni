@@ -11,6 +11,7 @@ export interface DesktopSettings {
   autoConnect?: boolean
   buttonStyle?: 'cyber' | 'classic'
   favorites?: string[]
+  dnsServer?: 'default' | 'cloudflare' | 'google' | 'adguard' | string
 }
 
 const DEFAULT_SETTINGS: DesktopSettings = {
@@ -19,6 +20,7 @@ const DEFAULT_SETTINGS: DesktopSettings = {
   autoConnect: false,
   buttonStyle: 'cyber',
   favorites: [],
+  dnsServer: 'default',
 }
 
 function settingsPath(): string {

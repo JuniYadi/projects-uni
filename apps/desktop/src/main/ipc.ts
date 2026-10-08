@@ -53,7 +53,8 @@ ipcMain.handle('vpn:getProfiles', async () => {
 
 ipcMain.handle('vpn:connect', async (_event, profileId: string) => {
   try {
-    await vpnService.connect(profileId)
+    const settings = getSettings()
+    await vpnService.connect(profileId, { dns: settings.dnsServer })
     setSettings({ lastProfileId: profileId })
     return { ok: true }
   } catch (err) {

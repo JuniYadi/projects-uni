@@ -2,14 +2,26 @@
 
 All notable changes to UniVPN are documented here.
 
-## [v0.5.0] - 2026-10-08
+## [v0.5.0-desktop] - 2026-10-08
 
 ### Added
-- **Desktop & Mobile**: Logout otomatis saat perangkat dicabut (`DEVICE_REVOKED`): sesi dihapus, terowongan VPN dan heartbeat dihentikan, lalu pengguna diarahkan ke layar/dialog "Perangkat dicabut" dengan tombol "Masuk Kembali".
+- **Desktop**: Logout otomatis saat perangkat dicabut (`DEVICE_REVOKED`): sesi dihapus, terowongan VPN dihentikan, lalu pengguna kembali ke layar Masuk dengan dialog "Perangkat dicabut" dan tombol "Masuk Kembali".
 
 ### Fixed
-- **Desktop & Mobile**: Sesi yang ditolak server (`TOKEN_INVALID` / 401) kini juga me-reset status login di UI, bukan hanya menghapus token.
+- **Desktop**: Sesi yang ditolak server (`TOKEN_INVALID` / 401) kini juga me-reset status login di UI, bukan hanya menghapus token.
 - **Desktop**: Catatan pembaruan pada dialog update kini dirender sebagai HTML (judul, daftar, tebal, kode) alih-alih menampilkan tag mentah.
+
+## [v0.5.0-mobile] - 2026-10-08
+
+### Added
+- **Mobile**: Layar "Perangkat dicabut" dan logout otomatis saat perangkat dicabut (`DEVICE_REVOKED`): sesi dihapus, terowongan VPN dan heartbeat dihentikan, lalu pengguna diarahkan ke layar dengan tombol "Masuk Kembali". Berlaku juga saat aplikasi dibuka ulang.
+- **Mobile**: Tombol toggle mata untuk menampilkan/menyembunyikan ID Langganan pada layar detail Akun, serta masking otomatis (`UNI-••••-72QX`) pada baris ringkasan Akun di Pengaturan.
+
+### Changed
+- **Mobile**: Endpoint WireGuard memprioritaskan IP server dibanding domain, dengan fallback ke hostname bila IP tidak tersedia.
+
+### Fixed
+- **Mobile**: Sesi yang ditolak server (`TOKEN_INVALID` / 401) kini juga me-reset status login di UI, bukan hanya menghapus token.
 
 ## [v0.4.6-desktop] - 2026-10-08
 

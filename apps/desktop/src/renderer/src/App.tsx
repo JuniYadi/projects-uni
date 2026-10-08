@@ -17,6 +17,8 @@ import {
   IconSearch,
   IconKey,
   IconStar,
+  IconFilter,
+  IconClose,
 } from './components/Icons'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -70,7 +72,13 @@ export default function App() {
   const [autoConnect, setAutoConnect] = useState(false)
   const [buttonStyle, setButtonStyle] = useState<'cyber' | 'classic'>('cyber')
   const [favorites, setFavorites] = useState<string[]>([])
+  const [dnsServer, setDnsServer] = useState<'default' | 'cloudflare' | 'google' | 'adguard' | string>('default')
 
+  // Locations Filter States
+  const [filterRegion, setFilterRegion] = useState<string>('all')
+  const [filterSort, setFilterSort] = useState<'ping' | 'name'>('ping')
+  const [filterShow, setFilterShow] = useState<'all' | 'favorites'>('all')
+  const [showFilterSheet, setShowFilterSheet] = useState(false)
   // VPN
   const [profiles, setProfiles] = useState<ProfileInfo[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -110,6 +118,7 @@ export default function App() {
         setAutoConnect(s.autoConnect ?? false)
         setButtonStyle(s.buttonStyle ?? 'cyber')
         setFavorites(s.favorites ?? [])
+        setDnsServer(s.dnsServer ?? 'default')
 
         const res = await window.electronAPI.restore()
         if (res.ok) {
@@ -259,18 +268,54 @@ export default function App() {
     [selected]
   )
 
-  const sortedProfiles = useMemo(() => {
-    const list = profiles.filter((p) =>
-      `${p.serverName} ${p.region} ${p.country ?? ''}`.toLowerCase().includes(query.trim().toLowerCase())
-    )
+  const uniqueRegions = useMemo(
+    () => Array.from(new Set(profiles.map((p) => p.region).filter(Boolean))).sort(),
+    [profiles]
+  )
+
+  const activeFilterCount =
+    (filterRegion !== 'all' ? 1 : 0) + (filterSort !== 'ping' ? 1 : 0) + (filterShow !== 'all' ? 1 : 0)
+
+  const filteredProfiles = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const list = profiles.filter((p) => {
+      if (filterRegion !== 'all' && p.region !== filterRegion) return false
+      if (filterShow === 'favorites' && !favorites.includes(p.id)) return false
+      if (q) {
+        const text = `${p.serverName} ${p.region} ${p.country ?? ''}`.toLowerCase()
+        if (!text.includes(q)) return false
+      }
+      return true
+    })
     return list.sort((a, b) => {
+      if (filterSort === 'name') {
+        return a.serverName.localeCompare(b.serverName)
+      }
       const aFav = favorites.includes(a.id)
       const bFav = favorites.includes(b.id)
       if (aFav && !bFav) return -1
       if (!aFav && bFav) return 1
-      return a.serverName.localeCompare(b.serverName)
+      return getLatencyMs(a) - getLatencyMs(b)
     })
-  }, [profiles, query, favorites])
+  }, [profiles, query, filterRegion, filterSort, filterShow, favorites])
+
+  const recommendedProfile = useMemo(() => {
+    if (profiles.length === 0) return null
+    return [...profiles].sort((a, b) => getLatencyMs(a) - getLatencyMs(b))[0] ?? null
+  }, [profiles])
+
+  const showRecommended = Boolean(
+    recommendedProfile &&
+    !query.trim() &&
+    filterRegion === 'all' &&
+    filterShow === 'all' &&
+    filterSort === 'ping' &&
+    filteredProfiles.some((p) => p.id === recommendedProfile.id)
+  )
+
+  const displayProfiles = showRecommended && recommendedProfile
+    ? filteredProfiles.filter((p) => p.id !== recommendedProfile.id)
+    : filteredProfiles
 
   if (loading) {
     return (
@@ -545,72 +590,178 @@ export default function App() {
           <section className="flex flex-col gap-3.5 pb-2">
             <h1 className="text-xl font-semibold text-fg">{Strings.tabs.locations}</h1>
 
-            {/* Search Input */}
-            <div className="flex min-h-11 items-center gap-2.5 rounded-xl border border-line bg-card px-3.5 focus-within:border-accent">
-              <IconSearch size={18} className="shrink-0 text-dim" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Cari lokasi"
-                aria-label="Cari lokasi"
-                spellCheck={false}
-                className="w-full bg-transparent text-sm text-fg placeholder:text-dim focus:outline-none"
-              />
+            {/* Search Input & Filter Button */}
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 min-h-11 items-center gap-2.5 rounded-xl border border-line bg-card px-3.5 focus-within:border-accent">
+                <IconSearch size={18} className="shrink-0 text-dim" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={Strings.locations.search}
+                  aria-label={Strings.locations.search}
+                  spellCheck={false}
+                  className="w-full bg-transparent text-sm text-fg placeholder:text-dim focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilterSheet(true)}
+                aria-label={Strings.locations.filter}
+                className={`relative flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors ${
+                  activeFilterCount > 0
+                    ? 'border-[#22C55E] bg-[#22C55E]/10 text-[#22C55E]'
+                    : 'border-line bg-card text-dim hover:text-fg hover:border-accent/40'
+                }`}
+              >
+                <IconFilter size={18} />
+                <span>{Strings.locations.filter}</span>
+                {activeFilterCount > 0 && (
+                  <span className="flex size-4.5 items-center justify-center rounded-full bg-[#22C55E] text-[10px] font-bold text-[#052E16]">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
             </div>
 
-            {/* Server List */}
-            <ul className="flex flex-col gap-2">
-              {sortedProfiles.map((p) => {
-                const isPicked = p.id === selectedId
-                const isFav = favorites.includes(p.id)
-                const lat = getLatencyBadge(getLatencyMs(p))
-                return (
-                  <li key={p.id}>
+            {/* Recommended Server section */}
+            {showRecommended && recommendedProfile && (
+              <div className="flex flex-col gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  REKOMENDASI TERCEPAT
+                </div>
+                <ul className="flex flex-col gap-2">
+                  <li key={recommendedProfile.id}>
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedId(p.id)
-                        void window.electronAPI.setSettings({ lastProfileId: p.id })
+                        setSelectedId(recommendedProfile.id)
+                        void window.electronAPI.setSettings({ lastProfileId: recommendedProfile.id })
                         setTab('home')
                       }}
                       disabled={isConnected || isConnecting}
                       className={`flex min-h-[58px] w-full cursor-pointer items-center gap-3 rounded-2xl border bg-card px-3.5 py-2.5 text-left transition-colors hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-60 ${
-                        isPicked ? 'border-[#22C55E]' : 'border-line'
+                        recommendedProfile.id === selectedId
+                          ? 'border-[#22C55E]'
+                          : 'border-[#22C55E]/40 bg-[#22C55E]/5'
                       }`}
                     >
-                      <CountryBadge code={getCountryCode(p)} size={36} />
+                      <CountryBadge code={getCountryCode(recommendedProfile)} size={36} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium text-fg">{p.serverName}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium text-fg">
+                            {recommendedProfile.serverName}
+                          </span>
+                          <span className="rounded bg-[#22C55E]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#22C55E]">
+                            Tercepat
+                          </span>
+                        </div>
                         <div className="text-xs text-dim">
-                          {p.region} · <span className={lat.color}>{lat.label}</span>
+                          {recommendedProfile.region} ·{' '}
+                          <span className={getLatencyBadge(getLatencyMs(recommendedProfile)).color}>
+                            {getLatencyBadge(getLatencyMs(recommendedProfile)).label}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Favorite button */}
                       <button
                         type="button"
-                        onClick={(e) => toggleFavorite(p.id, e)}
+                        onClick={(e) => toggleFavorite(recommendedProfile.id, e)}
                         aria-label="Favorit"
                         className="p-1 text-dim hover:text-fg focus:outline-none"
                       >
-                        <IconStar size={20} filled={isFav} className={isFav ? 'text-[#22C55E]' : 'text-dim'} />
+                        <IconStar
+                          size={20}
+                          filled={favorites.includes(recommendedProfile.id)}
+                          className={favorites.includes(recommendedProfile.id) ? 'text-[#22C55E]' : 'text-dim'}
+                        />
                       </button>
 
-                      {/* Selected checkmark */}
-                      {isPicked && (
+                      {recommendedProfile.id === selectedId && (
                         <span className="shrink-0 text-[#22C55E]">
                           <IconCheck size={20} />
                         </span>
                       )}
                     </button>
                   </li>
-                )
-              })}
+                </ul>
+              </div>
+            )}
 
-              {sortedProfiles.length === 0 && (
-                <li className="py-12 text-center text-sm text-dim">Lokasi tidak ditemukan</li>
+            {/* Server List */}
+            <div className="flex flex-col gap-2">
+              {showRecommended && recommendedProfile && displayProfiles.length > 0 && (
+                <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-dim">
+                  {Strings.locations.all}
+                </div>
               )}
-            </ul>
+              <ul className="flex flex-col gap-2">
+                {displayProfiles.map((p) => {
+                  const isPicked = p.id === selectedId
+                  const isFav = favorites.includes(p.id)
+                  const lat = getLatencyBadge(getLatencyMs(p))
+                  return (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedId(p.id)
+                          void window.electronAPI.setSettings({ lastProfileId: p.id })
+                          setTab('home')
+                        }}
+                        disabled={isConnected || isConnecting}
+                        className={`flex min-h-[58px] w-full cursor-pointer items-center gap-3 rounded-2xl border bg-card px-3.5 py-2.5 text-left transition-colors hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          isPicked ? 'border-[#22C55E]' : 'border-line'
+                        }`}
+                      >
+                        <CountryBadge code={getCountryCode(p)} size={36} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-fg">{p.serverName}</div>
+                          <div className="text-xs text-dim">
+                            {p.region} · <span className={lat.color}>{lat.label}</span>
+                          </div>
+                        </div>
+
+                        {/* Favorite button */}
+                        <button
+                          type="button"
+                          onClick={(e) => toggleFavorite(p.id, e)}
+                          aria-label="Favorit"
+                          className="p-1 text-dim hover:text-fg focus:outline-none"
+                        >
+                          <IconStar size={20} filled={isFav} className={isFav ? 'text-[#22C55E]' : 'text-dim'} />
+                        </button>
+
+                        {/* Selected checkmark */}
+                        {isPicked && (
+                          <span className="shrink-0 text-[#22C55E]">
+                            <IconCheck size={20} />
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  )
+                })}
+
+                {filteredProfiles.length === 0 && (
+                  <li className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                    <div className="text-sm font-medium text-fg">{Strings.locations.empty}</div>
+                    <div className="text-xs text-dim">{Strings.locations.emptyHint}</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery('')
+                        setFilterRegion('all')
+                        setFilterSort('ping')
+                        setFilterShow('all')
+                      }}
+                      className="mt-2 cursor-pointer rounded-xl border border-line bg-card px-4 py-1.5 text-xs font-semibold text-accent hover:border-accent"
+                    >
+                      {Strings.locations.reset}
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
           </section>
         )}
 
@@ -831,6 +982,45 @@ export default function App() {
                     )}
                   </button>
                 </div>
+                {/* Server DNS */}
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-dim">
+                      {Strings.advanced.dns}
+                    </label>
+                    <p className="mt-0.5 text-xs text-dim">{Strings.advanced.dnsHint}</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {(['default', 'cloudflare', 'google', 'adguard'] as const).map((key) => {
+                      const opt = Strings.advanced.dnsOptions[key]
+                      const isSelected = dnsServer === key
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            setDnsServer(key)
+                            void window.electronAPI.setSettings({ dnsServer: key })
+                          }}
+                          className={`flex cursor-pointer items-center justify-between rounded-2xl border bg-card p-3.5 text-left transition-colors ${
+                            isSelected ? 'border-[#22C55E]' : 'border-line'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-fg">{opt.label}</div>
+                            <div className="text-xs text-dim">{opt.hint}</div>
+                          </div>
+                          {isSelected && (
+                            <span className="shrink-0 text-[#22C55E]">
+                              <IconCheck size={20} />
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
 
                 {/* Tema */}
                 <div className="flex flex-col gap-2">
@@ -877,6 +1067,18 @@ export default function App() {
                     <div className="flex justify-between">
                       <span className="text-dim">Enkripsi</span>
                       <span className="font-medium text-fg">ChaCha20-Poly1305</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-dim">DNS</span>
+                      <span className="font-medium text-fg">
+                        {dnsServer === 'cloudflare'
+                          ? 'Cloudflare (1.1.1.1)'
+                          : dnsServer === 'google'
+                            ? 'Google (8.8.8.8)'
+                            : dnsServer === 'adguard'
+                              ? 'AdGuard (94.140.14.14)'
+                              : 'Otomatis'}
+                      </span>
                     </div>
                     {selected && (
                       <div className="flex justify-between">
@@ -956,6 +1158,146 @@ export default function App() {
           <span>{Strings.tabs.settings}</span>
         </button>
       </nav>
+      {/* Location Filter Modal / Sheet */}
+      {showFilterSheet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+              <span className="text-sm font-semibold text-fg">{Strings.locations.filter}</span>
+              <button
+                type="button"
+                onClick={() => setShowFilterSheet(false)}
+                aria-label="Tutup"
+                className="cursor-pointer text-dim hover:text-fg"
+              >
+                <IconClose size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col gap-4 overflow-y-auto p-5 text-left">
+              {/* Wilayah (Region) */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  {Strings.locations.region}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFilterRegion('all')}
+                    className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                      filterRegion === 'all'
+                        ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                        : 'border-line bg-card text-fg hover:border-accent/40'
+                    }`}
+                  >
+                    {Strings.locations.regionAll}
+                  </button>
+                  {uniqueRegions.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setFilterRegion(r)}
+                      className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                        filterRegion === r
+                          ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                          : 'border-line bg-card text-fg hover:border-accent/40'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tampilkan */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  {Strings.locations.show}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFilterShow('all')}
+                    className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                      filterShow === 'all'
+                        ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                        : 'border-line bg-card text-fg hover:border-accent/40'
+                    }`}
+                  >
+                    {Strings.locations.showAll}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterShow('favorites')}
+                    className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                      filterShow === 'favorites'
+                        ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                        : 'border-line bg-card text-fg hover:border-accent/40'
+                    }`}
+                  >
+                    Hanya Favorit
+                  </button>
+                </div>
+              </div>
+
+              {/* Urutkan */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  {Strings.locations.sort}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFilterSort('ping')}
+                    className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                      filterSort === 'ping'
+                        ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                        : 'border-line bg-card text-fg hover:border-accent/40'
+                    }`}
+                  >
+                    Tercepat (Ping)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterSort('name')}
+                    className={`min-h-8 cursor-pointer rounded-full border px-3.5 text-xs transition-colors ${
+                      filterSort === 'name'
+                        ? 'border-[#22C55E] bg-[#22C55E] font-semibold text-[#052E16]'
+                        : 'border-line bg-card text-fg hover:border-accent/40'
+                    }`}
+                  >
+                    Nama (A-Z)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center gap-3 border-t border-line p-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterRegion('all')
+                  setFilterSort('ping')
+                  setFilterShow('all')
+                }}
+                className="flex-1 cursor-pointer rounded-xl border border-line bg-card py-2 text-xs font-semibold text-fg hover:bg-white/5 active:opacity-80"
+              >
+                {Strings.locations.reset}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFilterSheet(false)}
+                className="flex-1 cursor-pointer rounded-xl bg-[#22C55E] py-2 text-xs font-semibold text-[#052E16] hover:opacity-90 active:opacity-80"
+              >
+                {Strings.actions.apply}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Log & Diagnostik Terminal Modal */}
       {showLogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">

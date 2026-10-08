@@ -1,5 +1,5 @@
 import { createApiClient, type AuthStorage } from '@univpn/api'
-import { createVpnCore, applyEndpointPreference, type VpnCore } from '@univpn/vpn-core'
+import { createVpnCore, applyEndpointPreference, applyDnsPreference, type VpnCore } from '@univpn/vpn-core'
 import { createNoopDriver, createDarwinDriver, createWindowsDriver, resolveWindowsResources, createPlatformDriver, type VpnPlatformDriver, type VpnStats } from '@univpn/vpn-platform'
 import { parseWireGuardConfig } from '../../../packages/vpn-platform/src/mac-helper'
 import type { VpnApiClient } from '@univpn/api'
@@ -151,6 +151,23 @@ const rewrittenFallback = applyEndpointPreference(confWithDomain, {
 })
 assert(rewrittenFallback.includes('Endpoint = sg01.vpn.pfnapp.com:51820'), 'applyEndpointPreference fallback ke hostname jika serverIp null')
 
+
+const confDnsReplace = '[Interface]\nPrivateKey = a\nDNS = 10.0.0.1\n[Peer]\nEndpoint = 1.2.3.4:51820'
+const cloudflareDns = applyDnsPreference(confDnsReplace, 'cloudflare')
+assert(cloudflareDns.includes('DNS = 1.1.1.1, 1.0.0.1'), 'applyDnsPreference mengganti DNS ke Cloudflare')
+
+const googleDns = applyDnsPreference(confDnsReplace, 'google')
+assert(googleDns.includes('DNS = 8.8.8.8, 8.8.4.4'), 'applyDnsPreference mengganti DNS ke Google')
+
+const adguardDns = applyDnsPreference(confDnsReplace, 'adguard')
+assert(adguardDns.includes('DNS = 94.140.14.14, 94.140.15.15'), 'applyDnsPreference mengganti DNS ke AdGuard')
+
+const defaultDns = applyDnsPreference(confDnsReplace, 'default')
+assert(defaultDns === confDnsReplace, 'applyDnsPreference default mempertahankan config asli')
+
+const confNoDns = '[Interface]\nPrivateKey = a\n[Peer]\nEndpoint = 1.2.3.4:51820'
+const insertedDns = applyDnsPreference(confNoDns, 'cloudflare')
+assert(insertedDns.includes('[Interface]\nDNS = 1.1.1.1, 1.0.0.1\nPrivateKey = a'), 'applyDnsPreference menyisipkan DNS setelah [Interface]')
 // ─── 3. Platform driver factory ──────────────────────────────
 
 const noop = createNoopDriver()

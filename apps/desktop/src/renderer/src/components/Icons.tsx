@@ -95,3 +95,11 @@ export function IconClose({ size = 18, className = '', strokeWidth = 1.8 }: Icon
     </svg>
   )
 }
+
+export function IconFilter({ size = 18, className = '', strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  )
+}

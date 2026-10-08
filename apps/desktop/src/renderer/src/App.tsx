@@ -27,6 +27,19 @@ import {
 type Theme = 'light' | 'dark' | 'system'
 type Tab = 'home' | 'locations' | 'settings'
 
+// Release notes arrive as HTML from the updater; keep only inert markup before rendering
+function sanitizeNotes(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  doc.querySelectorAll('script,style,iframe,object,embed,link,meta,form').forEach((n) => n.remove())
+  doc.body.querySelectorAll('*').forEach((el) => {
+    for (const a of [...el.attributes]) {
+      const bad = a.name.startsWith('on') || (['href', 'src'].includes(a.name) && /^\s*javascript:/i.test(a.value))
+      if (bad) el.removeAttribute(a.name)
+    }
+  })
+  return doc.body.innerHTML
+}
+
 function applyTheme(next: Theme) {
   const isDark =
     next === 'dark' || (next === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -1453,7 +1466,10 @@ export default function App() {
               </div>
               <div className="log-scroll max-h-36 overflow-y-auto pr-1 text-dim leading-relaxed select-text">
                 {updateState.releaseNotes ? (
-                  <div className="whitespace-pre-line">{updateState.releaseNotes}</div>
+                  <div
+                    className="[&_code]:rounded [&_code]:bg-white/10 [&_code]:px-1 [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:font-semibold [&_h3]:text-fg [&_li]:mb-1 [&_strong]:text-fg [&_ul]:list-disc [&_ul]:pl-4"
+                    dangerouslySetInnerHTML={{ __html: sanitizeNotes(updateState.releaseNotes) }}
+                  />
                 ) : (
                   <div className="flex flex-col gap-1">
                     <div>• Peningkatan kestabilan protokol WireGuard</div>

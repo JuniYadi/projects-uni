@@ -20,7 +20,9 @@ export type IconName =
   | 'external-link'
   | 'search'
   | 'refresh'
-  | 'info';
+  | 'info'
+  | 'eye'
+  | 'eye-off';
 
 interface IconProps {
   name: IconName;
@@ -157,6 +159,23 @@ export function Icon({
       content = (
         <Path
           d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+          fill="none"
+          {...strokeProps}
+        />
+      );
+      break;
+    case 'eye':
+      content = (
+        <>
+          <Path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="none" {...strokeProps} />
+          <Circle cx="12" cy="12" r="3" fill="none" {...strokeProps} />
+        </>
+      );
+      break;
+    case 'eye-off':
+      content = (
+        <Path
+          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"
           fill="none"
           {...strokeProps}
         />

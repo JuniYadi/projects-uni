@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Group, Row, Screen } from '@/components/ui/list-row';
 import { Switch } from '@/components/ui/switch';
 import { Strings } from '@/constants/strings';
+import { maskSubscriptionId } from '@univpn/shared';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 
@@ -46,7 +47,7 @@ export default function SettingsScreen() {
       <Group>
         <Row
           label={Strings.account.title}
-          value={subscriptionId ?? undefined}
+          value={subscriptionId ? maskSubscriptionId(subscriptionId) : undefined}
           onPress={() => router.push('/(main)/settings/akun')}
         />
         <Row

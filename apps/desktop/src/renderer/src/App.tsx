@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { resolveCountryCode, resolveEndpointHost, isIpAddress } from '@univpn/shared'
+import { resolveCountryCode, resolveEndpointHost, isIpAddress, maskSubscriptionId } from '@univpn/shared'
 import { Strings } from '../../../../mobile/src/constants/strings'
 import type { ProfileInfo, VpnStatus, DesktopSettingsState, UpdateInfoState } from './electron'
 import { BrandLogo } from './components/BrandLogo'
@@ -19,6 +19,9 @@ import {
   IconStar,
   IconFilter,
   IconClose,
+  IconEye,
+  IconEyeOff,
+  IconCopy,
 } from './components/Icons'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -59,6 +62,8 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState(false)
   const [subId, setSubId] = useState('')
   const [subscriptionId, setSubscriptionId] = useState('')
+  const [showSubId, setShowSubId] = useState(false)
+  const [copiedSubId, setCopiedSubId] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginBusy, setLoginBusy] = useState(false)
 
@@ -89,7 +94,7 @@ export default function App() {
 
   // Update System State
   const [updateState, setUpdateState] = useState<UpdateInfoState>({
-    currentVersion: '0.4.5',
+    currentVersion: '0.4.6',
     status: 'idle',
   })
   const [checkingUpdate, setCheckingUpdate] = useState(false)
@@ -886,9 +891,38 @@ export default function App() {
                 </div>
 
                 {/* Account row */}
-                <div className="flex items-center justify-between rounded-2xl border border-line bg-card p-3.5">
-                  <span className="text-sm font-medium text-fg">{Strings.account.subscriptionId}</span>
-                  <span className="max-w-[55%] truncate text-xs text-dim font-mono">{subscriptionId}</span>
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-card p-3.5">
+                  <span className="shrink-0 text-sm font-medium text-fg">{Strings.account.subscriptionId}</span>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-xs text-dim font-mono">
+                      {showSubId ? subscriptionId : maskSubscriptionId(subscriptionId)}
+                    </span>
+                    {subscriptionId && (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowSubId((v) => !v)}
+                          title={showSubId ? 'Sembunyikan ID' : 'Tampilkan ID'}
+                          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-dim transition-colors hover:bg-card-hover hover:text-fg"
+                        >
+                          {showSubId ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!subscriptionId) return
+                            navigator.clipboard.writeText(subscriptionId)
+                            setCopiedSubId(true)
+                            setTimeout(() => setCopiedSubId(false), 2000)
+                          }}
+                          title={copiedSubId ? 'Tersalin' : 'Salin ID'}
+                          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-dim transition-colors hover:bg-card-hover hover:text-fg"
+                        >
+                          {copiedSubId ? <IconCheck size={16} className="text-accent" /> : <IconCopy size={15} />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Logout */}

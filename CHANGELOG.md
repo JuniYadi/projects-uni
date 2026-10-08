@@ -2,6 +2,13 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.4.6-desktop] - 2026-10-08
+
+### Added
+- **Desktop & Mobile**: Masking ID Langganan (`UNI-••••-72QX`) untuk perlindungan privasi credential saat membuka menu pengaturan atau screen share.
+- **Desktop**: Tombol toggle mata (tampilkan/sembunyikan ID) dan tombol Salin ID ke clipboard pada kartu ID Langganan di tab Pengaturan.
+- **Mobile**: Tombol toggle mata untuk menampilkan/menyembunyikan ID Langganan pada layar detail Akun, serta masking otomatis pada baris ringkasan Akun di Pengaturan.
+
 ## [v0.4.5-desktop] - 2026-10-08
 
 ### Added

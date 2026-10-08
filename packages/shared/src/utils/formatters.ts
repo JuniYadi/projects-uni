@@ -241,3 +241,29 @@ export function resolveEndpointHost(options: {
   }
   return (serverIp || '').trim()
 }
+
+/**
+ * Masks a subscription ID for privacy and security against shoulder-surfing/screenshots.
+ * Preserves recognizable prefixes (e.g. "UNI-") or outer characters while masking the sensitive core.
+ * E.g.: "UNI-4F9K-72QX" -> "UNI-••••-72QX"
+ * E.g.: "0194e9f7-674f-7988-9488-82e0e0921a22" -> "0194••••1a22"
+ * Short IDs (<= 6 chars) -> "••••••"
+ */
+export function maskSubscriptionId(id: string | null | undefined): string {
+  if (!id) return ''
+  const trimmed = id.trim()
+  if (!trimmed) return ''
+  if (trimmed.length <= 6) {
+    return '••••••'
+  }
+  const uniMatch = trimmed.match(/^(UNI-)[^-]+(-.+)$/i)
+  if (uniMatch) {
+    return `${uniMatch[1]}••••${uniMatch[2]}`
+  }
+  const parts = trimmed.split('-')
+  if (parts.length >= 3) {
+    return `${parts[0]}-••••-${parts[parts.length - 1]}`
+  }
+  const edge = trimmed.length > 10 ? 4 : 2
+  return `${trimmed.slice(0, edge)}••••${trimmed.slice(-edge)}`
+}

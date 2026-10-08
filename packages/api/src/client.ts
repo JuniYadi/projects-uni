@@ -51,18 +51,22 @@ export interface VpnApiClientOptions {
   timeout?: number
   storage: AuthStorage
   device: DeviceContext | (() => DeviceContext | Promise<DeviceContext>)
+  /** Called after local auth is cleared because the server rejected the session. */
+  onAuthLost?: (code: 'TOKEN_INVALID' | 'DEVICE_REVOKED') => void
 }
 
 export class VpnApiClient {
   private baseUrl: string
   private timeout: number
   private storage: AuthStorage
+  private onAuthLost?: VpnApiClientOptions['onAuthLost']
   private device: () => DeviceContext | Promise<DeviceContext>
 
   constructor(options: VpnApiClientOptions) {
     this.baseUrl = options.baseUrl ?? API_BASE_URL
     this.timeout = options.timeout ?? API_TIMEOUT
     this.storage = options.storage
+    this.onAuthLost = options.onAuthLost
     this.device = async () =>
       typeof options.device === 'function' ? options.device() : options.device
   }
@@ -94,8 +98,20 @@ export class VpnApiClient {
 
       clearTimeout(timeoutId)
 
+      // A revoked device may arrive as 401 or 403 — check the error code first
+      const errBody = response.ok
+        ? null
+        : ((await response.clone().json().catch(() => ({}))) as ApiErrorBody)
+
+      if (errBody?.error?.code === 'DEVICE_REVOKED') {
+        await this.storage.clearAll()
+        this.onAuthLost?.('DEVICE_REVOKED')
+        return Promise.reject(new Error('DEVICE_REVOKED'))
+      }
+
       if (response.status === 401) {
         await this.storage.clearAll()
+        this.onAuthLost?.('TOKEN_INVALID')
         return Promise.reject(new Error('TOKEN_INVALID'))
       }
 

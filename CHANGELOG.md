@@ -2,6 +2,15 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.4.5-desktop] - 2026-10-08
+
+### Added
+- **Desktop**: Mode DNS Kustom (Otomatis, Cloudflare `1.1.1.1`, Google `8.8.8.8`, AdGuard `94.140.14.14`) pada menu Mode Lanjutan yang diinjeksikan secara otomatis ke konfigurasi interface WireGuard (`applyDnsPreference`).
+- **Desktop**: Sistem pemfilteran dan pengurutan lokasi server yang diselaraskan dengan aplikasi mobile, termasuk modal filter lokasi (berdasarkan wilayah, server favorit, dan urutan latensi/nama) serta kartu rekomendasi server tercepat.
+
+### Fixed
+- **Windows**: Memperbaiki variabel jalur registri/direktori uninstaller NSIS dari `$LOCALAPPDATA` menjadi `$PROGRAMDATA` untuk pembersihan service `UniVPNService`.
+
 ## [v0.4.4-desktop] - 2026-10-07
 
 ### Added

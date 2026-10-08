@@ -36,9 +36,9 @@ ipcMain.handle('auth:restore', async () => {
 
     await api.getProfiles()
     return { ok: true, token, expiresAt, subscriptionId }
-  } catch {
+  } catch (err) {
     await desktopStorage.clearAll()
-    return { ok: false }
+    return { ok: false, revoked: (err as Error).message === 'DEVICE_REVOKED' }
   }
 })
 

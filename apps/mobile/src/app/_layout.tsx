@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Stack } from 'expo-router/stack';
+import { useRouter } from 'expo-router';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold } from '@expo-google-fonts/figtree';
@@ -22,6 +23,8 @@ export default function RootLayout() {
   const { colorScheme, setColorScheme } = useColorScheme();
   const reset = useConnectionStore((s) => s.reset);
   const restore = useAuthStore((s) => s.restore);
+  const authStatus = useAuthStore((s) => s.status);
+  const router = useRouter();
   const loadSettings = useSettingsStore((s) => s.load);
   const theme = useSettingsStore((s) => s.theme);
   const [ready, setReady] = useState(false);
@@ -59,6 +62,16 @@ export default function RootLayout() {
     });
     return unsub;
   }, [ready, reset]);
+
+  // Session killed server-side (device revoked / token rejected) → drop the tunnel and leave the app
+  useEffect(() => {
+    if (!ready || (authStatus !== 'revoked' && authStatus !== 'invalid')) return;
+    if (useConnectionStore.getState().status !== 'disconnected') {
+      stopHeartbeat();
+      void useConnectionStore.getState().disconnect();
+    }
+    router.replace(authStatus === 'revoked' ? '/(auth)/revoked' : '/(auth)/login');
+  }, [ready, authStatus, router]);
 
   // Don't render navigation until auth is resolved — native splash covers the wait
   if (!ready || !(fontsLoaded || fontError)) return null;

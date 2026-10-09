@@ -35,6 +35,9 @@ export default function AccountScreen() {
     setConfirm(false);
     await disconnect();
     await logout();
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
     router.replace('/(auth)/login');
   };
 

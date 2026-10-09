@@ -25,6 +25,9 @@ export default function QrScanScreen() {
 
       try {
         await loginWithQr(result.data);
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
         router.replace(await routeAfterLogin());
       } catch (err) {
         const code = (err as Error).message;

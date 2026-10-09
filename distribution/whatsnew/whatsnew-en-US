@@ -1,5 +1,6 @@
 v0.5.2 is now available!
 
 - Installed app picker for VPN bypass/split-tunnel whitelist
+- Fix account logout and QR navigation flow
 - Support for 16KB page size Android devices
-- Performance and stability improvements
+- Stability and performance improvements

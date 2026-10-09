@@ -70,6 +70,9 @@ export default function RootLayout() {
       stopHeartbeat();
       void useConnectionStore.getState().disconnect();
     }
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
     router.replace(authStatus === 'revoked' ? '/(auth)/revoked' : '/(auth)/login');
   }, [ready, authStatus, router]);
 

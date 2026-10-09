@@ -1,9 +1,14 @@
 package expo.modules.univpnnative
 
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.VpnService
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
 import com.wireguard.android.backend.Statistics
@@ -15,6 +20,7 @@ import com.wireguard.config.Peer
 import com.wireguard.crypto.Key
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.io.ByteArrayOutputStream
 import java.net.InetAddress
 
 class UnivpnNativeModule : Module() {
@@ -99,6 +105,44 @@ class UnivpnNativeModule : Module() {
     }
 
     AsyncFunction("isSupported") { true }
+
+    AsyncFunction("getInstalledApps") {
+      val context = appContext.reactContext ?: throw Exception("React context unavailable")
+      val pm = context.packageManager
+      val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+      pm.queryIntentActivities(launcherIntent, PackageManager.MATCH_ALL)
+        .map { it.activityInfo.packageName }
+        .distinct()
+        .filter { it != context.packageName } // exclude UniVPN itself
+        .mapNotNull { pkg ->
+          try {
+            val label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+            mapOf("packageName" to pkg, "appName" to label)
+          } catch (_: PackageManager.NameNotFoundException) { null }
+        }
+        .sortedBy { (it["appName"] as String).lowercase() }
+    }
+
+    AsyncFunction("getAppIcon") { packageName: String ->
+      val context = appContext.reactContext ?: throw Exception("React context unavailable")
+      val pm = context.packageManager
+      try {
+        val appInfo = pm.getApplicationInfo(packageName, 0)
+        val drawable = appInfo.loadIcon(pm)
+        val w = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+        val h = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, w, h)
+        drawable.draw(canvas)
+        val out = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 90, out)
+        bitmap.recycle()
+        Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+      } catch (_: PackageManager.NameNotFoundException) {
+        null
+      }
+    }
   }
 
   private fun buildConfig(config: Map<String, Any?>): Config {

@@ -42,6 +42,10 @@ declare class UnivpnNativeModule extends NativeModule<UnivpnNativeEvents> {
   disconnect(): Promise<void>;
   getStatus(): Promise<WireGuardStatus>;
   isSupported(): Promise<boolean>;
+  /** Returns all user-visible installed apps sorted by name (Android only). */
+  getInstalledApps(): Promise<Array<{ packageName: string; appName: string }>>;
+  /** Returns app icon as base64-encoded PNG string, or null if not found (Android only). */
+  getAppIcon(packageName: string): Promise<string | null>;
 }
 
 export default requireNativeModule<UnivpnNativeModule>('UnivpnNative');

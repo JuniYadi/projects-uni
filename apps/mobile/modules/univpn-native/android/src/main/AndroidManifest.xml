@@ -1,3 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET" />
+
+  <!--
+    Allows PackageManager to see apps that have a launcher icon (user-visible apps).
+    Required on Android 11+ (API 30+) to enumerate installed apps for the split-tunnel
+    whitelist picker. Does NOT require QUERY_ALL_PACKAGES — this intent filter already
+    covers every app the user can consciously whitelist.
+  -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.LAUNCHER" />
+    </intent>
+  </queries>
 </manifest>

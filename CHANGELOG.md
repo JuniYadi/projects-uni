@@ -2,6 +2,14 @@
 
 All notable changes to UniVPN are documented here.
 
+## [v0.5.2-mobile] (DRAFT) - 2026-10-09
+
+### Added
+- **Mobile**: Pemilih aplikasi terpasang (interactive app picker) dengan dukungan ikon aplikasi dan pencarian pada menu pengaturan Split-Tunnel Whitelist.
+
+### Fixed
+- **Mobile**: Resolusi peringatan Google Play Store terkait alignment 16KB page size untuk library native WireGuard Android via plugin Gradle override.
+
 ## [v0.5.1-mobile] - 2026-10-08
 
 ### Fixed

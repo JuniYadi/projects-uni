@@ -1,5 +1,6 @@
-v0.5.1 telah tersedia!
+v0.5.2 telah tersedia!
 
-- Memperbaiki masalah inisialisasi store status koneksi
-- Memperbaiki gaya tombol status koneksi dan kontrol aksi di layar utama
+- Pemilih aplikasi terpasang untuk fitur bypass/whitelist VPN
+- Perbaikan alur navigasi dan logout akun
+- Peningkatan kompatibilitas sistem Android 16KB
 - Peningkatan kestabilan aplikasi

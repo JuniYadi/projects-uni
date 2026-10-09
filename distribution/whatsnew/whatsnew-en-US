@@ -1,5 +1,6 @@
-v0.5.1 is now available!
+v0.5.2 is now available!
 
-- Fixed connection store initialization issue
-- Fixed home connection button style and action controls
-- General stability improvements
+- Installed app picker for VPN bypass/split-tunnel whitelist
+- Fix account logout and QR navigation flow
+- Support for 16KB page size Android devices
+- Stability and performance improvements

@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { app, BrowserWindow, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { configureUmami, trackEvent } from '@univpn/shared'
 import './ipc'
 import { vpnService } from './vpn'
 import { createTray } from './tray'
@@ -84,6 +85,11 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', showWindow)
 
   app.whenReady().then(async () => {
+    configureUmami({
+      os: process.platform === 'darwin' ? 'Macintosh; Mac OS X' : process.platform === 'win32' ? 'Windows NT 10.0' : 'X11; Linux',
+      appVersion: app.getVersion(),
+    })
+    trackEvent('app-open')
     const appIcon = getAppIconPath()
     if (process.platform === 'darwin' && app.dock && appIcon) {
       try {

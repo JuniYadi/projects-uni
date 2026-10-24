@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import * as storage from '@/services/storageService'
 import { api, getErrorMessage, setAuthLostHandler } from '@/services/api'
+import { trackEvent, setUmamiUser } from '@univpn/shared'
 import type { SubscriptionInfo } from '@univpn/shared'
 
 // ponytail: dev bypass check
@@ -58,6 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.getProfiles()
 
       set({ token, expiresAt, subscriptionId: subId, status: 'valid' })
+      setUmamiUser(subId)
       return true
     } catch (err) {
       await storage.clearAll()
@@ -77,6 +79,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         subscription: res.subscription,
         status: 'valid',
       })
+      setUmamiUser(res.subscription.id)
+      trackEvent('login-success', { method: 'subscription-id' })
     } catch (err) {
       const code = (err as Error).message
       const msg = getErrorMessage(code as any)
@@ -96,6 +100,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         subscription: res.subscription,
         status: 'valid',
       })
+      setUmamiUser(res.subscription.id)
+      trackEvent('login-success', { method: 'qr' })
     } catch (err) {
       const code = (err as Error).message
       const msg = getErrorMessage(code as any)

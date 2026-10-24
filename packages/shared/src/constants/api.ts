@@ -5,3 +5,6 @@ export const APP_URL = process.env.EXPO_PUBLIC_APP_URL ?? "https://pfnapp.id"
 export const API_TIMEOUT = 10_000
 export const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+export const UMAMI_HOST = "https://analytics.pfnapp.com"
+// Public (same as a web data-website-id). Empty = analytics off.
+export const UMAMI_WEBSITE_ID = process.env.EXPO_PUBLIC_UMAMI_WEBSITE_ID ?? ""

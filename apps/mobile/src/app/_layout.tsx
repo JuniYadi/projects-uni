@@ -2,6 +2,8 @@ import '../global.css';
 
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
+import Constants from 'expo-constants';
+import { configureUmami, trackEvent } from '@univpn/shared';
 import { useColorScheme } from 'nativewind';
 import { Stack } from 'expo-router/stack';
 import { useRouter } from 'expo-router';
@@ -31,6 +33,15 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold });
   const isDark = colorScheme === 'dark';
   const backgroundColor = isDark ? Colors.dark.background : Colors.light.background;
+
+  // Analytics: once per app start
+  useEffect(() => {
+    configureUmami({
+      os: `${Platform.OS === 'ios' ? 'iOS' : 'Linux; Android'} ${Platform.Version}`,
+      appVersion: Constants.expoConfig?.version,
+    });
+    trackEvent('app-open');
+  }, []);
 
   // Auth check + settings restore + native splash management
   useEffect(() => {

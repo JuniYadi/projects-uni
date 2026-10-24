@@ -1,5 +1,6 @@
 import { app, ipcMain } from 'electron'
 import { getErrorMessage } from '@univpn/api'
+import { trackEvent, setUmamiUser } from '@univpn/shared'
 import type { VpnStats, VpnStatus } from '@univpn/vpn-platform'
 import { api } from './api'
 import { desktopStorage } from './storage'
@@ -9,6 +10,8 @@ import { getSettings, setSettings, type DesktopSettings } from './settings'
 ipcMain.handle('auth:login', async (_event, subscriptionId: string) => {
   try {
     const res = await api.loginWithSubId(subscriptionId)
+    setUmamiUser(res.subscription.id)
+    trackEvent('login-success', { method: 'subscription-id' })
     return { ok: true, subscription: res.subscription }
   } catch (err) {
     return { ok: false, error: getErrorMessage((err as Error).message) }
@@ -35,6 +38,7 @@ ipcMain.handle('auth:restore', async () => {
     }
 
     await api.getProfiles()
+    setUmamiUser(subscriptionId)
     return { ok: true, token, expiresAt, subscriptionId }
   } catch (err) {
     await desktopStorage.clearAll()
@@ -56,11 +60,15 @@ ipcMain.handle('vpn:connect', async (_event, profileId: string) => {
     const settings = getSettings()
     await vpnService.connect(profileId, { dns: settings.dnsServer })
     setSettings({ lastProfileId: profileId })
+    trackEvent('vpn-connected')
     return { ok: true }
   } catch (err) {
     const rawMsg = (err as Error).message
     const mapped = getErrorMessage(rawMsg)
     const errorMsg = mapped !== 'Terjadi kesalahan' ? mapped : rawMsg
+    trackEvent('vpn-connect-failed', {
+      reason: /^[A-Z][A-Z0-9_]{2,40}$/.test(rawMsg) ? rawMsg : 'connect_error',
+    })
     return { ok: false, error: errorMsg }
   }
 })

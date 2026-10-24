@@ -2,7 +2,7 @@
 // Manages VPN lifecycle: fetch config → parse → connect → heartbeat → disconnect
 import { create } from 'zustand'
 
-import { resolveEndpointHost } from '@univpn/shared'
+import { resolveEndpointHost, trackEvent } from '@univpn/shared'
 import type { VpnProfile, ConnectionStatus } from '@/types/vpn'
 import { api } from '@/services/api'
 import { vpnService } from '@/services/vpnService'
@@ -12,6 +12,12 @@ import { startHeartbeat, stopHeartbeat } from '@/services/heartbeatService'
 import { getIpLocation, type UserLocation, DEFAULT_USER_LOCATION } from '@/services/geoLocationService'
 
 import { diagnosticLogService } from '@/services/diagnosticLogService'
+
+/** Short, non-identifying reason code (never the raw message: it may hold IPs). */
+function failReason(err: unknown): string {
+  const m = err instanceof Error ? err.message : ''
+  return /^[A-Z][A-Z0-9_]{2,40}$/.test(m) ? m : 'connect_error'
+}
 
 interface ConnectionState {
   profile: VpnProfile | null
@@ -114,6 +120,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         status: 'disconnected',
         error: `OpenVPN not yet supported — use a WireGuard server`,
       })
+      trackEvent('vpn-connect-failed', { reason: 'unsupported_protocol' })
       return
     }
 
@@ -153,12 +160,18 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         details: `IP Terowongan: ${tunnelAddress.join(', ') || '10.64.0.1'} · DNS: ${(wgConfig.dns ?? []).join(', ') || 'Default'}`,
       })
 
+      trackEvent('vpn-connected', {
+        server: profile.name,
+        ...(profile.country ? { country: profile.country } : {}),
+      })
+
       // 6. Start heartbeat
       startHeartbeat(profile.id)
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Connection failed'
       set({ status: 'disconnected', error: msg })
+      trackEvent('vpn-connect-failed', { reason: failReason(err) })
       void diagnosticLogService.recordLog({
         level: 'ERROR',
         stage: 'HANDSHAKE',
